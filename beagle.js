@@ -36,7 +36,7 @@ child.exec("xxd -g 2 -a -l 16 -seek 16 /sys/bus/i2c//devices/1-0050/eeprom | sed
                     var pops = {
                         host: "192.168.0.104",
                         port: 5000,
-                        path: "/dump",
+                        path: "/update",
                         method: "POST",
                         headers: { "Content-Type": "application/x-www-form-urlencoded",
                                    "Content-Length": postdata.length }
