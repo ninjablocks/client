@@ -9,7 +9,7 @@ var getNodeId = function(){ return "NBABB-123BB123" };
 var getTokenId = function() { return "1234123412341234"};
     
 var options = {
-    host: 'localhost',
+    host: 'dinty.local',
     port: 3000,
     path: '/heartbeats',
     method: 'POST',
@@ -30,34 +30,45 @@ req.on('error', function(e) {
 });
 
 var wrapMsg = function(chunk) {
-    var parsedchunk = JSON.parse(chunk);
-    var nm = { "NODE_ID" : getNodeId(), "TOKEN" : getTokenId(), "DEVICE" : parsedchunk.DEVICE }
+    // var parsedchunk = JSON.parse(chunk);
+    var nm = { "NODE_ID" : getNodeId(), "TOKEN" : getTokenId(), "DEVICE" : chunk.DEVICE }
     for (var x=0; x<nm.DEVICE.length; x++) {
         nm.DEVICE[x].G = nm.NODE_ID+'-'+nm.DEVICE[x].G;
     }
     return JSON.stringify(nm);    
 };
 
-var streamTTY = function(e) { 
+var serialport = require("serialport");
+var SerialPort = serialport.SerialPort;
+var tty = new SerialPort("/dev/ttyO1", { 
+    parser: serialport.parsers.readline("\n")
+});
+
+// Event triggered on each \n from serial port
+tty.on("data", function (data) {
+    try {
+        
+        req.write(wrapMsg(JSON.parse(data)));
+    } catch (err) {
+        console.log(err);
+    }
+});
+
+// Write to serial port 
+// tty.write("Payload here\r");
+
+var fakeTTY = function(e) { 
     fs.readFile('/Users/pete/work/ninj/tmp/sample_cape_json.txt', 'utf8', function(err,data){
         if (err) throw err;
         var lines = data.split('\n');
-
         for (var i=0; i<lines.length; i++) {
-            // var parsed_line = JSON.parse(lines[i]);
-            // var nm = { "NODE_ID" : getNodeId(), "TOKEN" : getTokenId(), "DEVICE" : parsed_line.DEVICE }
-            // for (var x=0; x<nm.DEVICE.length; x++) {
-            //     nm.DEVICE[x].G = nm.NODE_ID+'-'+nm.DEVICE[x].G;
-            // }
             req.write(wrapMsg(lines[i]));
-            // req.write(JSON.stringify(nm));
         }
         req.end();
     });
 };
 
-streamTTY();
-// console.log(util.inspect(req));
+// fakeTTY();
 
 // Node is one weird... thing.
 /*
