@@ -1,0 +1,4 @@
+{ "name": "beagle-client",
+  "version": "0.0.1",
+  "dependencies": { "serialport" : ">= 0.0.0" }
+}
