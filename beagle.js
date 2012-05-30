@@ -5,32 +5,65 @@ var util = require('util');
 var qs = require('querystring');
 var child = require('child_process');
 
+var cloudHost = 'ninj.herokuapp.com';
+var cloudPort = 80;
+var cloudHost = '10.1.1.12';
+var cloudPort = 3000;
+
 var getNodeId = function(){ return "NBABB-123BB123" };
 var getTokenId = function() { return "1234123412341234"};
+
+var serialport = require("serialport");
+var SerialPort = serialport.SerialPort;
+var tty = new SerialPort("/dev/ttyO1", { 
+    // Emit data events on newline chars
+    parser: serialport.parsers.readline("\n")
+});
     
-var options = {
-    host: 'dinty.local',
-    port: 3000,
+var postOptions = {
+    host: cloudHost,
+    port: cloudPort,
     path: '/heartbeats',
     method: 'POST',
     headers: { 'content-type': 'application/json'}
 }
-    
-var req = http.request(options, function(res) {
-  console.log('STATUS: ' + res.statusCode);
-  console.log('HEADERS: ' + JSON.stringify(res.headers));
-  res.setEncoding('utf8');
-  res.on('data', function (chunk) {
-    console.log('BODY: ' + chunk);
-  });
-}); 
 
-req.on('error', function(e) {
-  console.log('problem with request: ' + e.message);
-});
+
+var firehose = function(){
+    var hb_req = http.request(postOptions, function(res) {
+        res.setEncoding('utf8');
+        res.on('data', function (chunk) {
+            console.log('oops, got a body: '+chunk);
+        });
+    }); 
+    hb_req.on('error', function(e) {
+        console.log('problem with request: ' + e.message);
+        // wait 2 seconds and retry
+        firehose();
+    });
+    hb_req.on('close', function() {
+        firehose();
+    });
+    hb_req.on('end', function() {
+        firehose();
+    });
+    hb_req.on('socket',function(){
+        // Start reading from serial when the connection is up
+        tty.on("data", function (data) {
+            if (isJSON(data)) {
+                if (hb_req.connection.writable) {
+                    hb_req.write(wrapMsg(JSON.parse(data)));
+                } else {
+                    console.log('connection down');
+                }
+            }
+        });
+    });
+}
+firehose();
+
 
 var wrapMsg = function(chunk) {
-    // var parsedchunk = JSON.parse(chunk);
     var nm = { "NODE_ID" : getNodeId(), "TOKEN" : getTokenId(), "DEVICE" : chunk.DEVICE }
     for (var x=0; x<nm.DEVICE.length; x++) {
         nm.DEVICE[x].G = nm.NODE_ID+'-'+nm.DEVICE[x].G;
@@ -38,24 +71,70 @@ var wrapMsg = function(chunk) {
     return JSON.stringify(nm);    
 };
 
-var serialport = require("serialport");
-var SerialPort = serialport.SerialPort;
-var tty = new SerialPort("/dev/ttyO1", { 
-    parser: serialport.parsers.readline("\n")
+
+var options = {
+    host: cloudHost,
+    port: cloudPort,
+    path: '/commands',
+    method: 'GET'
+}
+
+http.get(options, function (http_res) {
+    http_res.on("data", function (chunk) {
+        var p = JSON.parse(chunk);  
+        var command = { "DEVICE": [{
+            "G":"NIL", "V":0, "D":1000, "DA":p.payload
+        }]} 
+        console.log(JSON.stringify(command));
+        tty.write(JSON.stringify(command));
+    });
+    http_res.on("end", function () {
+
+    });
 });
 
-// Event triggered on each \n from serial port
-tty.on("data", function (data) {
-    try {
-        
-        req.write(wrapMsg(JSON.parse(data)));
-    } catch (err) {
-        console.log(err);
-    }
-});
 
-// Write to serial port 
-// tty.write("Payload here\r");
+var options = {
+    host: cloudHost,
+    port: cloudPort,
+    path: '/commands',
+    method: 'GET'
+}
+
+var isJSON = function(data) { 
+    try { JSON.parse(data) } catch (e) { return false } return true
+}
+
+var longpoll = function(){
+    http.get(options, function (http_res) {
+        http_res.on("data", function (chunk) {
+            if (isJSON(chunk)) {
+                color = JSON.parse(chunk).payload;
+                console.log("Changing color to "+color);
+                tty.write('{"DEVICE": [{"G": "NIL","V": 0,"D": 1000,"DA": "'+color+'"}]}')
+            } else {
+                // Uncomment for server error
+                // console.log(chunk.toString());  
+            }
+        });
+        http_res.on("end", function () {
+            longpoll();
+        });
+        http_res.on("close", function () {
+            longpoll();
+        });
+        http_res.on("error", function () {
+            longpoll();
+        });
+
+    }).on('error',function(err){
+        console.log('there was an error: '+err);
+        setTimeout(longpoll,2000)
+    });
+}
+
+longpoll();
+
 
 var fakeTTY = function(e) { 
     fs.readFile('/Users/pete/work/ninj/tmp/sample_cape_json.txt', 'utf8', function(err,data){
