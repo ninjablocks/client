@@ -7,17 +7,24 @@ var sutil = require('./lib/client-utils');
 var serialport = require("serialport");
 var SerialPort = serialport.SerialPort;
 
+// base config for beagle
 var config =  {
-    // cloudHost: 'ninj.herokuapp.com',
-    // cloudPort: 80,
-    // devtty: "/dev/ttyO1",
-    // devtty: "/home/ubuntu/client/serialnumber",
-    cloudHost : 'localhost',
-    cloudPort : 3000,
-    devtty    : "/dev/tty.usbserial-AE01AAE3",
-    serialfile: "/Users/pete/work/ninj/client/serialnumber",
+    cloudHost: 'ninj.herokuapp.com',
+    cloudPort: 80,
+    devtty: "/dev/ttyO1",
+    serialfile: "/home/ubuntu/client/serialnumber",
     heartbeat_interval: 500 
 }    
+// commandline config
+if (process.argv[2] == 'local') {
+    config.cloudHost = 'localhost';
+    config.cloudPort = '3000';
+}
+if (process.argv[3] == 'fddi') {
+    config.devtty = "/dev/tty.usbserial-AE01AAE3";
+    config.serialfile = "/Users/pete/work/ninj/client/serialnumber";
+}
+console.log(config);
 
 var tty = new SerialPort(config.devtty, { 
     parser: serialport.parsers.readline("\n")
@@ -25,7 +32,11 @@ var tty = new SerialPort(config.devtty, {
 
 var nodedetails = {}
 fs.readFile(config.serialfile,'ascii',function(err,data){
-    nodedetails["id"] = data.replace(/\n/g,"")
+    nodedetails["id"] = data.replace(/\n/g,"");
+    // Set here because of a race condition
+    cmdOptions.path += nodedetails.id;
+    console.log(cmdOptions);
+    longpoll()
 })
 nodedetails["token"] = "1234123412341234"; // TODO
 
@@ -65,10 +76,9 @@ var longPost = function(){
     var request = http.request(postOptions, function(res) {
         res.setEncoding('utf8');
         res.on('data', function (chunk) {
-            console.log('Received a body: '+chunk);
+            console.log('LongPost received a body: '+chunk);
         });
         res.on('end', function(){
-            console.log('end: ');
             setTimeout(longPost,100);
         })
     });
@@ -81,23 +91,23 @@ var longPost = function(){
         request.end();
     },120000)
     // console.log('connection');
-    request.on('error', function(){
-        console.log('error: ');
+    request.on('error', function(e){
+        console.log('Longpost Error: '+e);
         setTimeout(longPost,1000);
     });
 }
 longPost();
 
-var options = {
+var cmdOptions = {
     host: config.cloudHost,
     port: config.cloudPort,
-    path: '/commands',
+    path: '/commands/',
     method: 'GET'
 }
 var longpoll = function(){
-    http.get(options, function (http_res) {
+    http.get(cmdOptions, function (http_res) {
         http_res.on("data", function (data) {
-            command(data);
+            executeCommand(data);
         });
         http_res.on("end", function () {
             longpoll();
@@ -106,25 +116,27 @@ var longpoll = function(){
             longpoll();
         });
         http_res.on("error", function () {
-            longpoll();
+            setTimeout(longpoll,5000)
         });
 
     }).on('error',function(err){
-        console.log('there was an error: '+err);
+        console.log('Error in longpoll request: '+err);
         setTimeout(longpoll,5000)
     });
 }
-longpoll();
 
-var command = function(data){
-    // Bodgy handle colour only 
-    j = sutil.getJSON(data);
-    if (j) {
-        console.log('change color to: '+j.payload);
-        sutil.rgb(tty,j.payload);
+var executeCommand = function(data){
+    var ds = sutil.getJSON(data).DEVICE;
+    if (ds && ds.length>0) {
+        for (d in ds) {
+            delete ds[d].GUID;
+            if (ds[d].G == 0 ) ds[d].G = ''; //TODO get JP to fix for 0
+            sutil.writeTTY(tty,'{"DEVICE":['+JSON.stringify(ds[d])+']}');
+        }
+    } else {
+        console.log(data.toString());
     }
 }
-
 
 process.on('uncaughtException', function (err) {
   console.log('Caught exception: ' + util.inspect(err,null,true,true));
