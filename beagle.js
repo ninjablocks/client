@@ -12,7 +12,7 @@ var config =  {
     cloudHost: 'ninj.herokuapp.com',
     cloudPort: 80,
     devtty: "/dev/ttyO1",
-    serialfile: "/home/ubuntu/client/serialnumber",
+    serialfile: "/utilities/etc/serial.conf",
     heartbeat_interval: 500
 }    
 // commandline config
