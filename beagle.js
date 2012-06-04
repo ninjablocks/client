@@ -13,7 +13,7 @@ var config =  {
     cloudPort: 80,
     devtty: "/dev/ttyO1",
     serialfile: "/home/ubuntu/client/serialnumber",
-    heartbeat_interval: 500 
+    heartbeat_interval: 500
 }    
 // commandline config
 if (process.argv[2] == 'local') {
@@ -42,6 +42,7 @@ nodedetails["token"] = "1234123412341234"; // TODO
 
 var readings = {};
 tty.on('data',function(data){
+    // console.log(data); // the almost raw serial data
     var nm = sutil.getJSON(data) || false;
     if (nm) {
         // only keep latest reading per device between heartbeats
@@ -60,9 +61,9 @@ var getHeartbeat = function(){
     hb.TIMESTAMP = new Date().getTime();
     for (r in readings) {
         hb.DEVICE.unshift(readings[r]);
+        delete readings[r];
     }
-    // console.log(JSON.stringify(hb));
-    return JSON.stringify(hb);
+    return JSON.stringify(hb);        
 }
 
 var postOptions = {
@@ -71,6 +72,20 @@ var postOptions = {
     path: '/heartbeats',
     method: 'POST',
     headers: { 'content-type': 'application/json'} 
+}
+var emptyBeats = 0;
+var beatThrottle = {
+    isGoodToGo : function() {
+        if (!sutil.isEmpty(readings) || beatThrottle.counter>beatThrottle.rate) {
+            beatThrottle.counter = 0;
+            return true;
+        } else {
+            beatThrottle.counter++;
+            return false;
+        }
+    },
+    rate : 10000/config.heartbeat_interval,
+    counter: 0
 }
 var longPost = function(){
     var request = http.request(postOptions, function(res) {
@@ -83,7 +98,11 @@ var longPost = function(){
         })
     });
     var sendBeats = setInterval(function(){
-        request.write(getHeartbeat());
+        // Only send empty heartbeats every 10s
+        // TODO reduce frequency of identical heartbeats
+        if (beatThrottle.isGoodToGo()) {
+            request.write(getHeartbeat());
+        } 
     },config.heartbeat_interval);
     setTimeout(function(){
         // restart connection after 120s
@@ -139,5 +158,5 @@ var executeCommand = function(data){
 }
 
 process.on('uncaughtException', function (err) {
-  console.log('Caught exception: ' + util.inspect(err,null,true,true));
+  // console.log('Caught Uncaught Exception: ' + util.inspect(err,null,true,true));
 });
