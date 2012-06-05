@@ -17,10 +17,10 @@ var config =  {
 }    
 // commandline config
 if (process.argv[2] == 'local') {
-    config.cloudHost = 'localhost';
+    config.cloudHost = '10.10.0.65';
     config.cloudPort = '3000';
 }
-if (process.argv[3] == 'fddi') {
+if (process.argv[3] == 'ftdi') {
     config.devtty = "/dev/tty.usbserial-AE01AAE3";
     config.serialfile = "/Users/pete/work/ninj/client/serialnumber";
 }
@@ -149,7 +149,7 @@ var executeCommand = function(data){
     if (ds && ds.length>0) {
         for (d in ds) {
             delete ds[d].GUID;
-            if (ds[d].G == 0 ) ds[d].G = ''; //TODO get JP to fix for 0
+            ds[d].G = ds[d].G.toString(); //TODO get JP to fix for 0
             sutil.writeTTY(tty,'{"DEVICE":['+JSON.stringify(ds[d])+']}');
         }
     } else {
