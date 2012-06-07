@@ -17,12 +17,12 @@ var config =  {
 }    
 // commandline config
 if (process.argv[2] == 'local') {
-    config.cloudHost = '10.10.0.65';
-    config.cloudPort = '3000';
+    config.cloudHost = 'localhost';
+    config.cloudPort = '3001';
 }
 if (process.argv[3] == 'ftdi') {
     config.devtty = "/dev/tty.usbserial-AE01AAE3";
-    config.serialfile = "/Users/pete/work/ninj/client/serialnumber";
+    config.serialfile = "/Users/danfriedman/Code/ninjablocks/client/serialnumber";
 }
 console.log(config);
 
@@ -42,7 +42,7 @@ nodedetails["token"] = "1234123412341234"; // TODO
 
 var readings = {};
 tty.on('data',function(data){
-    // console.log(data); // the almost raw serial data
+     //console.log(data); // the almost raw serial data
     var nm = sutil.getJSON(data) || false;
     if (nm) {
         // only keep latest reading per device between heartbeats
@@ -66,14 +66,44 @@ var getHeartbeat = function(){
     return JSON.stringify(hb);        
 }
 
-var postOptions = {
-    host: config.cloudHost,
-    port: config.cloudPort,
-    path: '/heartbeats',
-    method: 'POST',
-    headers: { 'content-type': 'application/json'} 
-}
+
+/*
+*   Sending Data
+*/
+var net = require('net');
+
+var stream = net.createConnection(config.cloudPort, config.cloudHost);
+
+stream.on('error', function (err) {
+    if (err.code === 'ECONNREFUSED' || err.code === 'ENOENT') {
+        console.log("Connection refused, retrying...")        
+        setTimeout(function () {
+            stream.connect(config.cloudPort,config.cloudHost);
+        }, 1000);
+    }
+});
+
+stream.on('end', function () {
+    console.log('Reconnecting...');
+    setTimeout(function () {
+        stream.connect(config.cloudPort,config.cloudHost);
+    }, 1000);
+});
+
+stream.on('connect',function(socket) {
+    console.log('Connected')
+    setInterval(function(){
+        // Only send empty heartbeats every 10s
+        // TODO reduce frequency of identical heartbeats
+        if (beatThrottle.isGoodToGo()) {
+            stream.write(getHeartbeat()+'\n');
+        } 
+    },config.heartbeat_interval);
+});
+
+
 var emptyBeats = 0;
+
 var beatThrottle = {
     isGoodToGo : function() {
         if (!sutil.isEmpty(readings) || beatThrottle.counter>beatThrottle.rate) {
@@ -86,7 +116,8 @@ var beatThrottle = {
     },
     rate : 10000/config.heartbeat_interval,
     counter: 0
-}
+};
+/*
 var longPost = function(){
     var request = http.request(postOptions, function(res) {
         res.setEncoding('utf8');
@@ -104,6 +135,7 @@ var longPost = function(){
             request.write(getHeartbeat());
         } 
     },config.heartbeat_interval);
+
     setTimeout(function(){
         // restart connection after 120s
         clearInterval(sendBeats);
@@ -116,7 +148,10 @@ var longPost = function(){
     });
 }
 longPost();
-
+*/
+/*
+*   Receiving Data
+*/
 var cmdOptions = {
     host: config.cloudHost,
     port: config.cloudPort,
