@@ -9,36 +9,41 @@ var SerialPort = serialport.SerialPort;
 
 // base config for beagle
 var config =  {
+    dojoHost: '',
+    dojoPort:3000,
     cloudHost: 'ninj.herokuapp.com',
     cloudPort: 80,
     devtty: "/dev/ttyO1",
-    serialfile: "/utilities/etc/serial.conf",
+    serialFile: "/utilities/etc/serial.conf",
+    tokenFile: "/utilities/etc/token.conf",
     heartbeat_interval: 500
 }    
-// commandline config
+// commandline config overwrites
 if (process.argv[2] == 'local') {
+    config.dojoHost = 'localhost';
+    config.dojoPort = '3001';
     config.cloudHost = 'localhost';
-    config.cloudPort = '3001';
+    config.cloudPort = 3000;
 }
 if (process.argv[3] == 'ftdi') {
     config.devtty = "/dev/tty.usbserial-AE01AAE3";
-    config.serialfile = "/Users/danfriedman/Code/ninjablocks/client/serialnumber";
+    config.serialFile = __dirname+"/serialnumber";
+    config.tokenFile = __dirname+"/token";
+
 }
 console.log(config);
+
+/*
+*   Serial Port Stuff
+*/
 
 var tty = new SerialPort(config.devtty, { 
     parser: serialport.parsers.readline("\n")
 });
 
 var nodedetails = {}
-fs.readFile(config.serialfile,'ascii',function(err,data){
-    nodedetails["id"] = data.replace(/\n/g,"");
-    // Set here because of a race condition
-    cmdOptions.path += nodedetails.id;
-    console.log(cmdOptions);
-    longpoll()
-})
-nodedetails["token"] = "1234123412341234"; // TODO
+nodedetails["id"] = fs.readFileSync(config.serialFile).toString(); // TODO
+nodedetails["token"] = fs.readFileSync(config.tokenFile).toString(); // TODO
 
 var readings = {};
 tty.on('data',function(data){
@@ -54,10 +59,12 @@ tty.on('data',function(data){
 });
 
 var getHeartbeat = function(){
-    hb = {  "NODE_ID":nodedetails.id,
-            "TOKEN": nodedetails.token,
-            "TIMESTAMP": null,
-            "DEVICE":[] }
+    var hb = {  
+        "NODE_ID":nodedetails.id,
+        "TOKEN": nodedetails.token,
+        "TIMESTAMP": null,
+        "DEVICE":[] 
+    };
     hb.TIMESTAMP = new Date().getTime();
     for (r in readings) {
         hb.DEVICE.unshift(readings[r]);
@@ -71,22 +78,23 @@ var getHeartbeat = function(){
 *   Sending Data
 */
 var net = require('net');
-
-var stream = net.createConnection(config.cloudPort, config.cloudHost);
-
+var stream = net.createConnection(config.dojoPort, config.dojoHost);
 stream.on('error', function (err) {
+    clearInterval(sendIv);
     if (err.code === 'ECONNREFUSED' || err.code === 'ENOENT') {
         console.log("Connection refused, retrying...")        
         setTimeout(function () {
-            stream.connect(config.cloudPort,config.cloudHost);
+            stream.connect(config.dojoPort,config.dojoHost);
         }, 1000);
     }
 });
 
 stream.on('end', function () {
+    clearInterval(sendIv);
     console.log('Reconnecting...');
     setTimeout(function () {
-        stream.connect(config.cloudPort,config.cloudHost);
+        stream.connect(config.dojoPort,config.dojoHost);
+
     }, 1000);
 });
 var sendIv = 0;
@@ -97,12 +105,11 @@ stream.on('connect',function(socket) {
         // Only send empty heartbeats every 10s
         // TODO reduce frequency of identical heartbeats
         if (beatThrottle.isGoodToGo()) {
-            stream.write(getHeartbeat()+'\n');
-            console.log(getHeartbeat());
+            var heartBeart = getHeartbeat();
+            stream.write(heartBeart+'\n');
         } 
     },config.heartbeat_interval);
 });
-
 
 var emptyBeats = 0;
 
@@ -157,7 +164,7 @@ longPost();
 var cmdOptions = {
     host: config.cloudHost,
     port: config.cloudPort,
-    path: '/commands/',
+    path: '/commands/'+nodedetails.id,
     method: 'GET'
 }
 var longpoll = function(){
@@ -193,7 +200,9 @@ var executeCommand = function(data){
         console.log(data.toString());
     }
 }
-
+longpoll();
+/*
 process.on('uncaughtException', function (err) {
   // console.log('Caught Uncaught Exception: ' + util.inspect(err,null,true,true));
 });
+*/
