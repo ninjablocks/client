@@ -89,14 +89,16 @@ stream.on('end', function () {
         stream.connect(config.cloudPort,config.cloudHost);
     }, 1000);
 });
-
+var sendIv = 0;
 stream.on('connect',function(socket) {
     console.log('Connected')
-    setInterval(function(){
+    clearInterval(sendIv);
+    sendIv = setInterval(function(){
         // Only send empty heartbeats every 10s
         // TODO reduce frequency of identical heartbeats
         if (beatThrottle.isGoodToGo()) {
             stream.write(getHeartbeat()+'\n');
+            console.log(getHeartbeat());
         } 
     },config.heartbeat_interval);
 });
