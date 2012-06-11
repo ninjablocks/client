@@ -42,8 +42,8 @@ var tty = new SerialPort(config.devtty, {
 });
 
 var nodedetails = {}
-nodedetails["id"] = fs.readFileSync(config.serialFile).toString().replace(/\n/''); // TODO
-nodedetails["token"] = fs.readFileSync(config.tokenFile).toString().replace(/\n/''); // TODO
+nodedetails["id"] = fs.readFileSync(config.serialFile).toString().replace(/\n/g,''); // TODO
+nodedetails["token"] = fs.readFileSync(config.tokenFile).toString().replace(/\n/g,''); // TODO
 
 var readings = {};
 tty.on('data',function(data){
