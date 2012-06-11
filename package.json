@@ -1,4 +1,8 @@
 { "name": "beagle-client",
   "version": "0.0.1",
-  "dependencies": { "serialport" : ">= 0.0.0" }
+  "dependencies": { 
+  	"serialport" : "latest",
+  	"socket.io" : "latest",
+  	"socket.io-client" : "latest"
+  }
 }

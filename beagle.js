@@ -1,11 +1,10 @@
-var http = require('http');
-var fs = require('fs');
-var util = require('util');
-// var qs = require('querystring');
-// var child = require('child_process');
-var sutil = require('./lib/client-utils');
-var serialport = require("serialport");
-var SerialPort = serialport.SerialPort;
+var fs = require('fs'),
+    util = require('util'),
+    http = require('http'),
+    io = require('socket.io-client'),
+    sutil = require('./lib/client-utils'),
+    serialport = require('serialport'),
+    SerialPort = serialport.SerialPort;
 
 // base config for beagle
 var config =  {
@@ -17,7 +16,7 @@ var config =  {
     serialFile: "/utilities/etc/serial.conf",
     tokenFile: "/utilities/etc/token.conf",
     heartbeat_interval: 500
-}    
+}
 // commandline config overwrites
 if (process.argv[2] == 'local') {
     config.dojoHost = 'localhost';
@@ -73,10 +72,58 @@ var getHeartbeat = function(){
     return JSON.stringify(hb);        
 }
 
+var socket = io.connect(config.dojoHost,{port:config.dojoPort});
+var sendIv;
+
+socket.on('connect', function () {
+    console.log("Connected");
+    clearInterval(sendIv);
+    sendIv = setInterval(function(){
+        if (beatThrottle.isGoodToGo()) {
+            socket.send(getHeartbeat());
+        } 
+    },config.heartbeat_interval);
+});
+socket.on('disconnect', function () {
+    // socket disconnected
+    setTimeout(function () {
+        socket = io.connect(config.dojoHost);
+    }, 1000);
+});
+socket.on('connect_failed', function () {
+    // socket cannot reconnect. Keep trying
+    setTimeout(function () {
+        socket = io.connect(config.dojoHost);
+    }, 1000);
+});
+
+var emptyBeats = 0;
+
+var beatThrottle = {
+    isGoodToGo : function() {
+        if (!sutil.isEmpty(readings) || beatThrottle.counter>beatThrottle.rate) {
+            beatThrottle.counter = 0;
+            return true;
+        } else {
+            beatThrottle.counter++;
+            return false;
+        }
+    },
+    rate : 10000/config.heartbeat_interval,
+    counter: 0
+};
+
+/*
+socket.on('custom event', function () {
+  // server emitted a custom event
+});
+*/
+
 
 /*
 *   Sending Data
 */
+/* Socket Data
 var net = require('net');
 var stream = net.createConnection(config.dojoPort, config.dojoHost);
 stream.on('error', function (err) {
@@ -111,52 +158,6 @@ stream.on('connect',function(socket) {
     },config.heartbeat_interval);
 });
 
-var emptyBeats = 0;
-
-var beatThrottle = {
-    isGoodToGo : function() {
-        if (!sutil.isEmpty(readings) || beatThrottle.counter>beatThrottle.rate) {
-            beatThrottle.counter = 0;
-            return true;
-        } else {
-            beatThrottle.counter++;
-            return false;
-        }
-    },
-    rate : 10000/config.heartbeat_interval,
-    counter: 0
-};
-/*
-var longPost = function(){
-    var request = http.request(postOptions, function(res) {
-        res.setEncoding('utf8');
-        res.on('data', function (chunk) {
-            console.log('LongPost received a body: '+chunk);
-        });
-        res.on('end', function(){
-            setTimeout(longPost,100);
-        })
-    });
-    var sendBeats = setInterval(function(){
-        // Only send empty heartbeats every 10s
-        // TODO reduce frequency of identical heartbeats
-        if (beatThrottle.isGoodToGo()) {
-            request.write(getHeartbeat());
-        } 
-    },config.heartbeat_interval);
-
-    setTimeout(function(){
-        // restart connection after 120s
-        clearInterval(sendBeats);
-        request.end();
-    },120000)
-    // console.log('connection');
-    request.on('error', function(e){
-        console.log('Longpost Error: '+e);
-        setTimeout(longPost,1000);
-    });
-}
-longPost();
 */
 /*
 *   Receiving Data
