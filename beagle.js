@@ -8,7 +8,7 @@ var fs = require('fs'),
 
 // base config for beagle
 var config =  {
-    dojoHost: '',
+    dojoHost: 'ninjdojo.herokuapp.com',
     dojoPort:3000,
     cloudHost: 'ninj.herokuapp.com',
     cloudPort: 80,
@@ -72,7 +72,7 @@ var getHeartbeat = function(){
     return JSON.stringify(hb);        
 }
 
-var socket = io.connect(config.dojoHost,{port:config.dojoPort});
+var socket = io.connect(config.dojoHost);
 var sendIv;
 
 socket.on('connect', function () {
@@ -84,6 +84,7 @@ socket.on('connect', function () {
         } 
     },config.heartbeat_interval);
 });
+/*
 socket.on('disconnect', function () {
     // socket disconnected
     setTimeout(function () {
@@ -96,7 +97,7 @@ socket.on('connect_failed', function () {
         socket = io.connect(config.dojoHost);
     }, 1000);
 });
-
+*/
 var emptyBeats = 0;
 
 var beatThrottle = {
