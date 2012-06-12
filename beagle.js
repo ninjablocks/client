@@ -149,7 +149,8 @@ var activatedState = function() {
     });
     socket.on('connect', function () {
         console.log("Connected");
-        changeLEDColor('green');
+        sendingData=true;
+        setStateToOK();
         clearInterval(sendIv);
         sendIv = setInterval(function(){
             if (beatThrottle.isGoodToGo()) {
@@ -158,12 +159,21 @@ var activatedState = function() {
         },config.heartbeat_interval);
     });
 
+    socket.on('error',function() {
+        setTimeout(function () {
+            socket = io.connect(config.dojoHost);
+        }, 1000);
+        sendingData=false;
+        setStateToError();
+    });
+
     socket.on('disconnect', function () {
         // socket disconnected
         setTimeout(function () {
             socket = io.connect(config.dojoHost);
         }, 1000);
-        changeLEDColor('red');
+        sendingData=false;
+        setStateToError();
     });
     /*
     socket.on('connect_failed', function () {
@@ -203,6 +213,8 @@ var activatedState = function() {
         if (longPollConn.end) longPollConn.end();
         longPollConn = http.get(cmdOptions, function (http_res) {
             http_res.on("data", function (data) {
+                receivingData=true;
+                setStateToOK();
                 executeCommand(data);
             });
             http_res.on("end", function () {
@@ -217,7 +229,9 @@ var activatedState = function() {
 
         }).on('error',function(err){
             console.log('Error in longpoll request: '+err);
-            setTimeout(longpoll,5000)
+            setTimeout(longpoll,5000);
+            receivingData=false;
+            setStateToError();
         });
     }
 
@@ -236,6 +250,21 @@ var activatedState = function() {
     longpoll();
 };
 // main() -- basically
+var sendingData = false;
+var receivingData = false;
+var currentState = 'error';
+var setStateToOK = function() {
+    if (sendingData && receivingData && currentState!=='ok') {
+        changeLEDColor('green');
+        currentState="ok";
+    }
+};
+
+var setStateToError = function() {
+    currentState='error';
+    changeLEDColor('red');
+};
+
 (function() {
     nodedetails["id"] = fs.readFileSync(config.serialFile).toString().replace(/\n/g,''); // TODO
 
