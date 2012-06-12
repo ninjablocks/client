@@ -93,6 +93,12 @@ var changeLEDColor = function(color) {
         case 'green':
             var hex = '00FF00';
         break;
+        case 'red':
+            var hex = 'FF0000';
+        break;
+        case 'cyan':
+            var hex = '00FFFF';
+        break;
         default:
             var hex = '000000';
         break;
@@ -102,7 +108,7 @@ var changeLEDColor = function(color) {
 
 var activatedState = function() {
     console.log("Entered activated state");
-    changeLEDColor('green');
+    
     var readings = {};
     tty.on('data',function(data){
          //console.log(data); // the almost raw serial data
@@ -139,10 +145,11 @@ var activatedState = function() {
 
     var sendIv;
     socket.on('connecting',function(transport){
-        console.log("Connecting via "+transport);
+        changeLEDColor('cyan');
     });
     socket.on('connect', function () {
         console.log("Connected");
+        changeLEDColor('green');
         clearInterval(sendIv);
         sendIv = setInterval(function(){
             if (beatThrottle.isGoodToGo()) {
@@ -156,6 +163,7 @@ var activatedState = function() {
         setTimeout(function () {
             socket = io.connect(config.dojoHost);
         }, 1000);
+        changeLEDColor('red');
     });
     /*
     socket.on('connect_failed', function () {
