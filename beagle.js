@@ -32,12 +32,15 @@ if (process.argv[3] == 'ftdi') {
     config.tokenFile = __dirname+"/token";
 }
 console.log(config);
-
+var tty = new SerialPort(config.devtty, { 
+    parser: serialport.parsers.readline("\n")
+});
 /*
 *   Serial Port Stuff
 */
 var activationRequiredState = function() {
     console.log("Entered activated requried state");
+    changeLEDColor('purple');
     var cmdOptions = {
         host: config.cloudHost,
         port: config.cloudPort,
@@ -82,12 +85,25 @@ var activationRequiredState = function() {
     longpoll();
 };
 
+var changeLEDColor = function(color) {
+    switch (color) {
+        case 'purple':
+            var hex = 'FF00FF';
+        break;
+        case 'green':
+            var hex = '00FF00';
+        break;
+        default:
+            var hex = '000000';
+        break;
+    }
+    sutil.writeTTY(tty,'{"DEVICE":[{"G":"0","V":0,"D":1000,"DA":"'+hex+'"}]}');
+}
+
 var activatedState = function() {
     console.log("Entered activated state");
+    changeLEDColor('green');
     var readings = {};
-    var tty = new SerialPort(config.devtty, { 
-        parser: serialport.parsers.readline("\n")
-    });
     tty.on('data',function(data){
          //console.log(data); // the almost raw serial data
         var nm = sutil.getJSON(data) || false;
