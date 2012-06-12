@@ -8,8 +8,8 @@ var fs = require('fs'),
 
 // base config for beagle
 var config =  {
-    dojoHost: 'ninjdojo.herokuapp.com',
-    dojoPort:3000,
+    dojoHost: 'http://ninjdojo.herokuapp.com',
+    dojoPort:80,
     cloudHost: 'ninj.herokuapp.com',
     cloudPort: 80,
     devtty: "/dev/ttyO1",
@@ -19,9 +19,9 @@ var config =  {
 }
 // commandline config overwrites
 if (process.argv[2] == 'local') {
-    config.dojoHost = 'localhost';
+    config.dojoHost = '10.10.0.35';
     config.dojoPort = '3001';
-    config.cloudHost = 'localhost';
+    config.cloudHost = '10.10.0.35';
     config.cloudPort = 3000;
 }
 if (process.argv[3] == 'ftdi') {
@@ -71,10 +71,17 @@ var getHeartbeat = function(){
     }
     return JSON.stringify(hb);        
 }
+var ioOpts = {
+    'port':config.dojoPort,
+    'transports':['xhr-polling'],
+    'try multiple transports':false
+};
+var socket = io.connect(config.dojoHost,ioOpts);
 
-var socket = io.connect(config.dojoHost);
 var sendIv;
-
+socket.on('connecting',function(transport){
+    console.log("Connecting via "+transport);
+});
 socket.on('connect', function () {
     console.log("Connected");
     clearInterval(sendIv);
@@ -84,14 +91,17 @@ socket.on('connect', function () {
         } 
     },config.heartbeat_interval);
 });
-/*
+
 socket.on('disconnect', function () {
     // socket disconnected
-    setTimeout(function () {
-        socket = io.connect(config.dojoHost);
-    }, 1000);
+   console.log('disconnected');
+     //setTimeout(function () {
+     //   socket = io.connect(config.dojoHost);
+   // }, 1000);
 });
+/*
 socket.on('connect_failed', function () {
+
     // socket cannot reconnect. Keep trying
     setTimeout(function () {
         socket = io.connect(config.dojoHost);
@@ -169,7 +179,9 @@ var cmdOptions = {
     path: '/commands/'+nodedetails.id,
     method: 'GET'
 }
+var longPollConn={};
 var longpoll = function(){
+    if (longPollConn.end) longPollConn.end();
     http.get(cmdOptions, function (http_res) {
         http_res.on("data", function (data) {
             executeCommand(data);
