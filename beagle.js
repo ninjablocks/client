@@ -145,6 +145,7 @@ var activatedState = function() {
 
     var sendIv;
     socket.on('connecting',function(transport){
+        currentState="connecting";
         changeLEDColor('cyan');
     });
     socket.on('connect', function () {
@@ -252,7 +253,7 @@ var activatedState = function() {
 // main() -- basically
 var sendingData = false;
 var receivingData = false;
-var currentState = 'error';
+var currentState;
 var setStateToOK = function() {
     if (sendingData && receivingData && currentState!=='ok') {
         changeLEDColor('green');
