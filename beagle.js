@@ -237,6 +237,7 @@ var activatedState = function() {
     }
 
     var executeCommand = function(data){
+        if (data.welcome) return;
         var ds = sutil.getJSON(data).DEVICE;
         if (ds && ds.length>0) {
             for (d in ds) {
