@@ -36,22 +36,6 @@ var tty = new SerialPort(config.devtty, {
     parser: serialport.parsers.readline("\n")
 });
 
-
-
-
-var serialport = require('serialport'),
-    SerialPort = serialport.SerialPort;
-var tty = new SerialPort('/dev/ttyO1', { 
-    parser: serialport.parsers.readline("\n")
-});
-tty.on('data',function(data) {
-    console.log(data);
-});
-
-
-
-
-
 /*
 *   Serial Port Stuff
 */
@@ -120,7 +104,7 @@ var changeLEDColor = function(color) {
             var hex = '000000';
         break;
     }
-    sutil.writeTTY(tty,'{"DEVICE":[{"G":"0","V":0,"D":1000,"DA":"'+hex+'"}]}');
+    sutil.writeg(tty,'{"DEVICE":[{"G":"0","V":0,"D":1000,"DA":"'+hex+'"}]}');
 }
 
 var activatedState = function() {
