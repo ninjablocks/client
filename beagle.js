@@ -36,6 +36,10 @@ var tty = new SerialPort(config.devtty, {
     parser: serialport.parsers.readline("\n")
 });
 
+
+
+
+
 /*
 *   Serial Port Stuff
 */
@@ -104,7 +108,7 @@ var changeLEDColor = function(color) {
             var hex = '000000';
         break;
     }
-    sutil.writeg(tty,'{"DEVICE":[{"G":"0","V":0,"D":1000,"DA":"'+hex+'"}]}');
+    sutil.writeTTY(tty,'{"DEVICE":[{"G":"0","V":0,"D":1000,"DA":"'+hex+'"}]}');
 }
 
 var activatedState = function() {
