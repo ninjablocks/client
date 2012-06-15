@@ -21,12 +21,12 @@ var config =  {
 var nodedetails = {};
 // commandline config overwrites
 if (process.argv[2] == 'local') {
-    config.dojoHost = '10.10.0.35';
-    config.dojoPort = '3001';
-    config.cloudHost = '10.10.0.35';
+    config.dojoHost = process.argv[3];
+    config.dojoPort = 3001;
+    config.cloudHost = process.argv[3];
     config.cloudPort = 3000;
 }
-if (process.argv[3] == 'ftdi') {
+if (process.argv[4] == 'ftdi') {
     config.devtty = "/dev/tty.usbserial-AE01AAE3";
     config.serialFile = __dirname+"/serialnumber";
     config.tokenFile = __dirname+"/token";
@@ -35,6 +35,23 @@ console.log(config);
 var tty = new SerialPort(config.devtty, { 
     parser: serialport.parsers.readline("\n")
 });
+
+
+
+
+var serialport = require('serialport'),
+    SerialPort = serialport.SerialPort;
+var tty = new SerialPort('/dev/ttyO1', { 
+    parser: serialport.parsers.readline("\n")
+});
+tty.on('data',function(data) {
+    console.log(data);
+});
+
+
+
+
+
 /*
 *   Serial Port Stuff
 */
@@ -111,14 +128,20 @@ var activatedState = function() {
     
     var readings = {};
     tty.on('data',function(data){
-         //console.log(data); // the almost raw serial data
+        //console.log(data); // the almost raw serial data
         var nm = sutil.getJSON(data) || false;
         if (nm) {
-            // only keep latest reading per device between heartbeats
-            for (var x=0; x<nm.DEVICE.length; x++) {
-                nm.DEVICE[x].GUID = nodedetails.id+'_'+nm.DEVICE[x].G+'_'+nm.DEVICE[x].V+'_'+nm.DEVICE[x].D;
-                readings[nm.DEVICE[x].GUID] = nm.DEVICE[x];
+            try {
+                // only keep latest reading per device between heartbeats
+                for (var x=0; x<nm.DEVICE.length; x++) {
+                    nm.DEVICE[x].GUID = nodedetails.id+'_'+nm.DEVICE[x].G+'_'+nm.DEVICE[x].V+'_'+nm.DEVICE[x].D;
+                    readings[nm.DEVICE[x].GUID] = nm.DEVICE[x];
+                }
+            } catch(err) {
+                console.log(err);
+                console.log(nm);
             }
+            
         }
     });
 
