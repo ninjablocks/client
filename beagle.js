@@ -37,9 +37,6 @@ var tty = new SerialPort(config.devtty, {
 });
 
 
-
-
-
 /*
 *   Serial Port Stuff
 */
@@ -218,7 +215,10 @@ var activatedState = function() {
         host: config.cloudHost,
         port: config.cloudPort,
         path: '/commands/'+nodedetails.id,
-        method: 'GET'
+        method: 'GET',
+        headers: {
+            'X-Ninja-Token':nodedetails["token"]
+        }
     }
     var longPollConn={};
     var longpoll = function(){
@@ -248,8 +248,8 @@ var activatedState = function() {
     }
 
     var executeCommand = function(data){
-        if (data.welcome) return;
         var ds = sutil.getJSON(data).DEVICE;
+        if (ds.welcome) return;
         if (ds && ds.length>0) {
             for (d in ds) {
                 delete ds[d].GUID;
@@ -277,7 +277,28 @@ var setStateToError = function() {
     currentState='error';
     changeLEDColor('red');
 };
+/*
+var Inotify = require('inotify-plusplus'), // should be 'inotify++', but npm has issues with the ++
+    inotify,
+    directive,
+    options;
 
+inotify = Inotify.create(true); // stand-alone, persistent mode, runs until you hit ctrl+c
+directive = (function() {
+    // multiple events may fire at the same time
+    return {
+      create: function (ev) {
+        // Send the device added message to the server here
+        if(ev.name == 'v4l'){console.log(ev.name + " was added.");}
+      },
+      delete: function(ev) {
+        // Send the device removed message to teh server here 
+        if(ev.name == 'v4l'){console.log(ev.name + " was removed.");}
+      }
+    };
+}());
+inotify.watch(directive, '/dev/');
+*/
 (function() {
     nodedetails["id"] = fs.readFileSync(config.serialFile).toString().replace(/\n/g,''); // TODO
 
