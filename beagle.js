@@ -36,7 +36,6 @@ var tty = new SerialPort(config.devtty, {
     parser: serialport.parsers.readline("\n")
 });
 
-
 /*
 *   Serial Port Stuff
 */
@@ -110,25 +109,61 @@ var changeLEDColor = function(color) {
 
 var activatedState = function() {
     console.log("Entered activated state");
+
+    var deviceMeta = {
+        '0': {
+            '5': {
+                instant:true
+            }
+        }
+    };
     
     var readings = {};
     tty.on('data',function(data){
         //console.log(data); // the almost raw serial data
         var nm = sutil.getJSON(data) || false;
-        if (nm) {
-            try {
-                // only keep latest reading per device between heartbeats
-                for (var x=0; x<nm.DEVICE.length; x++) {
-                    nm.DEVICE[x].GUID = nodedetails.id+'_'+nm.DEVICE[x].G+'_'+nm.DEVICE[x].V+'_'+nm.DEVICE[x].D;
+        if (!nm) return;
+
+        try {
+            // only keep latest reading per device between heartbeats
+            for (var x=0; x<nm.DEVICE.length; x++) {
+                nm.DEVICE[x].GUID = nodedetails.id+'_'+nm.DEVICE[x].G+'_'+nm.DEVICE[x].V+'_'+nm.DEVICE[x].D;
+                
+                if (deviceMeta[nm.DEVICE[x].V]&&deviceMeta[nm.DEVICE[x].V][nm.DEVICE[x].D]) {
+                    var meta = deviceMeta[nm.DEVICE[x].V][nm.DEVICE[x].D];
+                    if (meta.instant) sendInstantData(nm.DEVICE[x]);
+                    else readings[nm.DEVICE[x].GUID] = nm.DEVICE[x];
+                } else {
                     readings[nm.DEVICE[x].GUID] = nm.DEVICE[x];
                 }
-            } catch(err) {
-                console.log(err);
-                console.log(nm);
             }
-            
-        }
+        } catch(err) {
+            console.log(err);
+            //console.log(nm);
+        } 
     });
+
+    var sendInstantData = function(deviceData) {
+        if (readings.hasOwnProperty(deviceData.GUID)&&readings[deviceData.GUID].DA!==deviceData.DA) {
+            var ev = {
+                "NODE_ID":nodedetails.id,
+                "TOKEN": nodedetails.token,
+                "TIMESTAMP": new Date().getTime(),
+                "DEVICE":[deviceData]
+            }
+            socket.send(JSON.stringify(ev));
+            var ev1 = {
+                "NODE_ID":nodedetails.id,
+                "TOKEN": nodedetails.token,
+                "TIMESTAMP": new Date().getTime(),
+                "DEVICE":[readings[deviceData.GUID]]
+            }
+            socket.send(JSON.stringify(ev1));
+
+            console.log(ev);
+        }
+        readings[deviceData.GUID]=deviceData;
+    };
 
     var getHeartbeat = function(){
         var hb = {  
