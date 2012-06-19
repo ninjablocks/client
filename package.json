@@ -2,7 +2,6 @@
   "version": "0.0.1",
   "dependencies": { 
   	"serialport" : "latest",
-  	"socket.io" : "latest",
   	"socket.io-client" : "latest"
   }
 }
