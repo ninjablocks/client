@@ -14,8 +14,8 @@ var config =  {
     cloudHost: 'ninj.herokuapp.com',
     cloudPort: 80,
     devtty: "/dev/ttyO1",
-    serialFile: "/utilities/etc/serial.conf",
-    tokenFile: "/utilities/etc/token.conf",
+    serialFile: "/etc/opt/ninja/serial.conf",
+    tokenFile: "/etc/opt/ninja/token.conf",
     heartbeat_interval: 500
 };
 var nodedetails = {};
