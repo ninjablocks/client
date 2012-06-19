@@ -145,20 +145,21 @@ var activatedState = function() {
 
     var sendInstantData = function(deviceData) {
         if (readings.hasOwnProperty(deviceData.GUID)&&readings[deviceData.GUID].DA!==deviceData.DA) {
-            var ev = {
+            var ev1 = {
                 "NODE_ID":nodedetails.id,
                 "TOKEN": nodedetails.token,
                 "TIMESTAMP": new Date().getTime(),
                 "DEVICE":[deviceData]
             }
-            socket.send(JSON.stringify(ev));
-            var ev1 = {
+            socket.send(JSON.stringify(ev1));
+            var ev = {
                 "NODE_ID":nodedetails.id,
                 "TOKEN": nodedetails.token,
                 "TIMESTAMP": new Date().getTime(),
                 "DEVICE":[readings[deviceData.GUID]]
             }
-            socket.send(JSON.stringify(ev1));
+            socket.send(JSON.stringify(ev));
+
 
             console.log(ev);
         }
@@ -284,7 +285,7 @@ var activatedState = function() {
 
     var executeCommand = function(data){
         var ds = sutil.getJSON(data).DEVICE;
-        if (ds.welcome) return;
+        if (ds && ds.welcome) return;
         if (ds && ds.length>0) {
             for (d in ds) {
                 delete ds[d].GUID;
