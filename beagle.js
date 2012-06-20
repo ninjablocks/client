@@ -127,6 +127,9 @@ var activatedState = function() {
         try {
             // only keep latest reading per device between heartbeats
             for (var x=0; x<nm.DEVICE.length; x++) {
+                // Log unknown device messages for JP
+                if (nm.DEVICE[x].D == 0) console.log("UNKNOWN DEVICE MSG: "+nm);
+                
                 nm.DEVICE[x].GUID = nodedetails.id+'_'+nm.DEVICE[x].G+'_'+nm.DEVICE[x].V+'_'+nm.DEVICE[x].D;
                 
                 if (deviceMeta[nm.DEVICE[x].V]&&deviceMeta[nm.DEVICE[x].V][nm.DEVICE[x].D]) {
