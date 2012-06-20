@@ -114,7 +114,14 @@ var activatedState = function() {
         '0': {
             '5': {
                 instant:true
+            },
+            '7': {
+                instant:true
+            },
+            '12': {
+                instant:true
             }
+
         }
     };
     
