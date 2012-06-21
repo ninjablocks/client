@@ -180,7 +180,6 @@ var activatedState = function() {
                     "DEVICE":[deviceData]
                 }
                 socket.send(JSON.stringify(newMsg));
-                console.log(newMsg);
             }
         }
         instantContainer[deviceData.GUID] = deviceData;
