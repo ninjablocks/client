@@ -118,62 +118,72 @@ var activatedState = function() {
             '7': {
                 instant:true
             },
-            '12': {
+            '10': {
                 instant:true
             }
-
         }
     };
     
     var readings = {};
-    tty.on('data',function(data){
-        //console.log(data); // the almost raw serial data
-        var nm = sutil.getJSON(data) || false;
-        if (!nm) return;
 
-        try {
-            // only keep latest reading per device between heartbeats
-            for (var x=0; x<nm.DEVICE.length; x++) {
-                // Log unknown device messages for JP
-                if (nm.DEVICE[x].D == 0) console.log("UNKNOWN DEVICE MSG: "+data);
-                
-                nm.DEVICE[x].GUID = nodedetails.id+'_'+nm.DEVICE[x].G+'_'+nm.DEVICE[x].V+'_'+nm.DEVICE[x].D;
-                
-                if (deviceMeta[nm.DEVICE[x].V]&&deviceMeta[nm.DEVICE[x].V][nm.DEVICE[x].D]) {
-                    var meta = deviceMeta[nm.DEVICE[x].V][nm.DEVICE[x].D];
-                    if (meta.instant) sendInstantData(nm.DEVICE[x]);
-                    else readings[nm.DEVICE[x].GUID] = nm.DEVICE[x];
-                } else {
-                    readings[nm.DEVICE[x].GUID] = nm.DEVICE[x];
-                }
-            }
-        } catch(err) {
-            console.log(err);
-            //console.log(nm);
-        } 
+    tty.on('data',function(data){
+        handleRawTtyData(data);
     });
 
-    var sendInstantData = function(deviceData) {
-        if (readings.hasOwnProperty(deviceData.GUID)&&readings[deviceData.GUID].DA!==deviceData.DA) {
-            var ev1 = {
-                "NODE_ID":nodedetails.id,
-                "TOKEN": nodedetails.token,
-                "TIMESTAMP": new Date().getTime(),
-                "DEVICE":[deviceData]
-            }
-            socket.send(JSON.stringify(ev1));
-            var ev = {
-                "NODE_ID":nodedetails.id,
-                "TOKEN": nodedetails.token,
-                "TIMESTAMP": new Date().getTime(),
-                "DEVICE":[readings[deviceData.GUID]]
-            }
-            socket.send(JSON.stringify(ev));
+    var handleRawTtyData = function(data) {
+        var jsonTtyData = sutil.getJSON(data) || false;
+        if (!jsonTtyData) return;
+        var deviceDataPoints = jsonTtyData.DEVICE;
+        if (!(deviceDataPoints instanceof Array)) return;
+        // only keep latest reading per device between heartbeats
+        for (var i=0; i<deviceDataPoints.length; i++) {
+            var device = deviceDataPoints[i];
+            // Log unknown device messages for JP
+            if (device.D == 0) console.log("UNKNOWN DEVICE MSG: "+data);
 
+            // Build the GUID
+            device.GUID = buildDeviceGuid(device);
 
-            console.log(ev);
+            // If we have meta data about the device, handle it.
+            if (deviceHasMetaData(device)) {
+                var meta = getDeviceMetaData(device);
+                if (meta.instant) trySendInstantData(device);
+            }
+
+            // Add the devices data to the heartbeat container
+            readings[deviceDataPoints[i].GUID] = deviceDataPoints[i];
         }
-        readings[deviceData.GUID]=deviceData;
+    };
+
+    var buildDeviceGuid = function(device) {
+        return nodedetails.id+'_'+device.G+'_'+device.V+'_'+device.D;
+    };
+
+    var deviceHasMetaData = function(device) {
+        return (deviceMeta[device.V]&&deviceMeta[device.V][device.D]);
+    };
+
+    var getDeviceMetaData = function(device) {
+        return deviceMeta[device.V][device.D];
+    };
+
+    var instantContainer = {};
+    var trySendInstantData = function(deviceData) {
+        if (instantContainer.hasOwnProperty(deviceData.GUID)) {
+            // We've got stuff
+            if (instantContainer[deviceData.GUID].DA!==deviceData.DA) {
+                // It's different
+                var newMsg = {
+                    "NODE_ID":nodedetails.id,
+                    "TOKEN": nodedetails.token,
+                    "TIMESTAMP": new Date().getTime(),
+                    "DEVICE":[deviceData]
+                }
+                socket.send(JSON.stringify(newMsg));
+                console.log(newMsg);
+            }
+        }
+        instantContainer[deviceData.GUID] = deviceData;
     };
 
     var getHeartbeat = function(){
@@ -186,8 +196,8 @@ var activatedState = function() {
         hb.TIMESTAMP = new Date().getTime();
         for (r in readings) {
             hb.DEVICE.unshift(readings[r]);
-            delete readings[r];
         }
+        readings={};
         return JSON.stringify(hb);        
     }
     var ioOpts = {
