@@ -2,6 +2,6 @@
   "version": "0.0.1",
   "dependencies": { 
   	"serialport" : "latest",
-  	"socket.io-client" : "latest"
+  	"socket.io-client" : "https://github.com/ninjablocks/socket.io-client/tarball/master"
   }
 }
