@@ -209,6 +209,7 @@ var activatedState = function() {
     var sendIv;
     socket.on('connecting',function(transport){
         currentState="connecting";
+        sendingData=false;
         changeLEDColor('cyan');
     });
     socket.on('connect', function () {
@@ -246,15 +247,14 @@ var activatedState = function() {
         sendingData=false;
         setStateToError();
     });
-    /*
     socket.on('connect_failed', function () {
-
+        sendingData=false;
+        setStateToError();
         // socket cannot reconnect. Keep trying
         setTimeout(function () {
             socket = io.connect(config.dojoHost);
         }, 1000);
     });
-    */
     var emptyBeats = 0;
 
     var beatThrottle = {
@@ -310,8 +310,9 @@ var activatedState = function() {
     }
 
     var executeCommand = function(data){
-        var ds = sutil.getJSON(data).DEVICE;
-        if (ds && ds.welcome) return;
+        var data = sutil.getJSON(data);
+        if (data && data.welcome) return;
+        var ds = data.DEVICE;
         if (ds && ds.length>0) {
             for (d in ds) {
                 delete ds[d].GUID;
