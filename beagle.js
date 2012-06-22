@@ -179,7 +179,7 @@ var activatedState = function() {
                     "TIMESTAMP": new Date().getTime(),
                     "DEVICE":[deviceData]
                 }
-                socket.send(JSON.stringify(newMsg));
+                socket.emit('data',JSON.stringify(newMsg));
             }
         }
         instantContainer[deviceData.GUID] = deviceData;
@@ -218,9 +218,16 @@ var activatedState = function() {
         clearInterval(sendIv);
         sendIv = setInterval(function(){
             if (beatThrottle.isGoodToGo()) {
-                socket.send(getHeartbeat());
+                socket.emit('heartbeat',getHeartbeat());
             } 
         },config.heartbeat_interval);
+    });
+
+    socket.on('invalidToken',function() {
+        // Delete token
+        fs.unlinkSync(config.tokenFile);
+        // Restart
+        process.exit(1);
     });
 
     socket.on('error',function() {
