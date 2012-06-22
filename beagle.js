@@ -100,6 +100,9 @@ var changeLEDColor = function(color) {
         case 'cyan':
             var hex = '00FFFF';
         break;
+        case 'yellow':
+            var hex = 'FFFF00';
+        break;
         default:
             var hex = '000000';
         break;
