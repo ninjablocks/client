@@ -1,3 +1,5 @@
+(function() {
+
 var fs = require('fs'),
     path = require('path'),
     util = require('util'),
@@ -328,7 +330,7 @@ var activatedState = function() {
     }
     longpoll();
 };
-// main() -- basically
+
 var sendingData = false;
 var receivingData = false;
 var currentState;
@@ -343,6 +345,19 @@ var setStateToError = function() {
     currentState='error';
     changeLEDColor('red');
 };
+
+// main() -- basically
+nodedetails["id"] = fs.readFileSync(config.serialFile).toString().replace(/\n/g,''); // TODO
+
+if (path.existsSync(config.tokenFile)) {
+    // We're good to go
+    nodedetails["token"] = fs.readFileSync(config.tokenFile).toString().replace(/\n/g,''); // TODO
+    activatedState();
+} else {
+    // Need to request a token
+    activationRequiredState();
+}
+
 /*
 var Inotify = require('inotify-plusplus'), // should be 'inotify++', but npm has issues with the ++
     inotify,
@@ -365,16 +380,5 @@ directive = (function() {
 }());
 inotify.watch(directive, '/dev/');
 */
-(function() {
-    nodedetails["id"] = fs.readFileSync(config.serialFile).toString().replace(/\n/g,''); // TODO
 
-    if (path.existsSync(config.tokenFile)) {
-        // We're good to go
-        nodedetails["token"] = fs.readFileSync(config.tokenFile).toString().replace(/\n/g,''); // TODO
-        activatedState();
-    }
-    else {
-        // Need to request a token
-        activationRequiredState();
-    }
 })();
