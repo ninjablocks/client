@@ -63,7 +63,6 @@ socket.on('whoareyou',function() {
         changeLEDColor('purple');
         socket.emit('notsure');
         socket.on('youare',function(token) {
-            console.log(token);
             fs.writeFileSync(config.tokenFile, token.token, 'utf8');
             nodedetails["token"] = token.token;
             socket.emit('iam',token.token);
@@ -103,17 +102,13 @@ socket.on('error',function() {
 });
 
 socket.on('disconnect', function () {
-    // socket disconnected
+    setStateToError();
     setTimeout(function () {
         socket = io.connect(config.cloudHost);
     }, 1000);
-    sendingData=false;
-    setStateToError();
 });
 socket.on('connect_failed', function () {
-    sendingData=false;
     setStateToError();
-    // socket cannot reconnect. Keep trying
     setTimeout(function () {
         socket = io.connect(config.cloudHost);
     }, 1000);
