@@ -11,18 +11,20 @@ var fs = require('fs'),
 
 // base config for beagle
 var config =  {
-    cloudHost: 'ninj.herokuapp.com',
+    cloudHost: 'dojo.ninja.is',
     cloudPort: 80,
     devtty: "/dev/ttyO1",
     serialFile: "/etc/opt/ninja/serial.conf",
     tokenFile: "/etc/opt/ninja/token.conf",
-    heartbeat_interval: 500
+    heartbeat_interval: 500,
+    secure:true
 };
 var nodedetails = {};
 // commandline config overwrites
 if (process.argv[2] == 'local') {
     config.cloudHost = process.argv[3];
     config.cloudPort = 3001;
+    config.secure = false;
 }
 if (process.argv[4] == 'ftdi') {
     config.devtty = "/dev/tty.usbserial-AE01AAE3";
@@ -37,11 +39,11 @@ var tty = new SerialPort(config.devtty, {
     parser: serialport.parsers.readline("\n")
 });
 
-
 var ioOpts = {
     'port':config.cloudPort,
     'transports':['xhr-polling'],
-    'try multiple transports':false
+    'try multiple transports':false,
+    'secure':settings.secure
 };
 
 var socket = io.connect(config.cloudHost,ioOpts);
