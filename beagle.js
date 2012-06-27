@@ -12,7 +12,7 @@ var fs = require('fs'),
 // base config for beagle
 var config =  {
     cloudHost: 'dojo.ninja.is',
-    cloudPort: 80,
+    cloudPort: 443,
     devtty: "/dev/ttyO1",
     serialFile: "/etc/opt/ninja/serial.conf",
     tokenFile: "/etc/opt/ninja/token.conf",
@@ -43,7 +43,7 @@ var ioOpts = {
     'port':config.cloudPort,
     'transports':['xhr-polling'],
     'try multiple transports':false,
-    'secure':settings.secure
+    'secure':config.secure
 };
 
 var socket = io.connect(config.cloudHost,ioOpts);
