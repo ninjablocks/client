@@ -47,11 +47,13 @@ var ioOpts = {
 var socket = io.connect(config.cloudHost,ioOpts);
 
 socket.on('connecting',function(transport){
+    console.log("Connecting");
     currentState="connecting";
     sendingData=false;
-    sutil.changeLEDColor('cyan');
+    sutil.changeLEDColor('cyan',tty);
 });
 socket.on('connect', function () {
+    console.log("Connected");
     console.log("Authenticating");
     socket.emit('hello',nodedetails.id);
 });
@@ -60,7 +62,7 @@ socket.on('whoareyou',function() {
     if (nodedetails.token) {
         socket.emit('iam',nodedetails.token);
     } else {
-        sutil.changeLEDColor('purple');
+        sutil.changeLEDColor('purple',tty);
         socket.emit('notsure');
         socket.on('youare',function(token) {
             fs.writeFileSync(config.tokenFile, token.token, 'utf8');
@@ -72,7 +74,8 @@ socket.on('whoareyou',function() {
 
 var sendIv;
 socket.on('begin',function() {
-    console.log("Connecting...");
+    console.log("Authenticated");
+    console.log("Sending/Receiving...");
     clearInterval(sendIv);
     sendIv = setInterval(function(){
         if (beatThrottle.isGoodToGo()) {
@@ -87,7 +90,7 @@ socket.on('command',function(data) {
 });
 
 socket.on('invalidToken',function() {
-    console.log("Invalid Token, rebooting...");
+    console.log("Invalid Token, rebooting");
     // Delete token
     fs.unlinkSync(config.tokenFile);
     // Restart
@@ -95,7 +98,7 @@ socket.on('invalidToken',function() {
 });
 
 socket.on('error',function() {
-    console.log("Socket error, retrying connection...")
+    console.log("Socket error, retrying connection")
     setTimeout(function () {
         socket = io.connect(config.cloudHost);
     }, 1000);
@@ -104,14 +107,14 @@ socket.on('error',function() {
 });
 
 socket.on('disconnect', function () {
-    console.log("Disconnected, reconnecting...")
+    console.log("Disconnected, reconnecting")
     setStateToError();
     setTimeout(function () {
         socket = io.connect(config.cloudHost);
     }, 1000);
 });
 socket.on('connect_failed', function () {
-    console.log("Connect failed, retrying...");
+    console.log("Connect failed, retrying");
     setStateToError();
     setTimeout(function () {
         socket = io.connect(config.cloudHost);
@@ -234,11 +237,11 @@ var executeCommand = function(data){
 }
 
 var setStateToOK = function() {
-    sutil.changeLEDColor('green');
+    sutil.changeLEDColor('green',tty);
 };
 
 var setStateToError = function() {
-    sutil.changeLEDColor('red');
+    sutil.changeLEDColor('red',tty);
 };
 /*  Future release
 var Inotify = require('inotify-plusplus'), // should be 'inotify++', but npm has issues with the ++
