@@ -49,8 +49,7 @@ var socket = io.connect(config.cloudHost,ioOpts);
 socket.on('connecting',function(transport){
     console.log("Connecting");
     currentState="connecting";
-    sendingData=false;
-    sutil.changeLEDColor('cyan',tty);
+    sutil.changeLEDColor(tty,'cyan');
 });
 socket.on('connect', function () {
     console.log("Connected");
@@ -62,7 +61,7 @@ socket.on('whoareyou',function() {
     if (nodedetails.token) {
         socket.emit('iam',nodedetails.token);
     } else {
-        sutil.changeLEDColor('purple',tty);
+        sutil.changeLEDColor(tty,'purple');
         socket.emit('notsure');
         socket.on('youare',function(token) {
             fs.writeFileSync(config.tokenFile, token.token, 'utf8');
@@ -102,7 +101,6 @@ socket.on('error',function() {
     setTimeout(function () {
         socket = io.connect(config.cloudHost);
     }, 1000);
-    sendingData=false;
     setStateToError();
 });
 
@@ -237,11 +235,11 @@ var executeCommand = function(data){
 }
 
 var setStateToOK = function() {
-    sutil.changeLEDColor('green',tty);
+    sutil.changeLEDColor(tty,'green');
 };
 
 var setStateToError = function() {
-    sutil.changeLEDColor('red',tty);
+    sutil.changeLEDColor(tty,'red');
 };
 /*  Future release
 var Inotify = require('inotify-plusplus'), // should be 'inotify++', but npm has issues with the ++
