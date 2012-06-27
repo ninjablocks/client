@@ -33,8 +33,6 @@ if (process.argv[4] == 'ftdi') {
 nodedetails.id = fs.readFileSync(config.serialFile).toString().replace(/\n/g,''); // TODO
 nodedetails.token = (path.existsSync(config.tokenFile)) ? fs.readFileSync(config.tokenFile).toString().replace(/\n/g,'') : false;
 
-console.log(config);
-
 var tty = new SerialPort(config.devtty, { 
     parser: serialport.parsers.readline("\n")
 });
@@ -49,11 +47,12 @@ var ioOpts = {
 var socket = io.connect(config.cloudHost,ioOpts);
 
 socket.on('connecting',function(transport){
+    console.log("Connecting");
     currentState="connecting";
-    sendingData=false;
-    changeLEDColor('cyan');
+    sutil.changeLEDColor(tty,'cyan');
 });
 socket.on('connect', function () {
+    console.log("Connected");
     console.log("Authenticating");
     socket.emit('hello',nodedetails.id);
 });
@@ -62,7 +61,7 @@ socket.on('whoareyou',function() {
     if (nodedetails.token) {
         socket.emit('iam',nodedetails.token);
     } else {
-        changeLEDColor('purple');
+        sutil.changeLEDColor(tty,'purple');
         socket.emit('notsure');
         socket.on('youare',function(token) {
             fs.writeFileSync(config.tokenFile, token.token, 'utf8');
@@ -75,6 +74,7 @@ socket.on('whoareyou',function() {
 var sendIv;
 socket.on('begin',function() {
     console.log("Authenticated");
+    console.log("Sending/Receiving...");
     clearInterval(sendIv);
     sendIv = setInterval(function(){
         if (beatThrottle.isGoodToGo()) {
@@ -89,6 +89,7 @@ socket.on('command',function(data) {
 });
 
 socket.on('invalidToken',function() {
+    console.log("Invalid Token, rebooting");
     // Delete token
     fs.unlinkSync(config.tokenFile);
     // Restart
@@ -96,20 +97,22 @@ socket.on('invalidToken',function() {
 });
 
 socket.on('error',function() {
+    console.log("Socket error, retrying connection")
     setTimeout(function () {
         socket = io.connect(config.cloudHost);
     }, 1000);
-    sendingData=false;
     setStateToError();
 });
 
 socket.on('disconnect', function () {
+    console.log("Disconnected, reconnecting")
     setStateToError();
     setTimeout(function () {
         socket = io.connect(config.cloudHost);
     }, 1000);
 });
 socket.on('connect_failed', function () {
+    console.log("Connect failed, retrying");
     setStateToError();
     setTimeout(function () {
         socket = io.connect(config.cloudHost);
@@ -145,18 +148,13 @@ var handleRawTtyData = function(data) {
     // only keep latest reading per device between heartbeats
     for (var i=0; i<deviceDataPoints.length; i++) {
         var device = deviceDataPoints[i];
-        // Log unknown device messages for JP
-        if (device.D == 0) console.log("UNKNOWN DEVICE MSG: "+data);
-
         // Build the GUID
         device.GUID = buildDeviceGuid(device);
-
         // If we have meta data about the device, handle it.
         if (deviceHasMetaData(device)) {
             var meta = getDeviceMetaData(device);
             if (meta.instant) trySendInstantData(device);
         }
-
         // Add the devices data to the heartbeat container
         readings[deviceDataPoints[i].GUID] = deviceDataPoints[i];
     }
@@ -205,7 +203,6 @@ var getHeartbeat = function(){
     return JSON.stringify(hb);        
 }
 
-
 var emptyBeats = 0;
 
 var beatThrottle = {
@@ -222,7 +219,6 @@ var beatThrottle = {
     counter: 0
 };
 
-
 var executeCommand = function(data){
     var data = sutil.getJSON(data);
    //if (data && data.welcome) return;
@@ -238,18 +234,14 @@ var executeCommand = function(data){
     }
 }
 
-
-var currentState;
 var setStateToOK = function() {
-    changeLEDColor('green');
-    currentState="ok";
+    sutil.changeLEDColor(tty,'green');
 };
 
 var setStateToError = function() {
-    currentState='error';
-    changeLEDColor('red');
+    sutil.changeLEDColor(tty,'red');
 };
-
+/*  Future release
 var Inotify = require('inotify-plusplus'), // should be 'inotify++', but npm has issues with the ++
     inotify,
     directive,
@@ -275,28 +267,5 @@ directive = (function() {
     };
 }());
 inotify.watch(directive, '/dev/');
-
-var changeLEDColor = function(color) {
-    switch (color) {
-        case 'purple':
-            var hex = 'FF00FF';
-        break;
-        case 'green':
-            var hex = '00FF00';
-        break;
-        case 'red':
-            var hex = 'FF0000';
-        break;
-        case 'cyan':
-            var hex = '00FFFF';
-        break;
-        case 'yellow':
-            var hex = 'FFFF00';
-        break;
-        default:
-            var hex = '000000';
-        break;
-    }
-    sutil.writeTTY(tty,'{"DEVICE":[{"G":"0","V":0,"D":1000,"DA":"'+hex+'"}]}');
-}
+*/
 })();
