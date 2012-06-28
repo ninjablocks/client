@@ -241,6 +241,10 @@ var setStateToOK = function() {
 var setStateToError = function() {
     sutil.changeLEDColor(tty,'red');
 };
+
+process.on('exit',function() {
+    sutil.changeLEDColor(tty,'yellow');
+});
 /*  Future release
 var Inotify = require('inotify-plusplus'), // should be 'inotify++', but npm has issues with the ++
     inotify,
