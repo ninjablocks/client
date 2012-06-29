@@ -48,7 +48,6 @@ var socket = io.connect(config.cloudHost,ioOpts);
 
 socket.on('connecting',function(transport){
     console.log("Connecting");
-    currentState="connecting";
     sutil.changeLEDColor(tty,'cyan');
 });
 socket.on('connect', function () {
@@ -56,7 +55,39 @@ socket.on('connect', function () {
     console.log("Authenticating");
     socket.emit('hello',nodedetails.id);
 });
+socket.on('error',function() {
+    console.log("Socket error, retrying connection")
+    setTimeout(function () {
+        socket = io.connect(config.cloudHost);
+    }, 1000);
+    setStateToError();
+});
 
+socket.on('disconnect', function () {
+    console.log("Disconnected, reconnecting")
+    setStateToError();
+    setTimeout(function () {
+        socket = io.connect(config.cloudHost);
+    }, 1000);
+});
+socket.on('connect_failed', function () {
+    console.log("Connect failed, retrying");
+    setStateToError();
+    setTimeout(function () {
+        socket = io.connect(config.cloudHost);
+    }, 1000);
+});
+socket.on('reconnecting',function() {
+    console.log("Reconnecting");
+    sutil.changeLEDColor(tty,'cyan');
+});
+socket.on('reconnect_failed',function() {
+    console.log("Reconnect failed, retrying");
+    setStateToError();
+    setTimeout(function () {
+        socket = io.connect(config.cloudHost);
+    }, 1000);
+});
 socket.on('whoareyou',function() {
     if (nodedetails.token) {
         socket.emit('iam',nodedetails.token);
@@ -96,28 +127,6 @@ socket.on('invalidToken',function() {
     process.exit(1);
 });
 
-socket.on('error',function() {
-    console.log("Socket error, retrying connection")
-    setTimeout(function () {
-        socket = io.connect(config.cloudHost);
-    }, 1000);
-    setStateToError();
-});
-
-socket.on('disconnect', function () {
-    console.log("Disconnected, reconnecting")
-    setStateToError();
-    setTimeout(function () {
-        socket = io.connect(config.cloudHost);
-    }, 1000);
-});
-socket.on('connect_failed', function () {
-    console.log("Connect failed, retrying");
-    setStateToError();
-    setTimeout(function () {
-        socket = io.connect(config.cloudHost);
-    }, 1000);
-});
 
 
 var deviceMeta = {
