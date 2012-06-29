@@ -37,8 +37,8 @@
     // development overwrites
     if (process.argv[2] == 'local') {
         config.cloudHost = process.argv[3];
-        ioOpts.port = 3001;
-        config.secure = false;
+        ioOpts["port"] = 3001;
+        ioOpts.secure = false;
     };
     // Connect
     var socket = io.connect(config.cloudHost,ioOpts);
@@ -52,7 +52,8 @@
         console.log("Authenticating");
         socket.emit('hello',nodedetails.id);
     });
-    socket.on('error',function() {
+    socket.on('error',function(err) {
+        console.log(err);
         console.log("Socket error, retrying connection")
         setTimeout(function () {
             socket = io.connect(config.cloudHost);
