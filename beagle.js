@@ -192,7 +192,6 @@
         var ds = data.DEVICE;
         if (ds && ds.length>0) {
             for (d in ds) {
-                console.log(ds[d].D);
                 var guid = ds[d].GUID;
                 delete ds[d].GUID;
                 ds[d].G = ds[d].G.toString(); //TODO get JP to fix for 0
