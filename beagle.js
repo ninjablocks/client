@@ -192,9 +192,19 @@
         var ds = data.DEVICE;
         if (ds && ds.length>0) {
             for (d in ds) {
+                console.log(ds[d].D);
+                var guid = ds[d].GUID;
                 delete ds[d].GUID;
                 ds[d].G = ds[d].G.toString(); //TODO get JP to fix for 0
-                sutil.writeTTY(tty,'{"DEVICE":['+JSON.stringify(ds[d])+']}');
+                switch(ds[d].D) {
+                    case 1003: 
+                        // Take picture
+                        sutil.takePicture(guid,nodedetails.token);
+                    break;
+                    default:
+                        sutil.writeTTY(tty,'{"DEVICE":['+JSON.stringify(ds[d])+']}');
+                    break;
+                }
             }
         } else {
             console.log(data.toString());
@@ -209,4 +219,37 @@
     process.on('exit',function() {
         sutil.changeLEDColor(tty,'yellow');
     });
+
+    var Inotify = require('inotify-plusplus'), // should be 'inotify++', but npm has issues with the ++
+        inotify,
+        directive,
+        options,
+        cameraIv,
+        cameraGuid;
+
+    inotify = Inotify.create(true); // stand-alone, persistent mode, runs until you hit ctrl+c
+    directive = (function() {
+        return {
+          create: function (ev) {
+            if(ev.name == 'v4l'){
+                cameraGuid = sutil.buildDeviceGuid(nodedetails.id,{G:"0",V:0,D:1003});
+                cameraIv = setInterval(function() {
+                    readings[cameraIv] = {
+                        GUID:cameraGuid,
+                        G:"0",
+                        V:0,
+                        D:1003,
+                        DA:1
+                    };
+                },config.heartbeat_interval);
+            }
+          },
+          delete: function(ev) {
+            if(ev.name == 'v4l'){
+                clearInterval(cameraIv);
+            }
+          }
+        };
+    }());
+    inotify.watch(directive, '/dev/');
 })();
