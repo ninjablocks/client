@@ -1,4 +1,6 @@
 (function() {
+    console.log('Ninja Block Starting Up');
+
     var fs = require('fs'),
         path = require('path'),
         util = require('util'),
