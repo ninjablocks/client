@@ -110,6 +110,7 @@
         setStateToOK();
     });
     socket.on('command',function(data) {
+        console.log(data);
         executeCommand(data);
     });
     socket.on('invalidToken',function() {
@@ -199,6 +200,10 @@
                     case 1003: 
                         // Take picture
                         sutil.takePicture(guid,nodedetails.token);
+                    break;
+                    case 1004: 
+                        // Take stream
+                        sutil.sendCameraStream(guid,nodedetails.token);
                     break;
                     default:
                         sutil.writeTTY(tty,'{"DEVICE":['+JSON.stringify(ds[d])+']}');
