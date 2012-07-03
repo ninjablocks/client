@@ -239,6 +239,7 @@
           create: function (ev) {
             if(ev.name == 'v4l'){
                 cameraGuid = sutil.buildDeviceGuid(nodedetails.id,{G:"0",V:0,D:1003});
+                clearInterval(cameraIv);
                 cameraIv = setInterval(function() {
                     readings[cameraIv] = {
                         GUID:cameraGuid,
@@ -258,4 +259,25 @@
         };
     }());
     inotify.watch(directive, '/dev/');
+    try {
+        // Query the entry
+        stats = fs.lstatSync('/dev/video0');
+        // Is it a directory?
+        if (stats.isCharacterDevice()) {
+            // Yes it is
+            console.log("Camera is connected");
+            cameraGuid = sutil.buildDeviceGuid(nodedetails.id,{G:"0",V:0,D:1003});
+            cameraIv = setInterval(function() {
+                readings[cameraIv] = {
+                    GUID:cameraGuid,
+                    G:"0",
+                    V:0,
+                    D:1003,
+                    DA:1
+                };
+            },config.heartbeat_interval);
+        }
+    }
+    catch (e) { }
+
 })();
