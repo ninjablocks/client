@@ -14,7 +14,7 @@
         instantContainer = {},
         readings = {},
         config =  {
-            cloudHost: 'dojo.ninja.is',
+            cloudHost: 'staging-dojo.ninja.is',
             cloudPort: 443,
             devtty: "/dev/ttyO1",
             serialFile: "/etc/opt/ninja/serial.conf",
