@@ -6,7 +6,6 @@
         util = require('util'),
         http = require('http'),
         io = require('socket.io-client'),
-        sutil = require('./lib/client-utils'),
         serialport = require('serialport'),
         SerialPort = serialport.SerialPort,
         emptyBeats = 0,
@@ -30,7 +29,9 @@
         },
         nodedetails = {
             id:fs.readFileSync(config.serialFile).toString().replace(/\n/g,'')
-        };
+        },
+        sutil = require('./lib/client-utils');
+        sutil.configure(config);
 
     // Try and fetch the token
     nodedetails.token = (path.existsSync(config.tokenFile)) 
