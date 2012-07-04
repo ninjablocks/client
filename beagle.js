@@ -106,7 +106,7 @@
         console.log("Sending/Receiving...");
         clearInterval(sendIv);
         sendIv = setInterval(function(){
-            if (beatThrottle.isGoodToGo()) {
+            if (beatThrottle.isGoodToGo() && socket.socket.buffer.length==0) {
                 socket.emit('heartbeat',getHeartbeat());
             } 
         },config.heartbeat_interval);    
