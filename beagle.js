@@ -13,7 +13,9 @@
         instantContainer = {},
         readings = {},
         config =  {
-            cloudHost: 'staging-dojo.ninja.is',
+            cloudHost: 'dojo.ninja.is',
+            cloudStream: 'stream.ninja.is',
+            cloudStreamPort: 443,
             cloudPort: 443,
             devtty: "/dev/ttyO1",
             serialFile: "/etc/opt/ninja/serial.conf",
@@ -92,9 +94,11 @@
         if (nodedetails.token) {
             socket.emit('iam',nodedetails.token);
         } else {
+            console.log('Awaiting Activation');
             sutil.changeLEDColor(tty,'purple');
             socket.emit('notsure');
             socket.on('youare',function(token) {
+                console.log("Received Authorisation")
                 fs.writeFileSync(config.tokenFile, token.token, 'utf8');
                 nodedetails["token"] = token.token;
                 socket.emit('iam',token.token);
@@ -266,7 +270,7 @@
         // Is it a directory?
         if (stats.isCharacterDevice()) {
             // Yes it is
-            console.log("Camera is connected");
+            console.log("Camera is Connected");
             cameraGuid = sutil.buildDeviceGuid(nodedetails.id,{G:"0",V:0,D:1003});
             cameraIv = setInterval(function() {
                 readings[cameraIv] = {
