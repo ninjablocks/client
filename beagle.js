@@ -42,6 +42,8 @@
     // development overwrites
     if (process.argv[2] == 'local') {
         config.cloudHost = process.argv[3];
+        config.cloudStream = process.argv[3];
+        config.cloudStreamPort = 3003;
         ioOpts["port"] = 3001;
         ioOpts.secure = false;
     };
