@@ -1,8 +1,8 @@
-{ "name": "beagle-client",
-  "version": "0.0.1",
+{ "name": "ninja-beagle",
+  "version": "0.1.0",
   "dependencies": { 
-  	"serialport" : "latest",
+  	"serialport" : "0.7.5",
   	"socket.io-client" : "https://github.com/ninjablocks/socket.io-client/tarball/master",
-  	"inotify-plusplus": "latest"
+  	"inotify-plusplus": "1.0.1"
   }
 }
