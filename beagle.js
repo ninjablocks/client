@@ -5,6 +5,7 @@
         path = require('path'),
         util = require('util'),
         http = require('http'),
+        exec = require('child_process').exec,
         io = require('socket.io-client'),
         serialport = require('serialport'),
         SerialPort = serialport.SerialPort,
