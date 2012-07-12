@@ -14,8 +14,8 @@
         instantContainer = {},
         readings = {},
         config =  {
-            cloudHost: 'staging-dojo.ninja.is',
-            cloudStream: 'staging-stream.ninja.is',
+            cloudHost: 'dojo.ninja.is',
+            cloudStream: 'stream.ninja.is',
             cloudStreamPort: 443,
             cloudPort: 443,
             devtty: "/dev/ttyO1",
