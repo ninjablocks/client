@@ -63,24 +63,12 @@
     socket.on('error',function(err) {
         console.log(err);
         console.log("Socket error, retrying connection")
-        setTimeout(function () {
-            socket = io.connect(config.cloudHost,ioOpts);
-        }, 5000);
         setStateToError();
     });
     socket.on('disconnect', function () {
-        console.log("Disconnected, reconnecting")
+        console.log("Disconnected, restarting.")
         setStateToError();
-        setTimeout(function () {
-            socket = io.connect(config.cloudHost,ioOpts);
-        }, 5000);
-    });
-    socket.on('connect_failed', function () {
-        console.log("Connect failed, retrying");
-        setStateToError();
-        setTimeout(function () {
-            socket = io.connect(config.cloudHost,ioOpts);
-        }, 5000);
+        process.exit(1);
     });
     socket.on('reconnecting',function() {
         console.log("Reconnecting");
