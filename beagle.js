@@ -64,23 +64,23 @@
         console.log(err);
         console.log("Socket error, retrying connection")
         setTimeout(function () {
-            socket = io.connect(config.cloudHost);
-        }, 1000);
+            socket = io.connect(config.cloudHost,ioOpts);
+        }, 5000);
         setStateToError();
     });
     socket.on('disconnect', function () {
         console.log("Disconnected, reconnecting")
         setStateToError();
         setTimeout(function () {
-            socket = io.connect(config.cloudHost);
-        }, 1000);
+            socket = io.connect(config.cloudHost,ioOpts);
+        }, 5000);
     });
     socket.on('connect_failed', function () {
         console.log("Connect failed, retrying");
         setStateToError();
         setTimeout(function () {
-            socket = io.connect(config.cloudHost);
-        }, 1000);
+            socket = io.connect(config.cloudHost,ioOpts);
+        }, 5000);
     });
     socket.on('reconnecting',function() {
         console.log("Reconnecting");
@@ -90,8 +90,8 @@
         console.log("Reconnect failed, retrying");
         setStateToError();
         setTimeout(function () {
-            socket = io.connect(config.cloudHost);
-        }, 1000);
+            socket = io.connect(config.cloudHost,ioOpts);
+        }, 5000);
     });
     socket.on('whoareyou',function() {
         if (nodedetails.token) {
