@@ -62,24 +62,29 @@
     });
     socket.on('error',function(err) {
         console.log(err);
-        console.log("Socket error, retrying connection")
+        console.log("Socket error, restarting.")
         setStateToError();
+        setTimeout(function() {
+            process.exit(1);
+        },30000);
     });
     socket.on('disconnect', function () {
         console.log("Disconnected, restarting.")
         setStateToError();
-        process.exit(1);
+        setTimeout(function () {
+            process.exit(1);
+        },30000);
     });
     socket.on('reconnecting',function() {
         console.log("Reconnecting");
         sutil.changeLEDColor(tty,'cyan');
     });
     socket.on('reconnect_failed',function() {
-        console.log("Reconnect failed, retrying");
+        console.log("Reconnect failed, restarting.");
         setStateToError();
         setTimeout(function () {
-            socket = io.connect(config.cloudHost,ioOpts);
-        }, 5000);
+            process.exit(1);
+        },30000);
     });
     socket.on('whoareyou',function() {
         if (nodedetails.token) {
