@@ -1,6 +1,5 @@
 (function() {
     console.log('Ninja Block Starting Up');
-
     var fs = require('fs'),
         path = require('path'),
         util = require('util'),
@@ -11,6 +10,7 @@
         SerialPort = serialport.SerialPort,
         emptyBeats = 0,
         sendIv = 0,
+        watchDogIv,
         instantContainer = {},
         readings = {},
         config =  {
@@ -21,6 +21,7 @@
             devtty: "/dev/ttyO1",
             serialFile: "/etc/opt/ninja/serial.conf",
             tokenFile: "/etc/opt/ninja/token.conf",
+            updateLock: '/etc/utilities/tmp/has_updated',
             heartbeat_interval: 500,
             secure:true
         },
@@ -123,6 +124,13 @@
         // Restart
         process.exit(1);
     });
+    socket.on('updateYourself',function() {
+        console.log("Updating");
+        // Stop writing to the watchdog
+        clearInterval(watchDogIv);
+        // Remove the update lock file
+        fs.unlinkSync(config.updateLock);
+    });
     // Setup the TTY serial port
     var tty = new SerialPort(config.devtty, { 
         parser: serialport.parsers.readline("\n")
@@ -223,10 +231,7 @@
     var setStateToError = function() {
         sutil.changeLEDColor(tty,'red');
     };
-    process.on('exit',function() {
-        sutil.changeLEDColor(tty,'yellow');
-    });
-
+    // Camera
     var Inotify = require('inotify-plusplus'), // should be 'inotify++', but npm has issues with the ++
         inotify,
         directive,
@@ -280,4 +285,18 @@
         }
     }
     catch (e) { }
+    // Watdog Timer
+    var watchDogStream = fs.open('/dev/watchdog','r+',function(err,fd) {
+        if (err) console.log(err);
+        var watchDogPayload = new Buffer(1);
+        watchDogPayload.write('\n','utf8');
+        watchDogIv = setInterval(function() {
+            fs.write(fd,watchDogPayload,0, watchDogPayload.length, -1,function(err) {
+                if (err) console.log(err);
+            });
+        },30000);
+    });
+    process.on('exit',function() {
+        sutil.changeLEDColor(tty,'yellow');
+    });
 })();
