@@ -23,7 +23,8 @@
             tokenFile: "/etc/opt/ninja/token.conf",
             updateLock: '/etc/utilities/tmp/has_updated',
             heartbeat_interval: 500,
-            secure:true
+            secure:true,
+            version:0.1
         },
         ioOpts = {
             'port':config.cloudPort,
@@ -89,11 +90,11 @@
     });
     socket.on('whoareyou',function() {
         if (nodedetails.token) {
-            socket.emit('iam',nodedetails.token);
+            socket.emit('iam',{client:'beagle',version:config.version,token:nodedetails.token});
         } else {
             console.log('Awaiting Activation');
             sutil.changeLEDColor(tty,'purple');
-            socket.emit('notsure');
+            socket.emit('notsure',{client:'beagle',version:config.version});
             socket.on('youare',function(token) {
                 console.log("Received Authorisation")
                 fs.writeFileSync(config.tokenFile, token.token, 'utf8');
@@ -126,10 +127,11 @@
     });
     socket.on('updateYourself',function() {
         console.log("Updating");
-        // Stop writing to the watchdog
-        clearInterval(watchDogIv);
         // Remove the update lock file
         fs.unlinkSync(config.updateLock);
+        // Stop writing to the watchdog
+        clearInterval(watchDogIv);
+        sutil.changeLEDColor(tty,'white');
     });
     // Setup the TTY serial port
     var tty = new SerialPort(config.devtty, { 
