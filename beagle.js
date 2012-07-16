@@ -99,7 +99,7 @@
                 console.log("Received Authorisation")
                 fs.writeFileSync(config.tokenFile, token.token, 'utf8');
                 nodedetails["token"] = token.token;
-                socket.emit('iam',token.token);
+                socket.emit('iam',{client:'beagle',version:config.version,token:nodedetails.token});
             });
         }
     });
