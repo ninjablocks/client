@@ -210,13 +210,9 @@
                 delete ds[d].GUID;
                 ds[d].G = ds[d].G.toString(); //TODO get JP to fix for 0
                 switch(ds[d].D) {
-                    case 1003: 
+                    case 1004: 
                         // Take picture
                         sutil.takePicture(guid,nodedetails.token);
-                    break;
-                    case 1004: 
-                        // Take stream
-                        sutil.sendCameraStream(guid,nodedetails.token);
                     break;
                     default:
                         sutil.writeTTY(tty,'{"DEVICE":['+JSON.stringify(ds[d])+']}');
@@ -253,7 +249,7 @@
                         GUID:cameraGuid,
                         G:"0",
                         V:0,
-                        D:1003,
+                        D:1004,
                         DA:1
                     };
                 },config.heartbeat_interval);
@@ -280,7 +276,7 @@
                     GUID:cameraGuid,
                     G:"0",
                     V:0,
-                    D:1003,
+                    D:1004,
                     DA:1
                 };
             },config.heartbeat_interval);
