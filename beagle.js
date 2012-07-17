@@ -242,7 +242,7 @@
         return {
           create: function (ev) {
             if(ev.name == 'v4l'){
-                cameraGuid = sutil.buildDeviceGuid(nodedetails.id,{G:"0",V:0,D:1003});
+                cameraGuid = sutil.buildDeviceGuid(nodedetails.id,{G:"0",V:0,D:1004});
                 clearInterval(cameraIv);
                 cameraIv = setInterval(function() {
                     readings[cameraIv] = {
@@ -270,7 +270,7 @@
         if (stats.isCharacterDevice()) {
             // Yes it is
             console.log("Camera is Connected");
-            cameraGuid = sutil.buildDeviceGuid(nodedetails.id,{G:"0",V:0,D:1003});
+            cameraGuid = sutil.buildDeviceGuid(nodedetails.id,{G:"0",V:0,D:1004});
             cameraIv = setInterval(function() {
                 readings[cameraIv] = {
                     GUID:cameraGuid,
