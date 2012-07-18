@@ -22,7 +22,7 @@
             devtty: "/dev/ttyO1",
             serialFile: "/etc/opt/ninja/serial.conf",
             tokenFile: "/etc/opt/ninja/token.conf",
-            updateLock: '/etc/utilities/tmp/has_updated',
+            updateLock: '/etc/utilities/tmp/.has_updated',
             heartbeat_interval: 500,
             secure:true,
             version:0.1
@@ -58,7 +58,8 @@
         console.log("Connecting");
         sutil.changeLEDColor(tty,'cyan');
     });
-    socket.on('connect', function () {
+    socket.on('connect', function
+     () {
         clearTimeout(rebootIv);
         console.log("Connected");
         console.log("Authenticating");
@@ -130,13 +131,11 @@
         // Restart
         process.exit(1);
     });
-    socket.on('updateYourself',function() {
+    socket.on('updateYourself',function(toUpdate) {
         console.log("Updating");
-        // Remove the update lock file
-        fs.unlinkSync(config.updateLock);
-        // Stop writing to the watchdog
-        clearInterval(watchDogIv);
-        sutil.changeLEDColor(tty,'white');
+        if (typeof toUpdate !== "object"
+            || !(toUpdate instanceof Array)) return false;
+        else sutil.updateCode(toUpdate);
     });
     // Setup the TTY serial port
     var tty = new SerialPort(config.devtty, { 
@@ -207,7 +206,6 @@
     };
     var executeCommand = function(data){
         var data = sutil.getJSON(data);
-       //if (data && data.welcome) return;
         var ds = data.DEVICE;
         if (ds && ds.length>0) {
             for (d in ds) {
