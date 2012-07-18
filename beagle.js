@@ -12,6 +12,7 @@
         sendIv = 0,
         watchDogIv,
         instantContainer = {},
+        rebootIv,
         readings = {},
         config =  {
             cloudHost: 'dojo.ninja.is',
@@ -58,6 +59,7 @@
         sutil.changeLEDColor(tty,'cyan');
     });
     socket.on('connect', function () {
+        clearTimeout(rebootIv);
         console.log("Connected");
         console.log("Authenticating");
         socket.emit('hello',nodedetails.id);
@@ -66,14 +68,16 @@
         console.log(err);
         console.log("Socket error, restarting.")
         setStateToError();
-        setTimeout(function() {
+        clearTimeout(rebootIv);
+        rebootIv = setTimeout(function() {
             process.exit(1);
         },30000);
     });
     socket.on('disconnect', function () {
         console.log("Disconnected, restarting.")
         setStateToError();
-        setTimeout(function () {
+        clearTimeout(rebootIv);
+        rebootIv = setTimeout(function () {
             process.exit(1);
         },30000);
     });
@@ -84,7 +88,8 @@
     socket.on('reconnect_failed',function() {
         console.log("Reconnect failed, restarting.");
         setStateToError();
-        setTimeout(function () {
+        clearTimeout(rebootIv);
+        rebootIv = setTimeout(function () {
             process.exit(1);
         },30000);
     });
