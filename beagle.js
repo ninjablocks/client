@@ -179,7 +179,7 @@
     inotify.watch(directive, '/dev/');
     try {
         // Query the entry
-        stats = fs.lstatSync('/dev/video0');
+        var stats = fs.lstatSync('/dev/video0');
         // Is it a directory?
         if (stats.isCharacterDevice()) {
             // Yes it is
@@ -196,7 +196,9 @@
             },config.heartbeat_interval);
         }
     }
-    catch (e) { }
+    catch (e) {
+        console.log(utils.timestamp()+" Camera Error");
+    }
     // Watdog Timer
     var watchDogStream = fs.open('/dev/watchdog','r+',function(err,fd) {
         if (err) console.log(utils.timestamp()+" "+err);
