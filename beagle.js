@@ -1,20 +1,24 @@
 (function() {
-    console.log(sutil.timestamp()+' Ninja Block Starting Up');
+    console.log(utils.timestamp()+' Ninja Block Starting Up');
     var fs = require('fs'),
+        http = require('http'),
         path = require('path'),
         util = require('util'),
-        http = require('http'),
         exec = require('child_process').exec,
+        utils = require(__dirname+'/lib/client-utils.js'),
+        Inotify = require('inotify-plusplus'),
         io = require('socket.io-client'),
         serialport = require('serialport'),
         SerialPort = serialport.SerialPort,
-        emptyBeats = 0,
         sendIv = 0,
         watchDogIv,
-        instantContainer = {},
         rebootIv,
-        readings = {},
+        inotify,
+        directive,
+        cameraIv,
+        cameraGuid,
         config =  {
+            version:0.1,
             cloudHost: 'dojo.ninja.is',
             cloudStream: 'stream.ninja.is',
             cloudStreamPort: 443,
@@ -25,25 +29,19 @@
             updateLock: '/etc/utilities/tmp/.has_updated',
             heartbeat_interval: 500,
             secure:true,
-            version:0.1
+            id:fs.readFileSync(config.serialFile).toString().replace(/\n/g,''),
+            token:(path.existsSync(config.tokenFile))
+                    ?fs.readFileSync(config.tokenFile).toString().replace(/\n/g,'')
+                    :false
         },
         ioOpts = {
             'port':config.cloudPort,
             'transports':['xhr-polling'],
             'try multiple transports':false,
             'secure':config.secure
-        },
-        nodedetails = {
-            id:fs.readFileSync(config.serialFile).toString().replace(/\n/g,'')
-        },
-        sutil = require('./lib/client-utils');
-        sutil.configure(config);
+        };
 
-    // Try and fetch the token
-    nodedetails.token = (path.existsSync(config.tokenFile)) 
-                        ? fs.readFileSync(config.tokenFile).toString().replace(/\n/g,'') 
-                        : false;
-    // development overwrites
+    // Development overwrites
     if (process.argv[2] == 'local') {
         config.cloudHost = process.argv[3];
         config.cloudStream = process.argv[3];
@@ -51,24 +49,32 @@
         ioOpts["port"] = 3001;
         ioOpts.secure = false;
     };
+    // Setup the TTY serial port
+    var tty = new SerialPort(config.devtty, { 
+        parser: serialport.parsers.readline("\n")
+    });
     // Connect
     var socket = io.connect(config.cloudHost,ioOpts);
-    sutils.setSocket(socket)
-    // Various
-    socket.on('connecting',function(transport){
-        console.log(sutil.timestamp()+" Connecting");
-        sutil.changeLEDColor(tty,'cyan');
+    // Configure the helper library
+    utils.configure(config,socket,tty);
+    // TTY data handler
+    tty.on('data',function(data){
+        utils.handleRawTtyData(data);
     });
-    socket.on('connect', function
-     () {
+    // Various network handlers
+    socket.on('connecting',function(transport){
+        console.log(utils.timestamp()+" Connecting");
+        utils.changeLEDColor('cyan');
+    });
+    socket.on('connect',function() {
         clearTimeout(rebootIv);
-        console.log(sutil.timestamp()+" Connected");
-        console.log(sutil.timestamp()+" Authenticating");
-        socket.emit('hello',nodedetails.id);
+        console.log(utils.timestamp()+" Connected");
+        console.log(utils.timestamp()+" Authenticating");
+        socket.emit('hello',config.id);
     });
     socket.on('error',function(err) {
         console.log(err);
-        console.log(sutil.timestamp()+" Socket error, restarting.")
+        console.log(utils.timestamp()+" Socket error, restarting.")
         setStateToError();
         clearTimeout(rebootIv);
         rebootIv = setTimeout(function() {
@@ -76,7 +82,7 @@
         },30000);
     });
     socket.on('disconnect', function () {
-        console.log(sutil.timestamp()+" Disconnected, restarting.")
+        console.log(utils.timestamp()+" Disconnected, restarting.")
         setStateToError();
         clearTimeout(rebootIv);
         rebootIv = setTimeout(function () {
@@ -84,11 +90,11 @@
         },30000);
     });
     socket.on('reconnecting',function() {
-        console.log(sutil.timestamp()+" Reconnecting");
-        sutil.changeLEDColor(tty,'cyan');
+        console.log(utils.timestamp()+" Reconnecting");
+        utils.changeLEDColor('cyan');
     });
     socket.on('reconnect_failed',function() {
-        console.log(sutil.timestamp()+" Reconnect failed, restarting.");
+        console.log(utils.timestamp()+" Reconnect failed, restarting.");
         setStateToError();
         clearTimeout(rebootIv);
         rebootIv = setTimeout(function () {
@@ -96,155 +102,61 @@
         },30000);
     });
     socket.on('whoareyou',function() {
-        if (nodedetails.token) {
-            socket.emit('iam',{client:'beagle',version:config.version,token:nodedetails.token});
+        if (config.token) {
+            socket.emit('iam',{client:'beagle',version:config.version,token:config.token});
         } else {
-            console.log(sutil.timestamp()+' Awaiting Activation');
-            sutil.changeLEDColor(tty,'purple');
+            console.log(utils.timestamp()+' Awaiting Activation');
+            utils.changeLEDColor('purple');
             socket.emit('notsure',{client:'beagle',version:config.version});
             socket.on('youare',function(token) {
-                console.log(sutil.timestamp()+" Received Authorisation")
+                console.log(utils.timestamp()+" Received Authorisation")
                 fs.writeFileSync(config.tokenFile, token.token, 'utf8');
-                nodedetails["token"] = token.token;
-                socket.emit('iam',{client:'beagle',version:config.version,token:nodedetails.token});
+                config.token = token.token;
+                socket.emit('iam',{client:'beagle',version:config.version,token:config.token});
             });
         }
     });
     socket.on('begin',function() {
-        console.log(sutil.timestamp()+" Authenticated");
-        console.log(sutil.timestamp()+" Sending/Receiving");
+        console.log(utils.timestamp()+" Authenticated");
+        console.log(utils.timestamp()+" Sending/Receiving");
         clearInterval(sendIv);
         sendIv = setInterval(function(){
-            if (beatThrottle.isGoodToGo() && socket.socket.buffer.length==0) {
-                socket.emit('heartbeat',getHeartbeat());
+            if (utils.beatThrottle.isGoodToGo() && socket.socket.buffer.length==0) {
+                socket.emit('heartbeat',utils.getHeartbeat());
             } 
         },config.heartbeat_interval);    
         setStateToOK();
     });
     socket.on('command',function(data) {
-        console.log(sutil.timestamp()+" "+data);
-        executeCommand(data);
+        console.log(utils.timestamp()+" "+data);
+        utils.executeCommand(data);
     });
     socket.on('invalidToken',function() {
-        console.log(sutil.timestamp()+" Invalid Token, rebooting");
+        console.log(utils.timestamp()+" Invalid Token, rebooting");
         // Delete token
         fs.unlinkSync(config.tokenFile);
         // Restart
         process.exit(1);
     });
     socket.on('updateYourself',function(toUpdate) {
-        console.log(sutil.timestamp()+" Updating");
+        console.log(utils.timestamp()+" Updating");
         if (typeof toUpdate !== "object"
             || !(toUpdate instanceof Array)) return false;
-        else sutil.updateCode(toUpdate);
+        else utils.updateCode(toUpdate);
     });
-    // Setup the TTY serial port
-    var tty = new SerialPort(config.devtty, { 
-        parser: serialport.parsers.readline("\n")
-    });
-    tty.on('data',function(data){
-        handleRawTtyData(data);
-    });
-    var handleRawTtyData = function(data) {
-        var jsonTtyData = sutil.getJSON(data) || false;
-        if (!jsonTtyData) return;
-        var deviceDataPoints = jsonTtyData.DEVICE;
-        if (!(deviceDataPoints instanceof Array)) return;
-        // only keep latest reading per device between heartbeats
-        for (var i=0; i<deviceDataPoints.length; i++) {
-            var device = deviceDataPoints[i];
-            // Build the GUID
-            device.GUID = sutil.buildDeviceGuid(nodedetails.id,device);
-            // If we have meta data about the device, handle it.
-            if (sutil.deviceHasMetaData(device)) {
-                var meta = sutil.getDeviceMetaData(device);
-                if (meta.instant) trySendInstantData(device);
-            }
-            // Add the devices data to the heartbeat container
-            readings[deviceDataPoints[i].GUID] = deviceDataPoints[i];
-        }
-    };
-    var trySendInstantData = function(deviceData) {
-        if (instantContainer.hasOwnProperty(deviceData.GUID)) {
-            // We've got stuff
-            if (instantContainer[deviceData.GUID].DA!==deviceData.DA) {
-                // It's different
-                var newMsg = {
-                    "NODE_ID":nodedetails.id,
-                    "TIMESTAMP": new Date().getTime(),
-                    "DEVICE":[deviceData]
-                }
-                socket.emit('data',JSON.stringify(newMsg));
-            }
-        }
-        instantContainer[deviceData.GUID] = deviceData;
-    };
-    var getHeartbeat = function(){
-        var hb = {  
-            "NODE_ID":nodedetails.id,
-            "TIMESTAMP": null,
-            "DEVICE":[] 
-        };
-        hb.TIMESTAMP = new Date().getTime();
-        for (r in readings) {
-            hb.DEVICE.unshift(readings[r]);
-        }
-        readings={};
-        return JSON.stringify(hb);        
-    }
-    var beatThrottle = {
-        isGoodToGo : function() {
-            if (!sutil.isEmpty(readings) || beatThrottle.counter>beatThrottle.rate) {
-                beatThrottle.counter = 0;
-                return true;
-            } else {
-                beatThrottle.counter++;
-                return false;
-            }
-        },
-        rate : 10000/config.heartbeat_interval,
-        counter: 0
-    };
-    var executeCommand = function(data){
-        var data = sutil.getJSON(data);
-        var ds = data.DEVICE;
-        if (ds && ds.length>0) {
-            for (d in ds) {
-                var guid = ds[d].GUID;
-                delete ds[d].GUID;
-                ds[d].G = ds[d].G.toString(); //TODO get JP to fix for 0
-                switch(ds[d].D) {
-                    case 1004: 
-                        // Take picture
-                        sutil.takePicture(guid,nodedetails.token);
-                    break;
-                    default:
-                        sutil.writeTTY(tty,'{"DEVICE":['+JSON.stringify(ds[d])+']}');
-                    break;
-                }
-            }
-        }
-    }
     var setStateToOK = function() {
-        sutil.changeLEDColor(tty,'green');
+        utils.changeLEDColor('green');
     };
     var setStateToError = function() {
-        sutil.changeLEDColor(tty,'red');
+        utils.changeLEDColor('red');
     };
     // Camera
-    var Inotify = require('inotify-plusplus'), // should be 'inotify++', but npm has issues with the ++
-        inotify,
-        directive,
-        options,
-        cameraIv,
-        cameraGuid;
-
     inotify = Inotify.create(true); // stand-alone, persistent mode, runs until you hit ctrl+c
     directive = (function() {
         return {
           create: function (ev) {
             if(ev.name == 'v4l'){
-                cameraGuid = sutil.buildDeviceGuid(nodedetails.id,{G:"0",V:0,D:1004});
+                cameraGuid = utils.buildDeviceGuid(config.id,{G:"0",V:0,D:1004});
                 clearInterval(cameraIv);
                 cameraIv = setInterval(function() {
                     readings[cameraIv] = {
@@ -271,8 +183,8 @@
         // Is it a directory?
         if (stats.isCharacterDevice()) {
             // Yes it is
-            console.log(sutil.timestamp()+" Camera is Connected");
-            cameraGuid = sutil.buildDeviceGuid(nodedetails.id,{G:"0",V:0,D:1004});
+            console.log(utils.timestamp()+" Camera is Connected");
+            cameraGuid = utils.buildDeviceGuid(config.id,{G:"0",V:0,D:1004});
             cameraIv = setInterval(function() {
                 readings[cameraIv] = {
                     GUID:cameraGuid,
@@ -287,16 +199,17 @@
     catch (e) { }
     // Watdog Timer
     var watchDogStream = fs.open('/dev/watchdog','r+',function(err,fd) {
-        if (err) console.log(sutil.timestamp()+" "+err);
+        if (err) console.log(utils.timestamp()+" "+err);
         var watchDogPayload = new Buffer(1);
         watchDogPayload.write('\n','utf8');
         watchDogIv = setInterval(function() {
             fs.write(fd,watchDogPayload,0, watchDogPayload.length, -1,function(err) {
-                if (err) console.log(sutil.timestamp()+" "+err);
+                if (err) console.log(utils.timestamp()+" "+err);
             });
         },30000);
     });
+    // Process event handlers
     process.on('exit',function() {
-        sutil.changeLEDColor(tty,'yellow');
+        utils.changeLEDColor('yellow');
     });
 })();
