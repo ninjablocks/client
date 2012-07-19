@@ -17,7 +17,10 @@
         cameraIv,
         cameraGuid,
         config =  {
-            version:0.1,
+            nodeVersion:0.1,
+            arduinoVersion:0.1,
+            systemVersion:0.1,
+            utilitiesVersion:0.1,
             cloudHost: 'dojo.ninja.is',
             cloudStream: 'stream.ninja.is',
             cloudStreamPort: 443,
@@ -103,7 +106,16 @@
     });
     socket.on('whoareyou',function() {
         if (config.token) {
-            socket.emit('iam',{client:'beagle',version:config.version,token:config.token});
+            socket.emit('iam',{
+                client:'beagle',
+                version:{
+                    node:config.nodeVersion,
+                    arduino:config.arduinoVersion,
+                    utilities:config.utilitiesVersion,
+                    system:config.systemVersion
+                },
+                token:config.token
+            });
         } else {
             console.log(utils.timestamp()+' Awaiting Activation');
             utils.changeLEDColor('purple');
