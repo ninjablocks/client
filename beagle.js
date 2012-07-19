@@ -1,5 +1,4 @@
 (function() {
-    console.log(utils.timestamp()+' Ninja Block Starting Up');
     var fs = require('fs'),
         http = require('http'),
         path = require('path'),
@@ -41,6 +40,7 @@
             'secure':config.secure
         };
 
+    console.log(utils.timestamp()+' Ninja Block Starting Up');
     // Development overwrites
     if (process.argv[2] == 'local') {
         config.cloudHost = process.argv[3];
