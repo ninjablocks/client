@@ -209,8 +209,8 @@
                 if (err) console.log(utils.timestamp()+" "+err);
             });
         },30000);
+        utils.setWatchDogIv(watchDogIv);
     });
-    utils.setWatchDogIv(watchDogIv);
     // Process event handlers
     process.on('exit',function() {
         utils.changeLEDColor('yellow');
