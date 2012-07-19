@@ -27,11 +27,7 @@
             tokenFile: "/etc/opt/ninja/token.conf",
             updateLock: '/etc/utilities/tmp/.has_updated',
             heartbeat_interval: 500,
-            secure:true,
-            id:fs.readFileSync(config.serialFile).toString().replace(/\n/g,''),
-            token:(path.existsSync(config.tokenFile))
-                    ?fs.readFileSync(config.tokenFile).toString().replace(/\n/g,'')
-                    :false
+            secure:true
         },
         ioOpts = {
             'port':config.cloudPort,
@@ -39,6 +35,10 @@
             'try multiple transports':false,
             'secure':config.secure
         };
+        config.id=fs.readFileSync(config.serialFile).toString().replace(/\n/g,'');
+        config.token=(path.existsSync(config.tokenFile))
+                    ?fs.readFileSync(config.tokenFile).toString().replace(/\n/g,'')
+                    :false;
 
     console.log(utils.timestamp()+' Ninja Block Starting Up');
     // Development overwrites
