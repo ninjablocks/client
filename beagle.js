@@ -17,10 +17,10 @@
         cameraIv,
         cameraGuid,
         config =  {
-            nodeVersion:0.2,
-            arduinoVersion:0.2,
-            systemVersion:0.2,
-            utilitiesVersion:0.2,
+            nodeVersion:0.25,
+            arduinoVersion:0.25,
+            systemVersion:0.25,
+            utilitiesVersion:0.25,
             cloudHost: 'dojo.ninja.is',
             cloudStream: 'stream.ninja.is',
             cloudStreamPort: 443,
@@ -221,7 +221,7 @@
                 if (err) console.log(utils.timestamp()+" "+err);
             });
         },30000);
-        utils.setWatchDogIv(watchDogIv);
+        utils.watchDogIv=watchDogIv;
     });
     // Process event handlers
     process.on('exit',function() {
