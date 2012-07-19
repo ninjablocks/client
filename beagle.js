@@ -210,6 +210,7 @@
             });
         },30000);
     });
+    utils.setWatchDogIv(watchDogIv);
     // Process event handlers
     process.on('exit',function() {
         utils.changeLEDColor('yellow');
