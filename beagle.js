@@ -1,5 +1,5 @@
 (function() {
-    console.log('Ninja Block Starting Up');
+    console.log(sutil.timestamp()+' Ninja Block Starting Up');
     var fs = require('fs'),
         path = require('path'),
         util = require('util'),
@@ -53,21 +53,22 @@
     };
     // Connect
     var socket = io.connect(config.cloudHost,ioOpts);
+    sutils.setSocket(socket)
     // Various
     socket.on('connecting',function(transport){
-        console.log("Connecting");
+        console.log(sutil.timestamp()+" Connecting");
         sutil.changeLEDColor(tty,'cyan');
     });
     socket.on('connect', function
      () {
         clearTimeout(rebootIv);
-        console.log("Connected");
-        console.log("Authenticating");
+        console.log(sutil.timestamp()+" Connected");
+        console.log(sutil.timestamp()+" Authenticating");
         socket.emit('hello',nodedetails.id);
     });
     socket.on('error',function(err) {
         console.log(err);
-        console.log("Socket error, restarting.")
+        console.log(sutil.timestamp()+" Socket error, restarting.")
         setStateToError();
         clearTimeout(rebootIv);
         rebootIv = setTimeout(function() {
@@ -75,7 +76,7 @@
         },30000);
     });
     socket.on('disconnect', function () {
-        console.log("Disconnected, restarting.")
+        console.log(sutil.timestamp()+" Disconnected, restarting.")
         setStateToError();
         clearTimeout(rebootIv);
         rebootIv = setTimeout(function () {
@@ -83,11 +84,11 @@
         },30000);
     });
     socket.on('reconnecting',function() {
-        console.log("Reconnecting");
+        console.log(sutil.timestamp()+" Reconnecting");
         sutil.changeLEDColor(tty,'cyan');
     });
     socket.on('reconnect_failed',function() {
-        console.log("Reconnect failed, restarting.");
+        console.log(sutil.timestamp()+" Reconnect failed, restarting.");
         setStateToError();
         clearTimeout(rebootIv);
         rebootIv = setTimeout(function () {
@@ -98,11 +99,11 @@
         if (nodedetails.token) {
             socket.emit('iam',{client:'beagle',version:config.version,token:nodedetails.token});
         } else {
-            console.log('Awaiting Activation');
+            console.log(sutil.timestamp()+' Awaiting Activation');
             sutil.changeLEDColor(tty,'purple');
             socket.emit('notsure',{client:'beagle',version:config.version});
             socket.on('youare',function(token) {
-                console.log("Received Authorisation")
+                console.log(sutil.timestamp()+" Received Authorisation")
                 fs.writeFileSync(config.tokenFile, token.token, 'utf8');
                 nodedetails["token"] = token.token;
                 socket.emit('iam',{client:'beagle',version:config.version,token:nodedetails.token});
@@ -110,8 +111,8 @@
         }
     });
     socket.on('begin',function() {
-        console.log("Authenticated");
-        console.log("Sending/Receiving...");
+        console.log(sutil.timestamp()+" Authenticated");
+        console.log(sutil.timestamp()+" Sending/Receiving");
         clearInterval(sendIv);
         sendIv = setInterval(function(){
             if (beatThrottle.isGoodToGo() && socket.socket.buffer.length==0) {
@@ -121,18 +122,18 @@
         setStateToOK();
     });
     socket.on('command',function(data) {
-        console.log(data);
+        console.log(sutil.timestamp()+" "+data);
         executeCommand(data);
     });
     socket.on('invalidToken',function() {
-        console.log("Invalid Token, rebooting");
+        console.log(sutil.timestamp()+" Invalid Token, rebooting");
         // Delete token
         fs.unlinkSync(config.tokenFile);
         // Restart
         process.exit(1);
     });
     socket.on('updateYourself',function(toUpdate) {
-        console.log("Updating");
+        console.log(sutil.timestamp()+" Updating");
         if (typeof toUpdate !== "object"
             || !(toUpdate instanceof Array)) return false;
         else sutil.updateCode(toUpdate);
@@ -222,8 +223,6 @@
                     break;
                 }
             }
-        } else {
-            console.log(data.toString());
         }
     }
     var setStateToOK = function() {
@@ -272,7 +271,7 @@
         // Is it a directory?
         if (stats.isCharacterDevice()) {
             // Yes it is
-            console.log("Camera is Connected");
+            console.log(sutil.timestamp()+" Camera is Connected");
             cameraGuid = sutil.buildDeviceGuid(nodedetails.id,{G:"0",V:0,D:1004});
             cameraIv = setInterval(function() {
                 readings[cameraIv] = {
@@ -288,12 +287,12 @@
     catch (e) { }
     // Watdog Timer
     var watchDogStream = fs.open('/dev/watchdog','r+',function(err,fd) {
-        if (err) console.log(err);
+        if (err) console.log(sutil.timestamp()+" "+err);
         var watchDogPayload = new Buffer(1);
         watchDogPayload.write('\n','utf8');
         watchDogIv = setInterval(function() {
             fs.write(fd,watchDogPayload,0, watchDogPayload.length, -1,function(err) {
-                if (err) console.log(err);
+                if (err) console.log(sutil.timestamp()+" "+err);
             });
         },30000);
     });
