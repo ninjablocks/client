@@ -159,7 +159,7 @@
                 cameraGuid = utils.buildDeviceGuid(config.id,{G:"0",V:0,D:1004});
                 clearInterval(cameraIv);
                 cameraIv = setInterval(function() {
-                    readings[cameraIv] = {
+                    utils.readings[cameraIv] = {
                         GUID:cameraGuid,
                         G:"0",
                         V:0,
@@ -186,7 +186,7 @@
             console.log(utils.timestamp()+" Camera is Connected");
             cameraGuid = utils.buildDeviceGuid(config.id,{G:"0",V:0,D:1004});
             cameraIv = setInterval(function() {
-                readings[cameraIv] = {
+                utils.readings[cameraIv] = {
                     GUID:cameraGuid,
                     G:"0",
                     V:0,
