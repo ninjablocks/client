@@ -28,7 +28,7 @@
             devtty: "/dev/ttyO1",
             serialFile: "/etc/opt/ninja/serial.conf",
             tokenFile: "/etc/opt/ninja/token.conf",
-            updateLock: '/opt/utilities/tmp/.has_updated',
+            updateLock: '/etc/opt/ninja/.has_updated',
             heartbeat_interval: 500,
             secure:true
         },
