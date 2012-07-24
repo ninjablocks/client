@@ -68,6 +68,9 @@
     socket.on('connecting',function(transport){
         console.log(utils.timestamp()+" Connecting");
         utils.changeLEDColor('cyan');
+        rebootIv = setTimeout(function () {
+            process.exit(1);
+        },300000);
     });
     socket.on('connect',function() {
         clearTimeout(rebootIv);
