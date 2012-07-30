@@ -2,7 +2,7 @@
   "version": "0.1.0",
   "dependencies": { 
   	"serialport" : "0.7.5",
-  	"socket.io-client" : "https://github.com/ninjablocks/socket.io-client/tarball/master",
+  	"upnode" : "latest",
   	"inotify-plusplus": "1.0.1"
   }
 }

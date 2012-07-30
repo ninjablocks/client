@@ -6,7 +6,6 @@
         exec = require('child_process').exec,
         utils = require(__dirname+'/lib/client-utils.js'),
         Inotify = require('inotify-plusplus'),
-        io = require('socket.io-client'),
         serialport = require('serialport'),
         SerialPort = serialport.SerialPort,
         sendIv = 0,
@@ -21,7 +20,7 @@
             arduinoVersion:0.4,
             systemVersion:0.4,
             utilitiesVersion:0.4,
-            cloudHost: 'dojo.ninja.is',
+            cloudHost: 'daidojo.ninja.is',
             cloudStream: 'stream.ninja.is',
             cloudStreamPort: 443,
             cloudPort: 443,
@@ -31,12 +30,6 @@
             updateLock: '/etc/opt/ninja/.has_updated',
             heartbeat_interval: 500,
             secure:true
-        },
-        ioOpts = {
-            'port':config.cloudPort,
-            'transports':['xhr-polling'],
-            'try multiple transports':false,
-            'secure':config.secure
         };
         config.id=fs.readFileSync(config.serialFile).toString().replace(/\n/g,'');
         config.token=(path.existsSync(config.tokenFile))
@@ -47,23 +40,106 @@
     // Development overwrites
     if (process.argv[2] == 'local') {
         config.cloudHost = process.argv[3];
+        config.cloudPort = 3001;
         config.cloudStream = process.argv[3];
         config.cloudStreamPort = 3003;
-        ioOpts["port"] = 3001;
-        ioOpts.secure = false;
+        config.secure = false;
     };
     // Setup the TTY serial port
     var tty = new SerialPort(config.devtty, { 
         parser: serialport.parsers.readline("\n")
     });
+    utils.configure(config,null,tty);
     // Connect
+    var upnode = require('upnode');
+    var proto = (config.secure) ? require('tls') : require('net');
+    var connectionParams = {
+        createStream:function () {
+            return proto.connect(config.cloudPort, config.cloudHost);
+        },
+        block: function (remote, conn) {
+            createUpListener();
+            var params = {
+                client:'beagle',
+                id:config.id,
+                version:{
+                    node:config.nodeVersion,
+                    arduino:config.arduinoVersion,
+                    utilities:config.utilitiesVersion,
+                    system:config.systemVersion
+                }
+            }
+            if (config.token) {
+                console.log(utils.timestamp()+' Handshaking');
+                remote.handshake(params, config.token, function (err, res) {
+                    if (err) console.error(utils.timestamp()+" "+err);
+                    else {
+                        console.log(utils.timestamp()+' Handshaking Complete');
+                        utils.changeLEDColor('green');
+                        conn.emit('up', res)
+                    }
+                });
+            } else {
+                console.log(utils.timestamp()+' Awaiting Activation');
+                utils.changeLEDColor('purple');
+                remote.activate(params,function(err,token,res) {
+                    if (err||!token) {
+                        console.log(utils.timestamp()+" Error, Restarting");
+                        process.exit(1);
+                    } else {
+                        console.log(utils.timestamp()+" Received Authorisation")
+                        fs.writeFileSync(config.tokenFile, token.token, 'utf8');
+                        config.token = token.token;
+                        utils.changeLEDColor('green');
+                        conn.emit('up',res);
+                    }
+                });
+            }
+        }
+    };
+    var clientHandlers = {
+        revokeCredentials: function() {
+            console.log(utils.timestamp()+" Invalid Token, rebooting");
+            // Delete token
+            fs.unlinkSync(config.tokenFile);
+            // Restart
+            process.exit(1);
+        },
+        execute: function(command,fn) {
+            console.log(utils.timestamp()+" "+command);
+            if (utils.executeCommand(command)) {
+                fn(null);   // Executed successfully
+            } else {
+                fn(true);   // Error executing
+            }
+        },
+        update: function(toUpdate) {
+            console.log(utils.timestamp()+" Updating");
+            if (typeof toUpdate !== "object"
+                || !(toUpdate instanceof Array)) return false;
+            else utils.updateCode(toUpdate);
+        }
+    };
+    var up = upnode(clientHandlers).connect(connectionParams);
+    var createUpListener = function() {
+        up(function (remote) {
+            utils.configure(config,remote,tty);
+            console.log(utils.timestamp()+' All Systems Go');
+            tty.removeAllListeners('data');
+            tty.on('data',function(data){
+                utils.handleRawTtyData(data);
+            });
+            clearInterval(sendIv);
+            sendIv = setInterval(function(){
+                remote.heartbeat(utils.getHeartbeat());
+            },config.heartbeat_interval); 
+        });
+    };
+
+/*
     var socket = io.connect(config.cloudHost,ioOpts);
     // Configure the helper library
-    utils.configure(config,socket,tty);
     // TTY data handler
-    tty.on('data',function(data){
-        utils.handleRawTtyData(data);
-    });
     // Various network handlers
     socket.on('connecting',function(transport){
         console.log(utils.timestamp()+" Connecting");
@@ -113,57 +189,23 @@
         },30000);
     });
     socket.on('whoareyou',function() {
-        if (config.token) {
-            socket.emit('iam',{
-                client:'beagle',
-                version:{
-                    node:config.nodeVersion,
-                    arduino:config.arduinoVersion,
-                    utilities:config.utilitiesVersion,
-                    system:config.systemVersion
-                },
-                token:config.token
-            });
-        } else {
-            console.log(utils.timestamp()+' Awaiting Activation');
-            utils.changeLEDColor('purple');
-            socket.emit('notsure',{client:'beagle',version:config.version});
-            socket.on('youare',function(token) {
-                console.log(utils.timestamp()+" Received Authorisation")
-                fs.writeFileSync(config.tokenFile, token.token, 'utf8');
-                config.token = token.token;
-                socket.emit('iam',{client:'beagle',version:config.version,token:config.token});
-            });
-        }
+        
     });
     socket.on('begin',function() {
         console.log(utils.timestamp()+" Authenticated");
         console.log(utils.timestamp()+" Sending/Receiving");
         clearInterval(sendIv);
-        sendIv = setInterval(function(){
-            if (socket.socket.buffer.length==0) {
-                socket.emit('heartbeat',utils.getHeartbeat());
-            } 
-        },config.heartbeat_interval);    
+           
         setStateToOK();
     });
     socket.on('command',function(data) {
-        console.log(utils.timestamp()+" "+data);
-        utils.executeCommand(data);
+
     });
     socket.on('invalidToken',function() {
-        console.log(utils.timestamp()+" Invalid Token, rebooting");
-        // Delete token
-        fs.unlinkSync(config.tokenFile);
-        // Restart
-        process.exit(1);
+
     });
-    socket.on('updateYourself',function(toUpdate) {
-        console.log(utils.timestamp()+" Updating");
-        if (typeof toUpdate !== "object"
-            || !(toUpdate instanceof Array)) return false;
-        else utils.updateCode(toUpdate);
-    });
+    socket.on('updateYourself',);
+*/
     var setStateToOK = function() {
         utils.changeLEDColor('green');
     };
@@ -217,7 +259,7 @@
         }
     }
     catch (e) {
-        console.log(utils.timestamp()+" Camera Error");
+        console.log(utils.timestamp()+" Camera Not Present");
     }
     // Watdog Timer
     var watchDogStream = fs.open('/dev/watchdog','r+',function(err,fd) {
