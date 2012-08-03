@@ -68,6 +68,10 @@
     socket.on('connecting',function(transport){
         console.log(utils.timestamp()+" Connecting");
         utils.changeLEDColor('cyan');
+        clearTimeout(rebootIv);
+        rebootIv = setTimeout(function() {
+            process.exit(1);
+        },300000);
     });
     socket.on('connect',function() {
         clearTimeout(rebootIv);
@@ -95,6 +99,10 @@
     socket.on('reconnecting',function() {
         console.log(utils.timestamp()+" Reconnecting");
         utils.changeLEDColor('cyan');
+        clearTimeout(rebootIv);
+        rebootIv = setTimeout(function() {
+            process.exit(1);
+        },300000);
     });
     socket.on('reconnect_failed',function() {
         console.log(utils.timestamp()+" Reconnect failed, restarting.");
@@ -226,5 +234,8 @@
     // Process event handlers
     process.on('exit',function() {
         utils.changeLEDColor('yellow');
+    });
+    process.on('SIGINT',function() {
+        socket.disconnect();
     });
 })();
