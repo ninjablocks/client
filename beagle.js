@@ -69,7 +69,11 @@
         console.log(utils.timestamp()+" Connecting");
         utils.changeLEDColor('cyan');
         clearTimeout(rebootIv);
+<<<<<<< HEAD
         rebootIv = setTimeout(function() {
+=======
+        rebootIv = setTimeout(function () {
+>>>>>>> 72289513b890718968e6819d71510bf23a4b2b58
             process.exit(1);
         },300000);
     });
