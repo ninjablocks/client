@@ -145,7 +145,7 @@
         console.log(utils.timestamp()+" Connecting");
         utils.changeLEDColor('cyan');
         clearTimeout(rebootIv);
-        rebootIv = setTimeout(function () {
+        rebootIv = setTimeout(function() {
             process.exit(1);
         },300000);
     });
@@ -176,7 +176,7 @@
         console.log(utils.timestamp()+" Reconnecting");
         utils.changeLEDColor('cyan');
         clearTimeout(rebootIv);
-        rebootIv = setTimeout(function () {
+        rebootIv = setTimeout(function() {
             process.exit(1);
         },300000);
     });
@@ -276,5 +276,8 @@
     // Process event handlers
     process.on('exit',function() {
         utils.changeLEDColor('yellow');
+    });
+    process.on('SIGINT',function() {
+        socket.disconnect();
     });
 })();
