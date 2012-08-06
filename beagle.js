@@ -101,7 +101,6 @@
             process.exit(1);
         },
         execute: function(command,fn) {
-            console.log(utils.timestamp()+" "+command);
             if (utils.executeCommand(command)) {
                 fn(null);   // Executed successfully
             } else {
@@ -131,77 +130,6 @@
             },config.heartbeat_interval); 
         });
     };
-
-/*
-    var socket = io.connect(config.cloudHost,ioOpts);
-    // Configure the helper library
-    // TTY data handler
-    // Various network handlers
-    socket.on('connecting',function(transport){
-        console.log(utils.timestamp()+" Connecting");
-        utils.changeLEDColor('cyan');
-        clearTimeout(rebootIv);
-        rebootIv = setTimeout(function() {
-            process.exit(1);
-        },300000);
-    });
-    socket.on('connect',function() {
-        clearTimeout(rebootIv);
-        console.log(utils.timestamp()+" Connected");
-        console.log(utils.timestamp()+" Authenticating");
-        socket.emit('hello',config.id);
-    });
-    socket.on('error',function(err) {
-        console.log(err);
-        console.log(utils.timestamp()+" Socket error, restarting.")
-        setStateToError();
-        clearTimeout(rebootIv);
-        rebootIv = setTimeout(function() {
-            process.exit(1);
-        },30000);
-    });
-    socket.on('disconnect', function () {
-        console.log(utils.timestamp()+" Disconnected, restarting.")
-        setStateToError();
-        clearTimeout(rebootIv);
-        rebootIv = setTimeout(function () {
-            process.exit(1);
-        },30000);
-    });
-    socket.on('reconnecting',function() {
-        console.log(utils.timestamp()+" Reconnecting");
-        utils.changeLEDColor('cyan');
-        clearTimeout(rebootIv);
-        rebootIv = setTimeout(function() {
-            process.exit(1);
-        },300000);
-    });
-    socket.on('reconnect_failed',function() {
-        console.log(utils.timestamp()+" Reconnect failed, restarting.");
-        setStateToError();
-        clearTimeout(rebootIv);
-        rebootIv = setTimeout(function () {
-            process.exit(1);
-        },30000);
-    });
-    socket.on('whoareyou',function() {
-        
-    });
-    socket.on('begin',function() {
-        console.log(utils.timestamp()+" Authenticated");
-        console.log(utils.timestamp()+" Sending/Receiving");
-        clearInterval(sendIv);
-           
-        setStateToOK();
-    });
-    socket.on('command',function(data) {
-
-    });
-    socket.on('invalidToken',function() {
-
-    });
-    socket.on('updateYourself',);
-*/
     var setStateToOK = function() {
         utils.changeLEDColor('green');
     };
@@ -274,6 +202,10 @@
         utils.changeLEDColor('yellow');
     });
     process.on('SIGINT',function() {
-        socket.disconnect();
+        // Ctrl + C
+    });
+    process.on('uncaughtException',function() {
+        // Unknown error
+        process.exit(1);
     });
 })();
