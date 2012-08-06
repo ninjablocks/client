@@ -32,9 +32,6 @@
             secure:true
         };
         config.id=fs.readFileSync(config.serialFile).toString().replace(/\n/g,'');
-        config.token=(path.existsSync(config.tokenFile))
-                    ?fs.readFileSync(config.tokenFile).toString().replace(/\n/g,'')
-                    :false;
 
     console.log(utils.timestamp()+' Ninja Block Starting Up');
     // Development overwrites
@@ -69,28 +66,26 @@
                     system:config.systemVersion
                 }
             }
-            if (config.token) {
-                console.log(utils.timestamp()+' Handshaking');
-                remote.handshake(params, config.token, function (err, res) {
+            var token = utils.fetchBlockToken();
+            if (token) {
+                utils.changeLEDColor('cyan');
+                console.log(utils.timestamp()+' Connecting');
+                remote.handshake(params, token, function (err, res) {
                     if (err) console.error(utils.timestamp()+" "+err);
                     else {
-                        console.log(utils.timestamp()+' Handshaking Complete');
-                        utils.changeLEDColor('green');
                         conn.emit('up', res)
                     }
                 });
             } else {
-                console.log(utils.timestamp()+' Awaiting Activation');
                 utils.changeLEDColor('purple');
+                console.log(utils.timestamp()+' Awaiting Activation');
                 remote.activate(params,function(err,token,res) {
                     if (err||!token) {
                         console.log(utils.timestamp()+" Error, Restarting");
                         process.exit(1);
                     } else {
-                        console.log(utils.timestamp()+" Received Authorisation")
+                        console.log(utils.timestamp()+" Received Authorisation Codes");
                         fs.writeFileSync(config.tokenFile, token.token, 'utf8');
-                        config.token = token.token;
-                        utils.changeLEDColor('green');
                         conn.emit('up',res);
                     }
                 });
@@ -124,6 +119,7 @@
     var createUpListener = function() {
         up(function (remote) {
             utils.configure(config,remote,tty);
+            utils.changeLEDColor('green');
             console.log(utils.timestamp()+' All Systems Go');
             tty.removeAllListeners('data');
             tty.on('data',function(data){
