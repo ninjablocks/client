@@ -55,7 +55,6 @@
             return proto.connect(config.cloudPort, config.cloudHost);
         },
         block: function (remote, conn) {
-            createUpListener();
             var params = {
                 client:'beagle',
                 id:config.id,
@@ -115,21 +114,19 @@
         }
     };
     var up = upnode(clientHandlers).connect(connectionParams);
-    var createUpListener = function() {
-        up(function (remote) {
-            utils.configure(config,remote,tty);
-            utils.changeLEDColor('green');
-            console.log(utils.timestamp()+' All Systems Go');
-            tty.removeAllListeners('data');
-            tty.on('data',function(data){
-                utils.handleRawTtyData(data);
-            });
-            clearInterval(sendIv);
-            sendIv = setInterval(function(){
-                remote.heartbeat(utils.getHeartbeat());
-            },config.heartbeat_interval); 
+    up.on('up',function (remote) {
+        utils.configure(config,remote,tty);
+        utils.changeLEDColor('green');
+        console.log(utils.timestamp()+' All Systems Go');
+        tty.removeAllListeners('data');
+        tty.on('data',function(data){
+            utils.handleRawTtyData(data);
         });
-    };
+        clearInterval(sendIv);
+        sendIv = setInterval(function(){
+            remote.heartbeat(utils.getHeartbeat());
+        },config.heartbeat_interval); 
+    });
     var setStateToOK = function() {
         utils.changeLEDColor('green');
     };
