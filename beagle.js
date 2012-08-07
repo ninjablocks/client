@@ -17,7 +17,7 @@
         cameraIv,
         cameraGuid,
         config =  {
-            nodeVersion:0.4,
+            nodeVersion:0.5,
             arduinoVersion:0.4,
             systemVersion:0.4,
             utilitiesVersion:0.4,
