@@ -20,7 +20,6 @@
             nodeVersion:0.5,
             arduinoVersion:0.4,
             systemVersion:0.4,
-            utilitiesVersion:0.4,
             cloudHost: 'daidojo.ninja.is',
             cloudStream: 'stream.ninja.is',
             cloudStreamPort: 443,
@@ -29,7 +28,7 @@
             serialFile: "/etc/opt/ninja/serial.conf",
             tokenFile: "/etc/opt/ninja/token.conf",
             updateLock: '/etc/opt/ninja/.has_updated',
-            heartbeat_interval: 500,
+            heartbeat_interval: 750,
             secure:true
         },
         ioOpts = {
@@ -42,7 +41,10 @@
         config.token=(path.existsSync(config.tokenFile))
                     ?fs.readFileSync(config.tokenFile).toString().replace(/\n/g,'')
                     :false;
-
+        config.utilitiesVersion=(path.existsSync('/opt/utilities/version'))
+                    ?parseFloat(fs.readFileSync('/opt/utilities/version'))
+                    :0.4;
+                    
     console.log(utils.timestamp()+' Ninja Block Starting Up');
     // Development overwrites
     if (process.argv[2] == 'local') {
