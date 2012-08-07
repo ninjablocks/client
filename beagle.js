@@ -48,6 +48,7 @@
     });
     utils.configure(config,null,tty);
     // Connect
+    // up down reconnect reconnect reconnect up
     var upnode = require('upnode');
     var proto = (config.secure) ? require('tls') : require('net');
     var connectionParams = {
@@ -126,6 +127,10 @@
         sendIv = setInterval(function(){
             remote.heartbeat(utils.getHeartbeat());
         },config.heartbeat_interval); 
+    });
+    up.on('reconnect',function() {
+        utils.changeLEDColor('cyan');
+        console.log(utils.timestamp()+' Reonnecting');
     });
     var setStateToOK = function() {
         utils.changeLEDColor('green');
