@@ -21,7 +21,7 @@
             arduinoVersion:0.4,
             systemVersion:0.4,
             utilitiesVersion:0.4,
-            cloudHost: 'dojo.ninja.is',
+            cloudHost: 'daidojo.ninja.is',
             cloudStream: 'stream.ninja.is',
             cloudStreamPort: 443,
             cloudPort: 443,
