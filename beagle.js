@@ -135,7 +135,8 @@
                     arduino:config.arduinoVersion,
                     utilities:config.utilitiesVersion,
                     system:config.systemVersion
-                });
+                }
+            });
             socket.on('youare',function(token) {
                 console.log(utils.timestamp()+" Received Authorisation")
                 fs.writeFileSync(config.tokenFile, token.token, 'utf8');
