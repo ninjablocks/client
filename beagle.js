@@ -129,12 +129,27 @@
         } else {
             console.log(utils.timestamp()+' Awaiting Activation');
             utils.changeLEDColor('purple');
-            socket.emit('notsure',{client:'beagle',version:config.version});
+            socket.emit('notsure',{client:'beagle',
+                version:{
+                    node:config.nodeVersion,
+                    arduino:config.arduinoVersion,
+                    utilities:config.utilitiesVersion,
+                    system:config.systemVersion
+                });
             socket.on('youare',function(token) {
                 console.log(utils.timestamp()+" Received Authorisation")
                 fs.writeFileSync(config.tokenFile, token.token, 'utf8');
                 config.token = token.token;
-                socket.emit('iam',{client:'beagle',version:config.version,token:config.token});
+                socket.emit('iam',{
+                    client:'beagle',
+                    version:{
+                        node:config.nodeVersion,
+                        arduino:config.arduinoVersion,
+                        utilities:config.utilitiesVersion,
+                        system:config.systemVersion
+                    },
+                    token:config.token
+                });
             });
         }
     });
