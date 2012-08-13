@@ -30,9 +30,6 @@ var fs = require('fs'),
         secure:true
     };
     config.id=fs.readFileSync(config.serialFile).toString().replace(/\n/g,'');
-    config.token=(path.existsSync(config.tokenFile))
-                ?fs.readFileSync(config.tokenFile).toString().replace(/\n/g,'')
-                :false;
     config.utilitiesVersion=(path.existsSync('/opt/utilities/version'))
                 ?parseFloat(fs.readFileSync('/opt/utilities/version'))
                 :0.4;
@@ -50,12 +47,18 @@ if (process.argv[2] == 'local') {
 var tty = new SerialPort(config.devtty, { 
     parser: serialport.parsers.readline("\n")
 });
-utils.configure(config,null,tty);
+utils.configure(config,tty);
+tty.on('data',function(data){
+    utils.handleRawTtyData(data);
+});
 // Connect
 // up down reconnect reconnect reconnect up
 var upnode = require('upnode');
 var proto = (config.secure) ? require('tls') : require('net');
 var connectionParams = {
+    ping:10000,
+    timeout:5000,
+    reconnect:2000,
     createStream:function () {
         return proto.connect(config.cloudPort, config.cloudHost);
     },
@@ -77,28 +80,29 @@ var connectionParams = {
             remote.handshake(params, token, function (err, res) {
                 if (err) console.error(utils.timestamp()+" "+err);
                 else {
-                    conn.emit('up', res)
+                    conn.emit('up',res);
                 }
             });
         } else {
-            utils.changeLEDColor('purple');
+            setTimeout(function() {
+                utils.changeLEDColor('purple');// Short term hack to make sure it goes purple
+            },100);
             console.log(utils.timestamp()+' Awaiting Activation');
-            remote.activate(params,function(err,token,res) {
-                if (err||!token) {
+            remote.activate(params,function(err,auth) {
+                if (err||!auth) {
                     console.log(utils.timestamp()+" Error, Restarting");
-                    process.exit(1);
                 } else {
-                    console.log(utils.timestamp()+" Received Authorisation Codes");
-                    fs.writeFileSync(config.tokenFile, token.token, 'utf8');
-                    conn.emit('up',res);
+                    console.log(utils.timestamp()+" Received Authorisation");
+                    fs.writeFileSync(config.tokenFile, auth.token, 'utf8');
                 }
+                process.exit(1);
             });
         }
     }
 };
 var clientHandlers = {
     revokeCredentials: function() {
-        console.log(utils.timestamp()+" Invalid Token, rebooting");
+        console.log(utils.timestamp()+" Invalid Token, Restarting");
         // Delete token
         fs.unlinkSync(config.tokenFile);
         // Restart
@@ -120,13 +124,11 @@ var clientHandlers = {
 };
 var up = upnode(clientHandlers).connect(connectionParams);
 up.on('up',function (remote) {
-    utils.configure(config,remote,tty);
-    utils.changeLEDColor('green');
     console.log(utils.timestamp()+' All Systems Go');
-    tty.removeAllListeners('data');
-    tty.on('data',function(data){
-        utils.handleRawTtyData(data);
-    });
+    setTimeout(function() {
+        utils.changeLEDColor('green');
+    },100)
+    utils.remote = remote;
     clearInterval(sendIv);
     sendIv = setInterval(function(){
         remote.heartbeat(utils.getHeartbeat());
@@ -136,12 +138,6 @@ up.on('reconnect',function() {
     utils.changeLEDColor('cyan');
     console.log(utils.timestamp()+' Reconnecting');
 });
-var setStateToOK = function() {
-    utils.changeLEDColor('green');
-};
-var setStateToError = function() {
-    utils.changeLEDColor('red');
-};
 // Camera
 inotify = Inotify.create(true); // stand-alone, persistent mode, runs until you hit ctrl+c
 directive = (function() {
@@ -156,7 +152,7 @@ directive = (function() {
                     G:"0",
                     V:0,
                     D:1004,
-                    DA:1
+                    DA:"1"
                 };
             },config.heartbeat_interval);
         }
@@ -183,7 +179,7 @@ try {
                 G:"0",
                 V:0,
                 D:1004,
-                DA:1
+                DA:"1"
             };
         },config.heartbeat_interval);
     }
@@ -204,13 +200,16 @@ var watchDogStream = fs.open('/dev/watchdog','r+',function(err,fd) {
     utils.watchDogIv=watchDogIv;
 });
 // Process event handlers
+/*
 process.on('exit',function() {
     utils.changeLEDColor('yellow');
 });
 process.on('SIGINT',function() {
     // Ctrl + C
 });
-process.on('uncaughtException',function() {
+process.on('uncaughtException',function(err) {
     // Unknown error
+    console.log(err);
     process.exit(1);
 });
+*/
