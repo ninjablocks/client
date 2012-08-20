@@ -91,11 +91,14 @@ var connectionParams = {
             remote.activate(params,function(err,auth) {
                 if (err||!auth) {
                     console.log(utils.timestamp()+" Error, Restarting");
+                    process.exit(1)
                 } else {
                     console.log(utils.timestamp()+" Received Authorisation");
-                    fs.writeFileSync(config.tokenFile, auth.token, 'utf8');
+                    fs.writeFile(config.tokenFile, auth.token, 'utf8',function(err) {
+                        if (err) throw err;
+                        else process.exit(1)
+                    });
                 }
-                process.exit(1);
             });
         }
     }
