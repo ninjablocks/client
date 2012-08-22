@@ -98,7 +98,8 @@ var connectionParams = {
                     fs.writeFile(config.tokenFile, auth.token, 'utf8',function(err) {
                         if (err) throw err;
                         else {
-                            remote.confirmActivation(function() {
+                            params.token=auth.token;
+                            remote.confirmActivation(params,function(err) {
                                 console.log(utils.timestamp()+" Confirmed Authorisation, Restarting");
                                 process.exit(1);
                             });
