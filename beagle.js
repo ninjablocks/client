@@ -84,8 +84,9 @@ var connectionParams = {
                 }
             });
         } else {
+            // Short term hack to make sure it goes purple
             setTimeout(function() {
-                utils.changeLEDColor('purple');// Short term hack to make sure it goes purple
+                utils.changeLEDColor('purple');
             },100);
             console.log(utils.timestamp()+' Awaiting Activation');
             remote.activate(params,function(err,auth) {
@@ -93,10 +94,15 @@ var connectionParams = {
                     console.log(utils.timestamp()+" Error, Restarting");
                     process.exit(1)
                 } else {
-                    console.log(utils.timestamp()+" Received Authorisation");
+                    console.log(utils.timestamp()+" Received Authorisation, Confirming");
                     fs.writeFile(config.tokenFile, auth.token, 'utf8',function(err) {
                         if (err) throw err;
-                        else process.exit(1)
+                        else {
+                            remote.confirmActivation(function() {
+                                console.log(utils.timestamp()+" Confirmed Authorisation, Restarting");
+                                process.exit(1);
+                            });
+                        }
                     });
                 }
             });
