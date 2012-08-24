@@ -1,5 +1,5 @@
 { "name": "ninja-beagle",
-  "version": "0.1.0",
+  "version": "0.6.0",
   "dependencies": { 
   	"serialport" : "0.7.5",
   	"upnode" : "latest",
