@@ -15,7 +15,7 @@ var fs = require('fs'),
     cameraIv,
     cameraGuid,
     config =  {
-        nodeVersion:0.6,
+        nodeVersion:0.7,
         arduinoVersion:0.4,
         systemVersion:0.4,
         cloudHost: 'zendo.ninja.is',
