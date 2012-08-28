@@ -18,7 +18,7 @@ var fs = require('fs'),
         nodeVersion:0.7,
         arduinoVersion:0.4,
         systemVersion:0.4,
-        cloudHost: 'zendo.ninja.is',
+        cloudHost: 'staging-zendo.ninja.is',
         cloudStream: 'stream.ninja.is',
         cloudStreamPort: 443,
         cloudPort: 443,
@@ -153,6 +153,7 @@ inotify = Inotify.create(true); // stand-alone, persistent mode, runs until you 
 directive = (function() {
     return {
       create: function (ev) {
+        console.log(ev);
         if(ev.name == 'v4l'){
             cameraGuid = utils.buildDeviceGuid(config.id,{G:"0",V:0,D:1004});
             clearInterval(cameraIv);
@@ -184,7 +185,7 @@ try {
         console.log(utils.timestamp()+" Camera is Connected");
         cameraGuid = utils.buildDeviceGuid(config.id,{G:"0",V:0,D:1004});
         cameraIv = setInterval(function() {
-            utils.readings[cameraIv] = {
+            utils.readings[cameraGuid] = {
                 GUID:cameraGuid,
                 G:"0",
                 V:0,
@@ -197,6 +198,42 @@ try {
 catch (e) {
     console.log(utils.timestamp()+" Camera Not Present");
 }
+// HID
+// Bind to each HID device (some items present as two devices)
+var HID = require('hidstream');
+var devices = HID.devices()
+var hidIv;
+for (var i=0;i<devices.length;i++) {
+    (function(deviceDetails){
+        var device = new HID.device(deviceDetails.path);
+        /*  when we support all HID's
+        var payload = {
+            G:"0",
+            V:deviceDetails.vendorId,
+            D:deviceDetails.productId,
+            DA:0
+        };
+         */
+        var payload = {
+            G:"0",
+            V:0,
+            D:14,
+            DA:0
+        };
+        payload.GUID=utils.buildDeviceGuid(config.id,payload);
+        device.on("data", function(data) {
+            // Need to figure out if this is a good idea.
+            payload.DA=data.keyCodes[0]||data.charCodes[0]||data.modKeys[0];
+            utils.sendData(payload);
+            
+        });
+        // Send heartbeats
+        hidIv = setInterval(function() {
+            utils.readings[payload.GUID] = payload;
+        },config.heartbeat_interval);
+    })(devices[i]);
+}
+
 // Watdog Timer
 var watchDogStream = fs.open('/dev/watchdog','r+',function(err,fd) {
     if (err) console.log(utils.timestamp()+" "+err);
@@ -206,7 +243,7 @@ var watchDogStream = fs.open('/dev/watchdog','r+',function(err,fd) {
         fs.write(fd,watchDogPayload,0, watchDogPayload.length, -1,function(err) {
             if (err) console.log(utils.timestamp()+" "+err);
         });
-    },30000);
+    },15000);
     utils.watchDogIv=watchDogIv;
 });
 // Process event handlers

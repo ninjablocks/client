@@ -3,6 +3,7 @@
   "dependencies": { 
   	"serialport" : "0.7.5",
   	"upnode" : "latest",
-  	"inotify-plusplus": "1.0.1"
+  	"inotify-plusplus": "1.0.1",
+  	"hidstream":"https://github.com/nexxy/hidstream/tarball/master"
   }
 }
