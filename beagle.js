@@ -153,7 +153,6 @@ inotify = Inotify.create(true); // stand-alone, persistent mode, runs until you 
 directive = (function() {
     return {
       create: function (ev) {
-        console.log(ev);
         if(ev.name == 'v4l'){
             cameraGuid = utils.buildDeviceGuid(config.id,{G:"0",V:0,D:1004});
             clearInterval(cameraIv);
@@ -201,7 +200,7 @@ catch (e) {
 // HID
 // Bind to each HID device (some items present as two devices)
 var HID = require('hidstream');
-var devices = HID.devices()
+var devices = HID.devices();
 var hidIv;
 for (var i=0;i<devices.length;i++) {
     (function(deviceDetails){
