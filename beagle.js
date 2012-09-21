@@ -18,11 +18,11 @@ var fs = require('fs'),
         nodeVersion:0.7,
         arduinoVersion:0.4,
         systemVersion:0.4,
-        cloudHost: 'staging-zendo.ninja.is',
+        cloudHost: 'zendo.ninja.is',
         cloudStream: 'stream.ninja.is',
         cloudStreamPort: 443,
         cloudPort: 443,
-        devtty: "/dev/ttyO1",
+        devtty: "/dev/null",
         serialFile: "/etc/opt/ninja/serial.conf",
         tokenFile: "/etc/opt/ninja/token.conf",
         updateLock: '/etc/opt/ninja/.has_updated',
@@ -64,7 +64,7 @@ var connectionParams = {
     },
     block: function (remote, conn) {
         var params = {
-            client:'beagle',
+            client:'pi',
             id:config.id,
             version:{
                 node:config.nodeVersion,
@@ -234,17 +234,18 @@ for (var i=0;i<devices.length;i++) {
 }
 
 // Watdog Timer
-var watchDogStream = fs.open('/dev/watchdog','r+',function(err,fd) {
-    if (err) console.log(utils.timestamp()+" "+err);
-    var watchDogPayload = new Buffer(1);
-    watchDogPayload.write('\n','utf8');
-    watchDogIv = setInterval(function() {
-        fs.write(fd,watchDogPayload,0, watchDogPayload.length, -1,function(err) {
-            if (err) console.log(utils.timestamp()+" "+err);
-        });
-    },15000);
-    utils.watchDogIv=watchDogIv;
-});
+//var watchDogStream = fs.open('/dev/watchdog','r+',function(err,fd) {
+  //  if (err) console.log(utils.timestamp()+" "+err);
+    //var watchDogPayload = new Buffer(1);
+  //  watchDogPayload.write('\n','utf8');
+    //watchDogIv = setInterval(function() {
+      //  fs.write(fd,watchDogPayload,0, watchDogPayload.length, -1,function(err) {
+        //    if (err) console.log(utils.timestamp()+" "+err);
+        //});
+   // },15000);
+   // utils.watchDogIv=watchDogIv;
+//});
+
 // Process event handlers
 /*
 process.on('exit',function() {
