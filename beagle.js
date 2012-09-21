@@ -233,6 +233,33 @@ for (var i=0;i<devices.length;i++) {
     })(devices[i]);
 }
 
+/*
+        Neurosky stuff
+ */
+
+utils.getBrainScan(function(err,brain) {
+    if (err) console.log(err);
+    else {
+        console.log(brain);
+        var payload1 = {
+            G:"0",
+            V:0,
+            D:9,
+            DA:brain.eSense.attention
+        };
+        var payload2 = {
+            G:"0",
+            V:0,
+            D:8,
+            DA:brain.eSense.meditation
+        };
+        utils.sendData(payload1);
+        utils.sendData(payload2);
+    }
+});
+
+
+
 // Watdog Timer
 //var watchDogStream = fs.open('/dev/watchdog','r+',function(err,fd) {
   //  if (err) console.log(utils.timestamp()+" "+err);
