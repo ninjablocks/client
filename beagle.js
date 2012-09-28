@@ -3,6 +3,7 @@ var fs = require('fs'),
     path = require('path'),
     util = require('util'),
     exec = require('child_process').exec,
+    child_process = require('child_process'),
     utils = require(__dirname+'/lib/client-utils.js'),
     Inotify = require('inotify-plusplus'),
     serialport = require('serialport'),
@@ -11,12 +12,13 @@ var fs = require('fs'),
     watchDogIv,
     rebootIv,
     inotify,
+    tty,
     directive,
     cameraIv,
     cameraGuid,
     config =  {
+        client:'beagle',
         nodeVersion:0.7,
-        arduinoVersion:0.4,
         systemVersion:0.4,
         cloudHost: 'zendo.ninja.is',
         cloudStream: 'stream.ninja.is',
@@ -31,10 +33,56 @@ var fs = require('fs'),
     };
     config.id=fs.readFileSync(config.serialFile).toString().replace(/\n/g,'');
     config.utilitiesVersion=(path.existsSync('/opt/utilities/version'))
-                ?parseFloat(fs.readFileSync('/opt/utilities/version'))
-                :0.4;
-                
+        ? parseFloat(fs.readFileSync('/opt/utilities/version'))
+        : 0.4;
+
 console.log(utils.timestamp()+' Ninja Block Starting Up');
+
+/*
+    Fetch the arduino model and version
+ */
+child_process.execFile('./fetch_arduino_version',function(code,stdout,stderr) {
+    if (stdout && stdout.indexOf('_')>-1) {
+        var parts = stdout.split('_');
+        config.arduinoModel = parts[0];
+        config.arduinoVersion = parts[1];
+    } else if (stdout && stdout.lenght>0) {
+        config.arduinoModel = 'V11';
+        config.arduinoVersion = 0.4
+    }
+});
+// We give 3 seconds to try and grab the arduino version
+setTimeout(function() {
+    // Setup the TTY serial port
+    tty = new SerialPort(config.devtty, { 
+        parser: serialport.parsers.readline("\n")
+    });
+    utils.configure(config,tty);
+    var up = upnode(clientHandlers).connect(connectionParams);
+    up.on('up',function (remote) {
+        console.log(utils.timestamp()+' All Systems Go');
+
+        tty.on('data',function(data){
+            utils.handleRawTtyData(data);
+        });
+        exec('/opt/utilities/bin/reset_arduino',function(code,stdout,stderr) {
+            utils.changeLEDColor('green');
+        });
+        utils.remote = remote;
+        // Reset arduino
+        /*
+        clearInterval(sendIv);
+        sendIv = setInterval(function(){
+            remote.heartbeat(utils.getHeartbeat());
+        },config.heartbeat_interval); 
+        */
+    });
+    up.on('reconnect',function() {
+        utils.changeLEDColor('cyan');
+        console.log(utils.timestamp()+' Reconnecting');
+    });
+},3000);
+
 // Development overwrites
 if (process.argv[2] == 'local') {
     config.cloudHost = process.argv[3];
@@ -43,14 +91,7 @@ if (process.argv[2] == 'local') {
     config.cloudStreamPort = 3003;
     config.secure = false;
 };
-// Setup the TTY serial port
-var tty = new SerialPort(config.devtty, { 
-    parser: serialport.parsers.readline("\n")
-});
-utils.configure(config,tty);
-tty.on('data',function(data){
-    utils.handleRawTtyData(data);
-});
+
 // Connect
 // up down reconnect reconnect reconnect up
 var upnode = require('upnode');
@@ -64,15 +105,19 @@ var connectionParams = {
     },
     block: function (remote, conn) {
         var params = {
-            client:'beagle',
+            client:config.client,
             id:config.id,
             version:{
                 node:config.nodeVersion,
-                arduino:config.arduinoVersion,
                 utilities:config.utilitiesVersion,
-                system:config.systemVersion
+                system:config.systemVersion,
+                arduino: {
+                    model:config.arduinoModel,
+                    version:config.arduinoVersion
+                }
             }
-        }
+        };
+        console.log(params);
         var token = utils.fetchBlockToken();
         if (token) {
             utils.changeLEDColor('cyan');
@@ -132,22 +177,7 @@ var clientHandlers = {
         else utils.updateCode(toUpdate);
     }
 };
-var up = upnode(clientHandlers).connect(connectionParams);
-up.on('up',function (remote) {
-    console.log(utils.timestamp()+' All Systems Go');
-    setTimeout(function() {
-        utils.changeLEDColor('green');
-    },100)
-    utils.remote = remote;
-    clearInterval(sendIv);
-    sendIv = setInterval(function(){
-        remote.heartbeat(utils.getHeartbeat());
-    },config.heartbeat_interval); 
-});
-up.on('reconnect',function() {
-    utils.changeLEDColor('cyan');
-    console.log(utils.timestamp()+' Reconnecting');
-});
+
 // Camera
 inotify = Inotify.create(true); // stand-alone, persistent mode, runs until you hit ctrl+c
 directive = (function() {
@@ -198,6 +228,7 @@ catch (e) {
     console.log(utils.timestamp()+" Camera Not Present");
 }
 // Watdog Timer
+/*
 var watchDogStream = fs.open('/dev/watchdog','r+',function(err,fd) {
     if (err) console.log(utils.timestamp()+" "+err);
     var watchDogPayload = new Buffer(1);
@@ -209,6 +240,7 @@ var watchDogStream = fs.open('/dev/watchdog','r+',function(err,fd) {
     },30000);
     utils.watchDogIv=watchDogIv;
 });
+ */
 // Process event handlers
 /*
 process.on('exit',function() {

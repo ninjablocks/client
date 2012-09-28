@@ -19,3 +19,4 @@ tty.on('data',function(data){
 });
 
 tty.write('{"DEVICE":[{"G":"0","V":0,"D":1003,"DA":"VNO"}]}');
+// TODO set timeout
