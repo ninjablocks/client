@@ -28,7 +28,7 @@ var fs = require('fs'),
         serialFile: "/etc/opt/ninja/serial.conf",
         tokenFile: "/etc/opt/ninja/token.conf",
         updateLock: '/etc/opt/ninja/.has_updated',
-        heartbeat_interval: 750,
+        heartbeat_interval: 2000,
         secure:true
     };
     config.id=fs.readFileSync(config.serialFile).toString().replace(/\n/g,'');
@@ -41,14 +41,14 @@ console.log(utils.timestamp()+' Ninja Block Starting Up');
 /*
     Fetch the arduino model and version
  */
-child_process.execFile('./fetch_arduino_version',function(code,stdout,stderr) {
+child_process.execFile('/opt/utilities/bin/fetch_arduino_version',function(code,stdout,stderr) {
     if (stdout && stdout.indexOf('_')>-1) {
         var parts = stdout.split('_');
         config.arduinoModel = parts[0];
-        config.arduinoVersion = parts[1];
+        config.arduinoVersion = parseFloat(parts[1]);
     } else if (stdout && stdout.lenght>0) {
         config.arduinoModel = 'V11';
-        config.arduinoVersion = 0.4
+        config.arduinoVersion = 0.36
     }
 });
 // We give 3 seconds to try and grab the arduino version
@@ -61,7 +61,7 @@ setTimeout(function() {
     var up = upnode(clientHandlers).connect(connectionParams);
     up.on('up',function (remote) {
         console.log(utils.timestamp()+' All Systems Go');
-
+        tty.removeAllListeners('data');
         tty.on('data',function(data){
             utils.handleRawTtyData(data);
         });
@@ -70,12 +70,10 @@ setTimeout(function() {
         });
         utils.remote = remote;
         // Reset arduino
-        /*
         clearInterval(sendIv);
         sendIv = setInterval(function(){
             remote.heartbeat(utils.getHeartbeat());
         },config.heartbeat_interval); 
-        */
     });
     up.on('reconnect',function() {
         utils.changeLEDColor('cyan');
