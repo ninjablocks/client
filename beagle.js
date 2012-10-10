@@ -143,7 +143,12 @@ var connectionParams = {
                         else {
                             params.token=auth.token;
                             remote.confirmActivation(params,function(err) {
-                                console.log(utils.timestamp()+" Confirmed Authorisation, Restarting");
+                                if (err) {
+                                    console.log(utils.timestamp()+" Error pairing block.")
+                                    fs.unlinkSync(config.tokenFile);
+                                } else {
+                                    console.log(utils.timestamp()+" Confirmed Authorisation, Restarting");
+                                }
                                 process.exit(1);
                             });
                         }
