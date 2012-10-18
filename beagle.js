@@ -5,17 +5,13 @@ var fs = require('fs'),
     exec = require('child_process').exec,
     child_process = require('child_process'),
     utils = require(__dirname+'/lib/client-utils.js'),
-    Inotify = require('inotify-plusplus'),
+    Camera = require(__dirname+'/modules/camera.js'),
     serialport = require('serialport'),
     SerialPort = serialport.SerialPort,
     sendIv = 0,
     watchDogIv,
     rebootIv,
-    inotify,
     tty,
-    directive,
-    cameraIv,
-    cameraGuid,
     config =  {
         client:'beagle',
         nodeVersion:0.7,
@@ -155,55 +151,8 @@ var clientHandlers = {
     }
 };
 
-// Camera
-inotify = Inotify.create(true); // stand-alone, persistent mode, runs until you hit ctrl+c
-directive = (function() {
-    return {
-      create: function (ev) {
-        if(ev.name == 'v4l'){
-            cameraGuid = utils.buildDeviceGuid(config.id,{G:"0",V:0,D:1004});
-            clearInterval(cameraIv);
-            cameraIv = setInterval(function() {
-                utils.readings[cameraIv] = {
-                    GUID:cameraGuid,
-                    G:"0",
-                    V:0,
-                    D:1004,
-                    DA:"1"
-                };
-            },config.heartbeat_interval);
-        }
-      },
-      delete: function(ev) {
-        if(ev.name == 'v4l'){
-            clearInterval(cameraIv);
-        }
-      }
-    };
-}());
-inotify.watch(directive, '/dev/');
-try {
-    // Query the entry
-    var stats = fs.lstatSync('/dev/video0');
-    // Is it a directory?
-    if (stats.isCharacterDevice()) {
-        // Yes it is
-        console.log(utils.timestamp()+" Camera is Connected");
-        cameraGuid = utils.buildDeviceGuid(config.id,{G:"0",V:0,D:1004});
-        cameraIv = setInterval(function() {
-            utils.readings[cameraIv] = {
-                GUID:cameraGuid,
-                G:"0",
-                V:0,
-                D:1004,
-                DA:"1"
-            };
-        },config.heartbeat_interval);
-    }
-}
-catch (e) {
-    console.log(utils.timestamp()+" Camera Not Present");
-}
+
+
 
 // Watdog Timer
 /*
