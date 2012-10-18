@@ -28,7 +28,7 @@ var fs = require('fs'),
         serialFile: "/etc/opt/ninja/serial.conf",
         tokenFile: "/etc/opt/ninja/token.conf",
         updateLock: '/etc/opt/ninja/.has_updated',
-        heartbeat_interval: 2000,
+        heartbeat_interval: 5000,
         secure:true
     };
     config.id=fs.readFileSync(config.serialFile).toString().replace(/\n/g,'');
@@ -58,22 +58,12 @@ setTimeout(function() {
         parser: serialport.parsers.readline("\n")
     });
     utils.configure(config,tty);
+    utils.changeLEDColor('cyan');
     var up = upnode(clientHandlers).connect(connectionParams);
     up.on('up',function (remote) {
+        utils.initRemote(remote);
+        utils.changeLEDColor('green');
         console.log(utils.timestamp()+' All Systems Go');
-        tty.removeAllListeners('data');
-        tty.on('data',function(data){
-            utils.handleRawTtyData(data);
-        });
-        exec('/opt/utilities/bin/reset_arduino',function(code,stdout,stderr) {
-            utils.changeLEDColor('green');
-        });
-        utils.remote = remote;
-        // Reset arduino
-        clearInterval(sendIv);
-        sendIv = setInterval(function(){
-            remote.heartbeat(utils.getHeartbeat());
-        },config.heartbeat_interval); 
     });
     up.on('reconnect',function() {
         utils.changeLEDColor('cyan');
@@ -106,43 +96,39 @@ var connectionParams = {
         var token = utils.fetchBlockToken();
         console.log(params);
         if (token) {
-            utils.changeLEDColor('cyan');
-            console.log(utils.timestamp()+' Connecting');
             remote.handshake(params, token, function (err, res) {
                 if (err) console.error(utils.timestamp()+" "+err);
                 else {
                     conn.emit('up',res);
                 }
             });
+            utils.changeLEDColor('cyan');
+            console.log(utils.timestamp()+' Connecting');
         } else {
             // Short term hack to make sure it goes purple
-            setTimeout(function() {
-                utils.changeLEDColor('purple');
-            },100);
-            console.log(utils.timestamp()+' Awaiting Activation');
             remote.activate(params,function(err,auth) {
                 if (err||!auth) {
                     console.log(utils.timestamp()+" Error, Restarting");
-                    process.exit(1)
-                } else {
-                    console.log(utils.timestamp()+" Received Authorisation, Confirming");
-                    fs.writeFile(config.tokenFile, auth.token, 'utf8',function(err) {
-                        if (err) throw err;
-                        else {
-                            params.token=auth.token;
-                            remote.confirmActivation(params,function(err) {
-                                if (err) {
-                                    console.log(utils.timestamp()+" Error pairing block.")
-                                    fs.unlinkSync(config.tokenFile);
-                                } else {
-                                    console.log(utils.timestamp()+" Confirmed Authorisation, Restarting");
-                                }
-                                process.exit(1);
-                            });
-                        }
-                    });
+                    process.exit(1);
+                    return;
                 }
+                console.log(utils.timestamp()+" Received Authorisation, Confirming");
+                fs.writeFile(config.tokenFile, auth.token, 'utf8',function(err) {
+                    if (err) throw err;
+                    params.token=auth.token;
+                    remote.confirmActivation(params,function(err) {
+                        if (err) {
+                            console.log(utils.timestamp()+" Error pairing block.")
+                            fs.unlinkSync(config.tokenFile);
+                        } else {
+                            console.log(utils.timestamp()+" Confirmed Authorisation, Restarting");
+                        }
+                        process.exit(1);
+                    });
+                });
             });
+            utils.changeLEDColor('purple');
+            console.log(utils.timestamp()+' Awaiting Activation');
         }
     }
 };
@@ -218,6 +204,7 @@ try {
 catch (e) {
     console.log(utils.timestamp()+" Camera Not Present");
 }
+
 // Watdog Timer
 /*
 var watchDogStream = fs.open('/dev/watchdog','r+',function(err,fd) {
