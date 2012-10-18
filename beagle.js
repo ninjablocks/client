@@ -79,7 +79,7 @@ setTimeout(function() {
         utils.changeLEDColor('cyan');
         console.log(utils.timestamp()+' Reconnecting');
     });
-},3000);
+},4000);
 
 // Development overwrites
 if (process.argv[2] == 'local') {
@@ -102,21 +102,9 @@ var connectionParams = {
         return proto.connect(config.cloudPort, config.cloudHost);
     },
     block: function (remote, conn) {
-        var params = {
-            client:config.client,
-            id:config.id,
-            version:{
-                node:config.nodeVersion,
-                utilities:config.utilitiesVersion,
-                system:config.systemVersion,
-                arduino: {
-                    model:config.arduinoModel,
-                    version:config.arduinoVersion
-                }
-            }
-        };
-        console.log(params);
+        var params = utils.fetchBlockParams();
         var token = utils.fetchBlockToken();
+        console.log(params);
         if (token) {
             utils.changeLEDColor('cyan');
             console.log(utils.timestamp()+' Connecting');
