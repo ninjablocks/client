@@ -41,7 +41,7 @@ child_process.execFile('/opt/utilities/bin/fetch_arduino_version',function(code,
         var parts = stdout.split('_');
         config.arduinoModel = parts[0];
         config.arduinoVersion = parseFloat(parts[1]);
-    } else if (stdout && stdout.lenght>0) {
+    } else if (stdout && stdout.length>0) {
         config.arduinoModel = 'V11';
         config.arduinoVersion = 0.36
     }
