@@ -4,7 +4,14 @@
  */
 
 var 
-	path = require('path')
+	fs = require('fs')
+	, path = require('path')
+	, banner = fs.readFileSync(
+		path.resolve(
+			__dirname
+			, 'banner'
+		)
+	)
 	, defaults 
 	, argv
 ;
@@ -40,23 +47,19 @@ argv = require('optimist')
 
 	.usage(
 
-		[
-			"Usage: $0 --device <path>"
-			, "--token <token>"
-			, "--cloudHost <hostname>"
-			, "--streamHost <hostname>"
-			, "--cloudPort [port]"
-			, "--streamPort [port]"
-			, "--secure [bool]" 
-			, "--logFile [path]"
-		].join(" ")
+		[	banner
+			, "This process requires certain parameters to run."
+			, "Please see usage information below."
+			, ""
+			, "Example: $0 --device /dev/tty.usb*B"
+		].join("\n")
 	)
 	.demand(
 
 		[
 			"device"
 			, "cloudHost"
-			, "cloudStream" 
+			, "streamHost" 
 		]
 	)
 	.default(defaults)
