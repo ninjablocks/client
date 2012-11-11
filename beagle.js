@@ -13,8 +13,7 @@ var fs = require('fs'),
     tty,
     config =  {
         client:'beagle',
-        nodeVersion:0.7,
-        systemVersion:0.4,
+        nodeVersion:0.8,
         cloudHost: 'zendo.ninja.is',
         cloudStream: 'stream.ninja.is',
         cloudStreamPort: 443,
@@ -29,6 +28,9 @@ var fs = require('fs'),
     config.id=fs.readFileSync(config.serialFile).toString().replace(/\n/g,'');
     config.utilitiesVersion=(path.existsSync('/opt/utilities/version'))
         ? parseFloat(fs.readFileSync('/opt/utilities/version'))
+        : 0.4;
+    config.systemVersion=(path.existsSync('/opt/utilities/sys_version'))
+        ? parseFloat(fs.readFileSync('/opt/utilities/sys_version'))
         : 0.4;
 
 console.log(utils.timestamp()+' Ninja Block Starting Up');
@@ -100,8 +102,7 @@ var connectionParams = {
             utils.changeLEDColor('cyan');
             console.log(utils.timestamp()+' Connecting');
         } else {
-            // Short term hack to make sure it goes purple
-            remote.activate(params,function(err,auth) {
+            remote.awaitActivation(params,function(err,auth) {
                 if (err||!auth) {
                     console.log(utils.timestamp()+" Error, Restarting");
                     process.exit(1);
@@ -114,6 +115,8 @@ var connectionParams = {
                     remote.confirmActivation(params,function(err) {
                         if (err) {
                             console.log(utils.timestamp()+" Error pairing block.")
+                            console.log(utils.timestamp()+" "+err.error);
+                            if (err.id===409) utils.changeLEDColor('blue');
                             fs.unlinkSync(config.tokenFile);
                         } else {
                             console.log(utils.timestamp()+" Confirmed Authorisation, Restarting");
@@ -150,11 +153,7 @@ var clientHandlers = {
     }
 };
 
-
-
-
 // Watdog Timer
-/*
 var watchDogStream = fs.open('/dev/watchdog','r+',function(err,fd) {
     if (err) console.log(utils.timestamp()+" "+err);
     var watchDogPayload = new Buffer(1);
@@ -166,7 +165,6 @@ var watchDogStream = fs.open('/dev/watchdog','r+',function(err,fd) {
     },30000);
     utils.watchDogIv=watchDogIv;
 });
- */
 // Process event handlers
 /*
 process.on('exit',function() {
