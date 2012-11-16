@@ -154,7 +154,6 @@ var clientHandlers = {
 };
 
 // Watdog Timer
-/*
 var watchDogStream = fs.open('/dev/watchdog','r+',function(err,fd) {
     if (err) console.log(utils.timestamp()+" "+err);
     var watchDogPayload = new Buffer(1);
@@ -168,7 +167,6 @@ var watchDogStream = fs.open('/dev/watchdog','r+',function(err,fd) {
 });
  */
 // Process event handlers
-/*
 process.on('exit',function() {
     utils.changeLEDColor('yellow');
 });
