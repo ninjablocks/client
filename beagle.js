@@ -102,7 +102,7 @@ var connectionParams = {
             utils.changeLEDColor('cyan');
             console.log(utils.timestamp()+' Connecting');
         } else {
-            remote.awaitActivation(params,function(err,auth) {
+            remote.activate(params,function(err,auth) {
                 if (err||!auth) {
                     console.log(utils.timestamp()+" Error, Restarting");
                     process.exit(1);
