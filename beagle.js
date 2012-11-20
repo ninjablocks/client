@@ -51,7 +51,7 @@ child_process.execFile('/opt/utilities/bin/fetch_arduino_version',function(code,
 // We give 3 seconds to try and grab the arduino version
 setTimeout(function() {
     // Setup the TTY serial port
-    tty = new SerialPort(config.devtty, { 
+    tty = new SerialPort(config.devtty, {
         parser: serialport.parsers.readline("\n")
     });
     utils.configure(config,tty);
@@ -165,7 +165,7 @@ var watchDogStream = fs.open('/dev/watchdog','r+',function(err,fd) {
     },30000);
     utils.watchDogIv=watchDogIv;
 });
- */
+ /*
 // Process event handlers
 process.on('exit',function() {
     utils.changeLEDColor('yellow');
