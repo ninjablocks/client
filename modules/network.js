@@ -10,6 +10,7 @@ module.exports = function() {
 util.inherits(Network,Device);
 
 function Network(cloud) {
+    this._cloud = cloud;
     this.readable = true;
     this.writeable = true;
     this.V = 0;

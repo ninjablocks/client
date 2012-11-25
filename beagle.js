@@ -66,7 +66,7 @@ setTimeout(function() {
         utils.changeLEDColor('cyan');
         console.log(utils.timestamp()+' Reconnecting');
     });
-},4000);
+},5000);
 
 // Development overwrites
 if (process.argv[2] == 'local') {
