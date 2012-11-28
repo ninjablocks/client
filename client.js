@@ -3,16 +3,13 @@ var
 	, path = require('path')
 	, util = require('util')
 	, stream = require('stream')
-	, exec = require('child_process').exec
-	, serialport = require('serialport').SerialPort
 	, argv = require(path.resolve(__dirname, 'app', 'argv'))
-	, logger = new require(path.resolve(__dirname, 'lib', 'logger'))({
-
-		env : argv.env
-		, logFile : argv.logFile
-	})
+	, ninja = require(path.resolve(__dirname, 'app', 'client'))
+	, config = require(path.resolve(__dirname, 'app', 'config'))
+	, logger = require(path.resolve(__dirname, 'lib', 'logger'))
+	, log = new logger(argv).log
+	, client = new ninja(argv)
 ;
 
-var client = function client(opts) {
+logger.default = log;
 
-};
