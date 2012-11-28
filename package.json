@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {
   "name": "ninja-client",
   "version": "0.7.0",
@@ -5,5 +6,13 @@
     "serialport": "~0.7.5",
     "upnode": "~0.4.3",
     "optimist": "~0.3.5",
+=======
+{ "name": "ninja-beagle",
+  "version": "0.1.0",
+  "dependencies": { 
+  	"serialport" : "0.7.5",
+  	"upnode" : "latest",
+  	"inotify-plusplus": "https://github.com/ninjablocks/node-inotify-plusplus/tarball/master"
+>>>>>>> ca30dc58b0d45963ccc519f5c7074283fd7fff5e
   }
 }
