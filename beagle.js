@@ -162,7 +162,7 @@ var watchDogStream = fs.open('/dev/watchdog','r+',function(err,fd) {
         fs.write(fd,watchDogPayload,0, watchDogPayload.length, -1,function(err) {
             if (err) console.log(utils.timestamp()+" "+err);
         });
-    },29000);
+    },15000);
     utils.watchDogIv=watchDogIv;
 });
  /*
