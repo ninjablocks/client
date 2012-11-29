@@ -153,20 +153,6 @@ var clientHandlers = {
     }
 };
 
-// Watdog Timer
-// var watchDogStream = fs.open('/dev/watchdog','r+',function(err,fd) {
-//     if (err) console.log(utils.timestamp()+" "+err);
-//     var watchDogPayload = new Buffer(1);
-//     watchDogPayload.write('\n','utf8');
-//     utils.watchDogIv= = setInterval(function() {
-//         fs.write(fd,watchDogPayload,0, watchDogPayload.length, -1,function(err) {
-//             if (err) console.log(utils.timestamp()+" "+err);
-//         });
-//     },15000);
-//     fs.write(fd,watchDogPayload,0, watchDogPayload.length, -1,function(err) {
-//         if (err) console.log(utils.timestamp()+" "+err);
-//     });
-// });
  /*
 // Process event handlers
 process.on('exit',function() {
