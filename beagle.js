@@ -8,7 +8,6 @@ var fs = require('fs'),
     serialport = require('serialport'),
     SerialPort = serialport.SerialPort,
     sendIv = 0,
-    watchDogIv,
     rebootIv,
     tty,
     config =  {
@@ -19,6 +18,7 @@ var fs = require('fs'),
         cloudStreamPort: 443,
         cloudPort: 443,
         devtty: "/dev/ttyO1",
+        locksDir: "/etc/opt/ninja",
         serialFile: "/etc/opt/ninja/serial.conf",
         tokenFile: "/etc/opt/ninja/token.conf",
         updateLock: '/etc/opt/ninja/.has_updated',
@@ -154,20 +154,19 @@ var clientHandlers = {
 };
 
 // Watdog Timer
-var watchDogStream = fs.open('/dev/watchdog','r+',function(err,fd) {
-    if (err) console.log(utils.timestamp()+" "+err);
-    var watchDogPayload = new Buffer(1);
-    watchDogPayload.write('\n','utf8');
-    watchDogIv = setInterval(function() {
-        fs.write(fd,watchDogPayload,0, watchDogPayload.length, -1,function(err) {
-            if (err) console.log(utils.timestamp()+" "+err);
-        });
-    },15000);
-    fs.write(fd,watchDogPayload,0, watchDogPayload.length, -1,function(err) {
-        if (err) console.log(utils.timestamp()+" "+err);
-    });
-    utils.watchDogIv=watchDogIv;
-});
+// var watchDogStream = fs.open('/dev/watchdog','r+',function(err,fd) {
+//     if (err) console.log(utils.timestamp()+" "+err);
+//     var watchDogPayload = new Buffer(1);
+//     watchDogPayload.write('\n','utf8');
+//     utils.watchDogIv= = setInterval(function() {
+//         fs.write(fd,watchDogPayload,0, watchDogPayload.length, -1,function(err) {
+//             if (err) console.log(utils.timestamp()+" "+err);
+//         });
+//     },15000);
+//     fs.write(fd,watchDogPayload,0, watchDogPayload.length, -1,function(err) {
+//         if (err) console.log(utils.timestamp()+" "+err);
+//     });
+// });
  /*
 // Process event handlers
 process.on('exit',function() {
