@@ -2,7 +2,7 @@ var
     fs = require('fs')
     , util = require('util')
     , http = require('http')
-    , Device = require('../lib/device.js')
+    , Device = require('../device.js')
     , Inotify = require('inotify-plusplus')
     , directive
     , cameraGuid
@@ -158,4 +158,4 @@ Camera.prototype.destroy = function() {
     clearInterval(this._interval);
 };
 
-module.exports = camera
+module.exports = camera;
