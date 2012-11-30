@@ -25,8 +25,8 @@ function client(opts, credentials, app) {
 	this.addModule = function addModule(name, opts, mod, app) {
 
 		if(!modules[name]) { modules[name] = {}; }
-
 		modules[name][opts.id] = new mod(opts, app);
+
 	};
 
 	this.opts = opts || {};
