@@ -4,21 +4,34 @@ var
 	, logger = require(path.resolve(__dirname, '..', 'lib', 'logger'))
 	, tls = require('tls')
 	, net = require('net')
-	, log
+	, fs = require('fs')
 ;
 
-function client(opts, credentials) {
+function client(opts, credentials, app) {
 
-	log = logger.default;
+	var
+		modules = {}
+	;
 
+	this.log = app.log;
+
+/** waiting for credentials abstraction
 	if((!credentials) || !credentials.id) {
 
-		log.error('Unable to create client, no serial (ID) specified.');
+		app.log.error('Unable to create client, no ninja serial specified.');
 		return false;
 	}
+*/
+	this.addModule = function addModule(name, opts, mod, app) {
+
+		if(!modules[name]) { modules[name] = {}; }
+
+		modules[name][opts.id] = new mod(opts, app);
+	};
 
 	this.opts = opts || {};
-	this.node = undefined;
+	this.node = undefined; // upnode
+	this.parameters = this.getParameters(opts);
 	this.transport = opts.secure ? tls : net;
 };
 
@@ -26,7 +39,7 @@ client.prototype.handlers = {
 
 	revokeCredentials : function revokeCredentials() {
 
-		log.info('Invalid token, restarting.');
+		this.log.info('Invalid token, restarting.');
 		
 		// invalidate token
 		process.exit(1);	
@@ -52,19 +65,19 @@ client.prototype.connect = function connect() {
 client.prototype.up = function up() {
 
 	this.emit('up');
-	log.info("Client connected to cloud.");
+	this.log.info("Client connected to cloud.");
 };
 
 client.prototype.down = function down() {
 
 	this.emit('down');
-	log.info("Client disconnected from cloud.");
+	this.log.info("Client disconnected from cloud.");
 };
 
 client.prototype.reconnect = function reconnect() {
 
 	this.emit('reconnect');
-	log.info("Reconnecting to cloud...");
+	this.log.info("Reconnecting to cloud...");
 };
 
 client.prototype.getParameters = function getParameters(opts) {
@@ -107,7 +120,7 @@ client.prototype.block = function block(remote, conn) {
 
 			if(err) {
 
-				log.error("Error in remote handshake: %s", err);
+				this.log.error("Error in remote handshake: %s", err);
 				return;
 			}
 			conn.emit('up', res);
@@ -117,10 +130,34 @@ client.prototype.block = function block(remote, conn) {
 	else {
 
 		this.emit('readyActivate', res);
-		log.info("Ready to be activated.");
+		this.log.info("Ready to be activated.");
 
 		// activate
 	}
+};
+
+client.prototype.loadModule = function loadModule(name, opts, app) {
+
+	if(!name) {
+
+		this.log.error("loadModule error: invalid module name");
+		return false;
+	}
+
+	try {
+
+		var mod = require(path.resolve(__dirname, 'ninja_modules', name))
+	}
+	catch(e) {
+
+		this.log.error("loadModule error: %s", e);
+		return false;
+	}
+
+	this.log.info("loadModule success: %s", name);
+	this.addModule(name, opts, mod, app);
+
+	return true;
 };
 
 module.exports = client;
