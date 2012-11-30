@@ -110,6 +110,7 @@ var connectionParams = {
                 }
                 console.log(utils.timestamp()+" Received Authorisation, Confirming");
                 fs.writeFile(config.tokenFile, auth.token, 'utf8',function(err) {
+                    exec('sync');   // TODO: fsyncSync
                     if (err) throw err;
                     params.token=auth.token;
                     remote.confirmActivation(params,function(err) {
