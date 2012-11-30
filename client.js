@@ -5,7 +5,7 @@ var
 	, events = require('events')
 	, argv = require(path.resolve(__dirname, 'app', 'argv'))
 	, client = require(path.resolve(__dirname, 'app', 'client'))
-	// , config = require(path.resolve(__dirname, 'app', 'config'))
+	, config = require(path.resolve(__dirname, 'app', 'config'))
 	, logger = require(path.resolve(__dirname, 'lib', 'logger'))
 	, app = new events.EventEmitter()
 	, log = new logger(argv)
@@ -29,6 +29,8 @@ app.on('error', function(err) {
 
 var ninja = new client(argv, creds, app);
 
+config(ninja, app);
+
 /**
  * Note about apps (event emitters):
  * 
@@ -37,8 +39,3 @@ var ninja = new client(argv, creds, app);
  * if we so desire. This allows us to provide 
  * isolation without any additional infrastructure
  */
-
-if(argv.device && ninja) {
-
-	ninja.loadModule('serial', { device : argv.device, id : 'arduino' }, app);
-}
