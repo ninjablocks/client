@@ -15,7 +15,20 @@ var
 logger.default = log;
 app.log = log;
 
+app.on('error', function(err) {
+
+	log.error(err);
+	
+	/**
+	 * Do more stuff with errors.
+	 * err should include .stack,
+	 * which we could pipe to the cloud
+	 * at some point, it would be useful!
+	 */
+});
+
 var ninja = new client(argv, creds, app);
+
 /**
  * Note about apps (event emitters):
  * 
