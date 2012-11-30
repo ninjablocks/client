@@ -7,7 +7,17 @@ var
 
 function serial(opts, app) {
 	
-	var opts = opts || {};
+	var 
+		opts = opts || {}
+		, ready = false
+		, unload = function() {
+
+			if(this.device) {
+
+				this.device.close();
+			}
+		}
+	;
 	this.app = app;	
 
 	if(!opts.device) {
@@ -16,6 +26,17 @@ function serial(opts, app) {
 
 			'error'
 			, new Error("No device path specified for serial device.")
+		);
+
+		return null;
+	}
+
+	if(!opts.id) {
+
+		app.emit(
+
+			'error'
+			, new Error("Invalid device ID specified.")
 		);
 
 		return null;
@@ -43,6 +64,11 @@ function serial(opts, app) {
 
 	this.device.on('open', function() {
 
+		if(!this.ready) { 
+
+			this.ready = true;
+			this.emit('ready', true);
+		}
 		this.emit('open', this);
 	}.bind(this));
 
@@ -60,6 +86,10 @@ function serial(opts, app) {
 
 		this.parser(this, dat);
 	}.bind(this));
+
+
+	this.on('unload', unload);
+
 
 	return this;
 };
