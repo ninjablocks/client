@@ -18,6 +18,7 @@ function serial(opts, app) {
 			}
 		}
 	;
+
 	this.app = app;	
 
 	if(!opts.device) {
@@ -60,7 +61,14 @@ function serial(opts, app) {
 
 	stream.call(this);
 
-	this.device = new device(opts.device, this.parser);
+	try {
+
+		this.device = new device(opts.device, this.parser);
+	}
+	catch(e) {
+
+		this.log.error(e);
+	}
 
 	this.device.on('open', function() {
 
@@ -69,7 +77,9 @@ function serial(opts, app) {
 			this.ready = true;
 			this.emit('ready', true);
 		}
+
 		this.emit('open', this);
+
 	}.bind(this));
 
 	this.device.on('close', function() {
@@ -87,9 +97,7 @@ function serial(opts, app) {
 		this.parser(this, dat);
 	}.bind(this));
 
-
 	this.on('unload', unload);
-
 
 	return this;
 };
