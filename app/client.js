@@ -27,6 +27,7 @@ function client(opts, credentials, app) {
 		if(!modules[name]) { modules[name] = {}; }
 		modules[name][opts.id] = new mod(opts, app);
 
+		return modules[name][opts.id];
 	};
 
 	this.opts = opts || {};
@@ -40,7 +41,7 @@ client.prototype.handlers = {
 	revokeCredentials : function revokeCredentials() {
 
 		this.log.info('Invalid token, restarting.');
-		
+		this.emit('device::invalidToken', true);
 		// invalidate token
 		process.exit(1);	
 	}
@@ -59,24 +60,24 @@ client.prototype.connect = function connect() {
 	this.node = upnode(this.handlers).connect(this.parameters);
 
 	this.node.on('up', this.up);
-	this.node.on('reconnect', this.reconnect)
+	this.node.on('reconnect', this.reconnect);
 };
 
 client.prototype.up = function up() {
 
-	this.emit('up');
+	this.emit('device::up', true);
 	this.log.info("Client connected to cloud.");
 };
 
 client.prototype.down = function down() {
 
-	this.emit('down');
+	this.emit('device::down', true);
 	this.log.info("Client disconnected from cloud.");
 };
 
 client.prototype.reconnect = function reconnect() {
 
-	this.emit('reconnect');
+	this.emit('device::reconnecting', true);
 	this.log.info("Reconnecting to cloud...");
 };
 
@@ -102,8 +103,10 @@ client.prototype.getParameters = function getParameters(opts) {
 client.prototype.block = function block(remote, conn) {
 
 	var 
-		params = {
+		token = this.credentials.token || undefined
+		, params = {
 
+			//TODO: better client default/detection?
 			client : opts.client || 'beagle'
 			, id : opts.id
 			, version : {
@@ -111,7 +114,6 @@ client.prototype.block = function block(remote, conn) {
 				// node, arduino, utilities & system versions
 			}
 		}
-		, token = this.credentials.token || undefined
 	;
 
 	if(token) {
@@ -124,12 +126,12 @@ client.prototype.block = function block(remote, conn) {
 				return;
 			}
 			conn.emit('up', res);
-			this.emit('authed', res);
+			this.emit('device::authed', res);
 		});
 	}
 	else {
 
-		this.emit('readyActivate', res);
+		this.emit('device::needsActivation', res);
 		this.log.info("Ready to be activated.");
 
 		// activate
@@ -155,9 +157,7 @@ client.prototype.loadModule = function loadModule(name, opts, app) {
 	}
 
 	this.log.info("loadModule success: %s", name);
-	this.addModule(name, opts, mod, app);
-
-	return true;
+	return this.addModule(name, opts, mod, app);
 };
 
 module.exports = client;
