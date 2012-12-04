@@ -25,8 +25,8 @@ module.exports = function() {
           },
           delete: function(ev) {
             if(ev.name == 'v4l'){
-                cloud.deregisterDevice(camera);
                 camera.end();
+                cloud.deregisterDevice(camera);
             }
           }
         };
@@ -52,6 +52,7 @@ util.inherits(Camera,Device);
 function Camera(cloud) {
     this.writeable = true;
     this.readable = true;
+    this.configurable = true;
     this._cloud = cloud;
     this._interval = 0;
     this.V = 0;
@@ -68,6 +69,13 @@ Camera.prototype._init = function() {
         self.emit('data','1');
     },10000);
     this.emit('data','1');
+    console.log('emitting pluging')
+    this.emit('config',{
+        G:this.G,
+        V:this.V,
+        D:this.D,
+        type:'PLUGIN'
+    });
 }
 
 Camera.prototype.write = function(data) {
@@ -88,7 +96,7 @@ Camera.prototype.write = function(data) {
     console.log(postOptions)
     proto = (cloud.config.cloudStreamPort==443) ? require('https') : require('http')
     var getReq = http.get(getOptions,function(getRes) {
-        postOptions.headers = getRes.headers;   
+        postOptions.headers = getRes.headers;
         postOptions.headers['X-Ninja-Token'] = cloud.fetchBlockToken();
         var postReq = proto.request(postOptions,function(postRes) {
             postRes.on('end',function() {
@@ -115,6 +123,7 @@ Camera.prototype.write = function(data) {
 };
 
 Camera.prototype.end = function() {
+    this.emit('config',{G:this.G,V:this.V,D:this.D,type:'UNPLUG'});
     clearInterval(this._interval);
 };
 Camera.prototype.destroy = function() {
