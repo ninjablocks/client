@@ -14,12 +14,15 @@ function serial(opts, app) {
 
 			if(this.device) {
 
+				log.debug("Unloading serial module for %s", opts.device);	
 				this.device.close();
 			}
 		}
+		, log = app.log
 	;
 
-	this.app = app;	
+	this.app = app;
+	this.log = log;
 
 	if(!opts.device) {
 
@@ -61,47 +64,73 @@ function serial(opts, app) {
 
 	stream.call(this);
 
-	try {
+	this.connect = function connect() {
 
-		this.device = new device(opts.device, this.parser);
-	}
-	catch(e) {
+		try {
 
-		this.log.error(e);
-	}
+			this.device = new device(opts.device, this.parser);
+			this.device.path = opts.device;
+			this.bindListeners();
 
-	this.device.on('open', function() {
-
-		if(!this.ready) { 
-
-			this.ready = true;
-			this.emit('ready', true);
 		}
+		catch(e) {
 
-		this.emit('open', this);
+			app.emit('error', new Error("Unable to connect to serial device"));
+			setTimeout(this.connect, delay);
 
-	}.bind(this));
-
-	this.device.on('close', function() {
-
-		this.emit('close', this);
-	}.bind(this));
-
-	this.device.on('error', function(err) {
-
-		this.emit('error', err);
-	}.bind(this));
-
-	this.device.on('data', function(dat) {
-
-		this.parser(this, dat);
-	}.bind(this));
+		}
+	}.bind(this);
 
 	this.on('unload', unload);
+	this.connect();
 
 	return this;
 };
 
 util.inherits(serial, stream);
+
+serial.prototype.bindListeners = function bindListeners() {
+
+	var onOpen = function onOpen() {
+
+		if(!this.ready) { 
+
+			this.ready = true;
+			this.emit('ready', true);
+	
+		}
+		
+		this.log.debug("Serial connection open on %s", this.device.path);
+		this.emit('open', this);
+		
+	}.bind(this);
+
+	var onClose = function onClose() {
+
+		this.log.debug("Serial connection closed on %s", this.device.path);
+		setTimeout(this.connect, 2000);
+		this.emit('close', this);
+
+	}.bind(this);
+
+	var onError = function onError(err) {
+
+		this.log.debug("Serial error: %s", err);
+		setTimeout(this.connect, 2000);
+		//this.emit('error', err);
+
+	}.bind(this);
+
+	var onData = function onData(dat) {
+
+		this.parser(this, dat);
+
+	}.bind(this);
+
+	this.device.on('open', onOpen);
+	this.device.on('close', onClose);
+	this.device.on('error', onError);
+	this.device.on('data', onData);
+};
 
 module.exports = serial;
