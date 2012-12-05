@@ -16,6 +16,7 @@ function client(opts, credentials, app) {
 	this.log = app.log;
 
 /** waiting for credentials abstraction
+
 	if((!credentials) || !credentials.id) {
 
 		app.log.error('Unable to create client, no ninja serial specified.');
@@ -24,10 +25,19 @@ function client(opts, credentials, app) {
 */
 	this.addModule = function addModule(name, opts, mod, app) {
 
+		var newModule = new mod(opts, app);
+
 		if(!modules[name]) { modules[name] = {}; }
-		modules[name][opts.id] = new mod(opts, app);
+
+		modules[name][opts.id] = newModule;
+		newModule.on('error', this.moduleError.bind(newModule));
 
 		return modules[name][opts.id];
+	};
+
+	this.moduleError = function moduleError(err) {
+
+		this.log.error("Module error: %s", err);
 	};
 
 	this.opts = opts || {};
@@ -148,7 +158,19 @@ client.prototype.loadModule = function loadModule(name, opts, app) {
 
 	try {
 
-		var mod = require(path.resolve(__dirname, 'ninja_modules', name))
+		var 
+			file = path.resolve(__dirname, 'ninja_modules', name)
+		;
+
+		if(fs.existsSync(file)) {
+
+			var mod = require(file);
+		}
+		else {
+
+			this.log.error("loadModule error: No such module '%s'", name);
+			return null;
+		}
 	}
 	catch(e) {
 
