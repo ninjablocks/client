@@ -1,7 +1,9 @@
 var
-	upnode = require('upnode')
-	, path = require('path')
+	path = require('path')
+	, util = require('util')
+	, upnode = require('upnode')
 	, logger = require(path.resolve(__dirname, '..', 'lib', 'logger'))
+	, stream = require('stream')
 	, tls = require('tls')
 	, net = require('net')
 	, fs = require('fs')
@@ -12,6 +14,8 @@ function client(opts, credentials, app) {
 	var
 		modules = {}
 	;
+
+	stream.call(this);
 
 	this.log = app.log;
 
@@ -46,6 +50,8 @@ function client(opts, credentials, app) {
 	this.transport = opts.secure ? tls : net;
 };
 
+util.inherits(client, stream);
+
 client.prototype.handlers = {
 
 	revokeCredentials : function revokeCredentials() {
@@ -67,14 +73,17 @@ client.prototype.handlers = {
 
 client.prototype.connect = function connect() {
 
+	var client = this;
 	this.node = upnode(this.handlers).connect(this.parameters);
 
-	this.node.on('up', this.up);
-	this.node.on('reconnect', this.reconnect);
+	this.node.on('up', client.up.bind(client));
+
+	this.node.on('reconnect', client.reconnect.bind(client));
 };
 
 client.prototype.up = function up() {
 
+	console.log(this);
 	this.emit('device::up', true);
 	this.log.info("Client connected to cloud.");
 };
@@ -88,7 +97,7 @@ client.prototype.down = function down() {
 client.prototype.reconnect = function reconnect() {
 
 	this.emit('device::reconnecting', true);
-	this.log.info("Reconnecting to cloud...");
+	this.log.info("Connecting to cloud...");
 };
 
 client.prototype.getParameters = function getParameters(opts) {
@@ -124,20 +133,23 @@ client.prototype.block = function block(remote, conn) {
 				// node, arduino, utilities & system versions
 			}
 		}
-	;
-
-	if(token) {
-
-		remote.handshake(params, token, function handshake(err, res) {
+		, handshake = function handshake(err, res) {
 
 			if(err) {
 
 				this.log.error("Error in remote handshake: %s", err);
 				return;
 			}
+
 			conn.emit('up', res);
 			this.emit('device::authed', res);
-		});
+
+		}.bind(this)
+	;
+
+	if(token) {
+
+		remote.handshake(params, token, handshake);
 	}
 	else {
 
