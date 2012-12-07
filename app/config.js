@@ -25,5 +25,7 @@ module.exports = function config(ninja, app) {
 
 	}
 	
+	ninja.connect();
+	
 	return ninja;
 };
