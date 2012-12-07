@@ -3,38 +3,71 @@ var fs = require('fs'),
     path = require('path'),
     util = require('util'),
     exec = require('child_process').exec,
+    child_process = require('child_process'),
     utils = require(__dirname+'/lib/client-utils.js'),
-    Inotify = require('inotify-plusplus'),
     serialport = require('serialport'),
     SerialPort = serialport.SerialPort,
     sendIv = 0,
-    watchDogIv,
     rebootIv,
-    inotify,
-    directive,
-    cameraIv,
-    cameraGuid,
+    tty,
     config =  {
-        nodeVersion:0.7,
-        arduinoVersion:0.4,
-        systemVersion:0.4,
+        client:'beagle',
+        nodeVersion:0.8,
         cloudHost: 'zendo.ninja.is',
         cloudStream: 'stream.ninja.is',
         cloudStreamPort: 443,
         cloudPort: 443,
         devtty: "/dev/ttyO1",
+        locksDir: "/etc/opt/ninja",
         serialFile: "/etc/opt/ninja/serial.conf",
         tokenFile: "/etc/opt/ninja/token.conf",
         updateLock: '/etc/opt/ninja/.has_updated',
-        heartbeat_interval: 750,
+        heartbeat_interval: 5000,
         secure:true
     };
     config.id=fs.readFileSync(config.serialFile).toString().replace(/\n/g,'');
     config.utilitiesVersion=(path.existsSync('/opt/utilities/version'))
-                ?parseFloat(fs.readFileSync('/opt/utilities/version'))
-                :0.4;
-                
+        ? parseFloat(fs.readFileSync('/opt/utilities/version'))
+        : 0.4;
+    config.systemVersion=(path.existsSync('/opt/utilities/sys_version'))
+        ? parseFloat(fs.readFileSync('/opt/utilities/sys_version'))
+        : 0.4;
+
 console.log(utils.timestamp()+' Ninja Block Starting Up');
+
+/*
+    Fetch the arduino model and version
+ */
+child_process.execFile('/opt/utilities/bin/fetch_arduino_version',function(code,stdout,stderr) {
+    if (stdout && stdout.indexOf('_')>-1) {
+        var parts = stdout.split('_');
+        config.arduinoModel = parts[0];
+        config.arduinoVersion = parseFloat(parts[1]);
+    } else if (stdout && stdout.length>0) {
+        config.arduinoModel = 'V11';
+        config.arduinoVersion = 0.36
+    }
+});
+// We give 3 seconds to try and grab the arduino version
+setTimeout(function() {
+    // Setup the TTY serial port
+    tty = new SerialPort(config.devtty, {
+        parser: serialport.parsers.readline("\n")
+    });
+    utils.configure(config,tty);
+    utils.changeLEDColor('cyan');
+    var up = upnode(clientHandlers).connect(connectionParams);
+    up.on('up',function (remote) {
+        utils.initRemote(remote);
+        utils.changeLEDColor('green');
+        console.log(utils.timestamp()+' All Systems Go');
+    });
+    up.on('reconnect',function() {
+        utils.changeLEDColor('cyan');
+        console.log(utils.timestamp()+' Reconnecting');
+    });
+},5000);
+
 // Development overwrites
 if (process.argv[2] == 'local') {
     config.cloudHost = process.argv[3];
@@ -43,14 +76,7 @@ if (process.argv[2] == 'local') {
     config.cloudStreamPort = 3003;
     config.secure = false;
 };
-// Setup the TTY serial port
-var tty = new SerialPort(config.devtty, { 
-    parser: serialport.parsers.readline("\n")
-});
-utils.configure(config,tty);
-tty.on('data',function(data){
-    utils.handleRawTtyData(data);
-});
+
 // Connect
 // up down reconnect reconnect reconnect up
 var upnode = require('upnode');
@@ -63,50 +89,45 @@ var connectionParams = {
         return proto.connect(config.cloudPort, config.cloudHost);
     },
     block: function (remote, conn) {
-        var params = {
-            client:'beagle',
-            id:config.id,
-            version:{
-                node:config.nodeVersion,
-                arduino:config.arduinoVersion,
-                utilities:config.utilitiesVersion,
-                system:config.systemVersion
-            }
-        }
+        var params = utils.fetchBlockParams();
         var token = utils.fetchBlockToken();
+        console.log(params);
         if (token) {
-            utils.changeLEDColor('cyan');
-            console.log(utils.timestamp()+' Connecting');
             remote.handshake(params, token, function (err, res) {
                 if (err) console.error(utils.timestamp()+" "+err);
                 else {
                     conn.emit('up',res);
                 }
             });
+            utils.changeLEDColor('cyan');
+            console.log(utils.timestamp()+' Connecting');
         } else {
-            // Short term hack to make sure it goes purple
-            setTimeout(function() {
-                utils.changeLEDColor('purple');
-            },100);
-            console.log(utils.timestamp()+' Awaiting Activation');
             remote.activate(params,function(err,auth) {
                 if (err||!auth) {
                     console.log(utils.timestamp()+" Error, Restarting");
-                    process.exit(1)
-                } else {
-                    console.log(utils.timestamp()+" Received Authorisation, Confirming");
-                    fs.writeFile(config.tokenFile, auth.token, 'utf8',function(err) {
-                        if (err) throw err;
-                        else {
-                            params.token=auth.token;
-                            remote.confirmActivation(params,function(err) {
-                                console.log(utils.timestamp()+" Confirmed Authorisation, Restarting");
-                                process.exit(1);
-                            });
-                        }
-                    });
+                    process.exit(1);
+                    return;
                 }
+                console.log(utils.timestamp()+" Received Authorisation, Confirming");
+                fs.writeFile(config.tokenFile, auth.token, 'utf8',function(err) {
+                    exec('sync');   // TODO: fsyncSync
+                    if (err) throw err;
+                    params.token=auth.token;
+                    remote.confirmActivation(params,function(err) {
+                        if (err) {
+                            console.log(utils.timestamp()+" Error pairing block.")
+                            console.log(utils.timestamp()+" "+err.error);
+                            if (err.id===409) utils.changeLEDColor('blue');
+                            fs.unlinkSync(config.tokenFile);
+                        } else {
+                            console.log(utils.timestamp()+" Confirmed Authorisation, Restarting");
+                        }
+                        process.exit(1);
+                    });
+                });
             });
+            utils.changeLEDColor('purple');
+            console.log(utils.timestamp()+' Awaiting Activation');
         }
     }
 };
@@ -132,85 +153,9 @@ var clientHandlers = {
         else utils.updateCode(toUpdate);
     }
 };
-var up = upnode(clientHandlers).connect(connectionParams);
-up.on('up',function (remote) {
-    console.log(utils.timestamp()+' All Systems Go');
-    setTimeout(function() {
-        utils.changeLEDColor('green');
-    },100)
-    utils.remote = remote;
-    clearInterval(sendIv);
-    sendIv = setInterval(function(){
-        remote.heartbeat(utils.getHeartbeat());
-    },config.heartbeat_interval); 
-});
-up.on('reconnect',function() {
-    utils.changeLEDColor('cyan');
-    console.log(utils.timestamp()+' Reconnecting');
-});
-// Camera
-inotify = Inotify.create(true); // stand-alone, persistent mode, runs until you hit ctrl+c
-directive = (function() {
-    return {
-      create: function (ev) {
-        if(ev.name == 'v4l'){
-            cameraGuid = utils.buildDeviceGuid(config.id,{G:"0",V:0,D:1004});
-            clearInterval(cameraIv);
-            cameraIv = setInterval(function() {
-                utils.readings[cameraIv] = {
-                    GUID:cameraGuid,
-                    G:"0",
-                    V:0,
-                    D:1004,
-                    DA:"1"
-                };
-            },config.heartbeat_interval);
-        }
-      },
-      delete: function(ev) {
-        if(ev.name == 'v4l'){
-            clearInterval(cameraIv);
-        }
-      }
-    };
-}());
-inotify.watch(directive, '/dev/');
-try {
-    // Query the entry
-    var stats = fs.lstatSync('/dev/video0');
-    // Is it a directory?
-    if (stats.isCharacterDevice()) {
-        // Yes it is
-        console.log(utils.timestamp()+" Camera is Connected");
-        cameraGuid = utils.buildDeviceGuid(config.id,{G:"0",V:0,D:1004});
-        cameraIv = setInterval(function() {
-            utils.readings[cameraIv] = {
-                GUID:cameraGuid,
-                G:"0",
-                V:0,
-                D:1004,
-                DA:"1"
-            };
-        },config.heartbeat_interval);
-    }
-}
-catch (e) {
-    console.log(utils.timestamp()+" Camera Not Present");
-}
-// Watdog Timer
-var watchDogStream = fs.open('/dev/watchdog','r+',function(err,fd) {
-    if (err) console.log(utils.timestamp()+" "+err);
-    var watchDogPayload = new Buffer(1);
-    watchDogPayload.write('\n','utf8');
-    watchDogIv = setInterval(function() {
-        fs.write(fd,watchDogPayload,0, watchDogPayload.length, -1,function(err) {
-            if (err) console.log(utils.timestamp()+" "+err);
-        });
-    },30000);
-    utils.watchDogIv=watchDogIv;
-});
+
+ /*
 // Process event handlers
-/*
 process.on('exit',function() {
     utils.changeLEDColor('yellow');
 });
