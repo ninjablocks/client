@@ -4,6 +4,9 @@
 
 module.exports = function config(ninja, app) {
 
+	/**
+	 * Load ninja cape/arduino module if present
+	 */
 	if((ninja) && ninja.opts.device) {
 
 		ninja.loadModule(

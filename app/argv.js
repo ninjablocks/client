@@ -57,8 +57,7 @@ argv = require('optimist')
 	.demand(
 
 		[
-			"device"
-			, "cloudHost"
+			"cloudHost"
 			, "streamHost" 
 		]
 	)
