@@ -35,7 +35,7 @@ else {
 
 		cloudHost : "zendo.ninja.is"
 		, streamHost : "stream.ninja.is"
-		, logFile : '/var/log/client.log'
+		, logFile : '/var/log/ninjablock.log'
 		, env : 'production'
 		, streamPort : 443
 		, cloudPort : 443
