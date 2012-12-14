@@ -29,6 +29,12 @@ app.on('error', function(err) {
 
 var ninja = new client(argv, creds, app);
 
+if((!ninja) || !ninja.credentials.id) {
+
+	log.error("Unable to create ninja client.");
+	process.exit(1);
+}
+
 config(ninja, app);
 
 /**
