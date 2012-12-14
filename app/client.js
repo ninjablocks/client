@@ -15,28 +15,33 @@ function client(opts, credentials, app) {
 		modules = {}
 	;
 
-	stream.call(this);
-
-	this.log = app.log;
-
-/** waiting for credentials abstraction
-
 	if((!credentials) || !credentials.id) {
 
-		app.log.error('Unable to create client, no ninja serial specified.');
+		app.log.error("Invalid credentials specified.");
 		return false;
 	}
-*/
-	this.addModule = function addModule(name, opts, mod, app) {
+	if(!opts || opts == {}) {
 
-		var newModule = new mod(opts, app);
+		app.log.error("Invalid opts object provided.");
+		return false;
+	}
+
+	stream.call(this);
+
+	this.opts = opts || undefined;
+	this.log = app.log;
+	this.credentials = credentials;
+
+	this.addModule = function addModule(name, params, mod, app) {
+
+		var newModule = new mod(params, app);
 
 		if(!modules[name]) { modules[name] = {}; }
 
-		modules[name][opts.id] = newModule;
+		modules[name][params.id] = newModule;
 		newModule.on('error', this.moduleError.bind(newModule));
 
-		return modules[name][opts.id];
+		return modules[name][params.id];
 	};
 
 	this.moduleError = function moduleError(err) {
@@ -44,10 +49,9 @@ function client(opts, credentials, app) {
 		this.log.error("Module error: %s", err);
 	};
 
-	this.opts = opts || {};
 	this.node = undefined; // upnode
-	this.parameters = this.getParameters(opts);
 	this.transport = opts.secure ? tls : net;
+	this.parameters = this.getParameters.call(this, opts);
 };
 
 util.inherits(client, stream);
@@ -57,7 +61,7 @@ client.prototype.handlers = {
 	revokeCredentials : function revokeCredentials() {
 
 		this.log.info('Invalid token, restarting.');
-		this.emit('device::invalidToken', true);
+		this.emit('client::invalidToken', true);
 		// invalidate token
 		process.exit(1);	
 	}
@@ -83,39 +87,40 @@ client.prototype.connect = function connect() {
 
 client.prototype.up = function up() {
 
-	console.log(this);
-	this.emit('device::up', true);
+	this.emit('client::up', true);
 	this.log.info("Client connected to cloud.");
 };
 
 client.prototype.down = function down() {
 
-	this.emit('device::down', true);
+	this.emit('client::down', true);
 	this.log.info("Client disconnected from cloud.");
 };
 
 client.prototype.reconnect = function reconnect() {
 
-	this.emit('device::reconnecting', true);
+	this.emit('client::reconnecting', true);
 	this.log.info("Connecting to cloud...");
 };
 
 client.prototype.getParameters = function getParameters(opts) {
 
-	var parameters = {
+	var 
+		cloudPort = this.opts.cloudPort
+		, cloudHost = this.opts.cloudHost
+		, transport = this.transport
+	;
+
+	return {
 
 		ping : 10000
 		, timeout : 5000
 		, reconnect : 2000
 		, createStream : function createStream() {
 
-			return this.transport.connect(
-
-				this.opts.cloudPort
-				, this.opts.cloudHost
-			)
+			return transport.connect(cloudPort, cloudHost);
 		}
-		, block : this.block
+		, block : this.block.bind(this)
 	};
 };
 
@@ -126,8 +131,8 @@ client.prototype.block = function block(remote, conn) {
 		, params = {
 
 			//TODO: better client default/detection?
-			client : opts.client || 'beagle'
-			, id : opts.id
+			client : this.opts.client || 'beagle'
+			, id : this.credentials.id
 			, version : {
 
 				// node, arduino, utilities & system versions
@@ -142,8 +147,38 @@ client.prototype.block = function block(remote, conn) {
 			}
 
 			conn.emit('up', res);
-			this.emit('device::authed', res);
+			this.emit('client::authed', res);
 
+		}.bind(this)
+		, activate = function activate(err, auth) {
+
+			this.log.debug("Activation request received by cloud.");
+			if(err || !auth) {
+
+				err = err || 'No credentials received.';
+				this.log.error("Error activating (%s). Exiting.", err);
+
+				process.exit(1);
+			}
+			this.log.info('Received authorization, confirming...');
+			remote.confirmActivation(params, confirm);
+
+		}.bind(this)
+		, confirm = function confirm(err) {
+
+			if(err) {
+
+				this.log.error("Error pairing block (%s).", err);
+				if(err.id === 409) { 
+
+					this.emit('client::conflict');
+				}
+				this.emit('client::invalidToken', true);
+			}
+			else {
+
+				this.log.info("Confirmed authorization. Exiting...");
+			}
 		}.bind(this)
 	;
 
@@ -153,10 +188,10 @@ client.prototype.block = function block(remote, conn) {
 	}
 	else {
 
-		this.emit('device::needsActivation', res);
-		this.log.info("Ready to be activated.");
+		this.emit('client::activation', true);
+		this.log.info("Attempting to activate...");
 
-		// activate
+		remote.activate(params, activate)
 	}
 };
 
