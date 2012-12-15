@@ -9,7 +9,9 @@ var
 	, logger = require(path.resolve(__dirname, 'lib', 'logger'))
 	, app = new events.EventEmitter()
 	, log = new logger(argv)
-	, creds = {}
+	, creds = {
+		id : '1012BB022482'
+	}
 ;
 
 logger.default = log;
@@ -29,7 +31,7 @@ app.on('error', function(err) {
 
 var ninja = new client(argv, creds, app);
 
-if((!ninja) || !ninja.credentials.id) {
+if((!ninja) || !ninja.credentials) {
 
 	log.error("Unable to create ninja client.");
 	process.exit(1);
