@@ -168,11 +168,12 @@ client.prototype.block = function block(remote, conn) {
 
 			if(err) {
 
-				this.log.error("Error pairing block (%s).", err);
+				this.log.error("Error pairing block (%s).", err.error);
 				if(err.id === 409) { 
 
 					this.emit('client::conflict');
 				}
+				this.emit('client::error', err);
 				this.emit('client::invalidToken', true);
 			}
 			else {
