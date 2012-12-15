@@ -4,10 +4,16 @@
 
 module.exports = function config(ninja, app) {
 
+
+	if((!ninja) || !ninja.opts) {
+
+		return false;
+	}
+	
 	/**
 	 * Load ninja cape/arduino module if present
 	 */
-	if((ninja) && ninja.opts.device) {
+	if(ninja.opts.device) {
 
 		ninja.loadModule(
 
@@ -26,6 +32,6 @@ module.exports = function config(ninja, app) {
 	}
 	
 	ninja.connect();
-	
+
 	return ninja;
 };
