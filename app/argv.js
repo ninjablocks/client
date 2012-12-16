@@ -22,7 +22,7 @@ if(process.env.NODE_ENV == "development") {
 
 		cloudHost : "127.0.0.1"
 		, streamHost : "127.0.0.1"
-		, logFile : path.resolve(process.env.PWD, 'client.log')
+		, logFile : path.resolve(process.env.PWD, 'ninjablock.log')
 		, env : 'development'
 		, streamPort : 3003
 		, cloudPort : 3001
