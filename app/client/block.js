@@ -1,3 +1,8 @@
+/**
+ * Ninja Block client.prototype.block
+ * This is where we maintain client presence
+ * and manage dojo relations
+ */
 
 function block(remote, conn) {
 
@@ -10,6 +15,9 @@ function block(remote, conn) {
 			, id : this.credentials.id
 			, version : {
 
+				node : process.version
+				, utilities : null
+				, system : null
 				// node, arduino, utilities & system versions
 			}
 		}
@@ -21,20 +29,22 @@ function block(remote, conn) {
 				return;
 			}
 
+			this.log.info("Successfully completed handshake.");
 			conn.emit('up', res);
 			this.emit('client::authed', res);
 
 		}.bind(this)
 		, activate = function activate(err, auth) {
 
-			this.log.debug("Activation request received by cloud.");
 			if(err || !auth) {
 
 				err = err || 'No credentials received.';
-				this.log.error("Error activating (%s). Exiting.", err);
-
-				process.exit(1);
+				this.log.error("Error activating (%s).", err);
+				this.emit('client::error', err);
 			}
+
+			params.token = auth.token || '';
+			this.credentials.token = auth.token || undefined;
 			this.log.info('Received authorization, confirming...');
 			remote.confirmActivation(params, confirm);
 
@@ -44,16 +54,11 @@ function block(remote, conn) {
 			if(err) {
 
 				this.log.error("Error pairing block (%s).", err.error);
-				if(err.id === 409) { 
-
-					this.emit('client::conflict');
-				}
 				this.emit('client::error', err);
-				this.emit('client::invalidToken', true);
 			}
 			else {
 
-				this.log.info("Confirmed authorization. Exiting...");
+				this.log.info("Confirmed authorization.");
 			}
 		}.bind(this)
 	;
