@@ -59,7 +59,7 @@ function block(remote, conn) {
 			else {
 
 				this.log.info("Confirmed authorization.");
-				this.emit('client::authed', this.credentials.token);
+				this.emit('client::authed', true);
 			}
 		}.bind(this)
 	;
