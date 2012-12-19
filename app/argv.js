@@ -23,6 +23,8 @@ if(process.env.NODE_ENV == "development") {
 		cloudHost : "127.0.0.1"
 		, streamHost : "127.0.0.1"
 		, logFile : path.resolve(process.env.PWD, 'ninjablock.log')
+		, serialFile : path.resolve(process.env.PWD, 'serial.conf')
+		, tokenFile : path.resolve(process.env.PWD, 'token.conf')
 		, env : 'development'
 		, streamPort : 3003
 		, cloudPort : 3001
@@ -36,6 +38,8 @@ else {
 		cloudHost : "zendo.ninja.is"
 		, streamHost : "stream.ninja.is"
 		, logFile : '/var/log/ninjablock.log'
+		, serialFile : '/etc/opt/ninja/serial.conf'
+		, tokenFile : '/etc/opt/ninja/token.conf'
 		, env : 'production'
 		, streamPort : 443
 		, cloudPort : 443
