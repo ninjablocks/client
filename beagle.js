@@ -55,7 +55,6 @@ setTimeout(function() {
         parser: serialport.parsers.readline("\n")
     });
     utils.configure(config,tty);
-    utils.changeLEDColor('cyan');
     var up = upnode(clientHandlers).connect(connectionParams);
     up.on('up',function (remote) {
         utils.initRemote(remote);
