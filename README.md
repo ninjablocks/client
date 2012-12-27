@@ -1,7 +1,7 @@
 client
 ======
 
-The Node that runs on the Beagle and sends data to Ninja Cloud
+The Node that runs on a Raspberry Pi and sends data to Ninja Cloud
 
 ## License
 
