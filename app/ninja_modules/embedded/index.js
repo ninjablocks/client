@@ -6,9 +6,12 @@ var
 
 function embedded(opts, app) {
 	
-	var opts = opts || {};
+	var 
+		opts = opts || {}
+		, log = app.log
+	;
 
-	this.log = app.log;
+	return this;
 
 };
 

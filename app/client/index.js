@@ -2,6 +2,7 @@ var
 	path = require('path')
 	, util = require('util')
 	, upnode = require('upnode')
+	, creds = require(path.resolve(__dirname, '..', '..', 'lib', 'credentials'))
 	, logger = require(path.resolve(__dirname, '..', '..', 'lib', 'logger'))
 	, stream = require('stream')
 	, tls = require('tls')
@@ -9,28 +10,31 @@ var
 	, fs = require('fs')
 ;
 
-function client(opts, credentials, app) {
+function client(opts, app) {
 
 	var
 		modules = {}
 	;
 
-	if((!credentials) || !credentials.id) {
-
-		app.log.error("Invalid credentials specified.");
-		return false;
-	}
 	if(!opts || opts == {}) {
 
-		app.log.error("Invalid opts object provided.");
+		app.log.error("Invalid opts object provided");
+		return false;
+	}
+
+	if(!creds || typeof creds !== 'function') {
+
+		app.log.error("Invalid credential provider specified");
 		return false;
 	}
 
 	stream.call(this);
 
+	this.app = app;
 	this.opts = opts || undefined;
+	this.sendBuffer = [ ];
 	this.log = app.log;
-	this.credentials = credentials;
+	creds.call(this);
 
 	this.addModule = function addModule(name, params, mod, app) {
 
@@ -56,47 +60,87 @@ function client(opts, credentials, app) {
 
 util.inherits(client, stream);
 
-client.prototype.block = require('./block')
+client.prototype.block = require('./block');
 
-client.prototype.handlers = {
+client.prototype.getHandlers = function() {
 
-	revokeCredentials : function revokeCredentials() {
+	return {
 
-		this.log.info('Invalid token, restarting.');
-		this.emit('client::invalidToken', true);
-		// invalidate token
-		process.exit(1);	
-	}
-	, execute : function execute(cmd, cb) {
+		revokeCredentials : function revokeCredentials() {
 
-		// execute command
-	}
-	, update : function update(to) {
+			this.log.info('Invalid token');
+			this.emit('client::invalidToken', true);
 
-		// update client
+		}.bind(this)
+		, execute : function execute(cmd, cb) {
+
+			console.log("Command request: %s", cmd);
+			// execute command
+		}.bind(this)
+		, update : function update(to) {
+
+			// update client
+		}.bind(this)
 	}
 };
 
 client.prototype.connect = function connect() {
 
 	var client = this;
-	this.node = upnode(this.handlers).connect(this.parameters);
-
-	this.node.on('up', client.up.bind(client));
+	this.node = upnode(this.getHandlers()).connect(this.parameters);
 
 	this.node.on('reconnect', client.reconnect.bind(client));
+	this.node.on('up', client.up.bind(client));
+	this.initialize();
+};
+
+/**
+ * Initialize the session with the cloud after a connection
+ * has been established. 
+ */
+ 
+client.prototype.initialize = function initialize() {
+
+	var 
+		flushBuffer = function flushBuffer() {
+
+			if(this.sendBuffer.length > 0) {
+
+				this.log.debug("Sending buffered commands...");
+				this.cloud.data({
+
+					'DEVICE' : this.sendBuffer
+				});
+				this.sendBuffer = [ ];
+			}
+			else {
+
+				this.log.debug("No buffered commands to send");
+			}
+		}
+		, initSession = function initSession(cloud) {
+
+			this.cloud = cloud;
+	 		
+			if(this.pulse) { clearInterval(this.pulse) }
+			this.pulse = setInterval(beat, 5000);
+			flushBuffer.call(this);
+		}
+	;
+
+	this.on('client::authed', initSession);
 };
 
 client.prototype.up = function up() {
 
 	this.emit('client::up', true);
-	this.log.info("Client connected to cloud.");
+	this.log.info("Client connected to cloud");
 };
 
 client.prototype.down = function down() {
 
 	this.emit('client::down', true);
-	this.log.info("Client disconnected from cloud.");
+	this.log.info("Client disconnected from cloud");
 };
 
 client.prototype.reconnect = function reconnect() {

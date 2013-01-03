@@ -58,13 +58,6 @@ argv = require('optimist')
 			, "Example: $0 --device /dev/tty.usb*B"
 		].join("\n")
 	)
-	.demand(
-
-		[
-			"cloudHost"
-			, "streamHost" 
-		]
-	)
 	.default(defaults)
 	.argv
 ;
