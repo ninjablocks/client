@@ -15,6 +15,7 @@ function serial(opts, app) {
 			if(this.device) {
 
 				log.debug("Unloading serial module for %s", opts.device);	
+				this.emit('unload');
 				this.device.close();
 			}
 		}
@@ -59,11 +60,12 @@ function serial(opts, app) {
 
 	if(!opts.parser) {
 
-		this.parser = serialport.parsers.raw;
+		this.parser = serialport.parsers.readline("\n");
 	}
 
 	stream.call(this);
 
+	this.id = opts.id;
 	this.connect = function connect() {
 
 		try {
@@ -76,13 +78,34 @@ function serial(opts, app) {
 		catch(e) {
 
 			app.emit('error', new Error("Unable to connect to serial device"));
-			setTimeout(this.connect, delay);
+			setTimeout(this.connect, 2000);
 
 		}
+
+	}.bind(this);
+
+	this.write = function write(data) {
+
+		if(this.device) {
+
+			try {
+
+				this.device.write(data);
+			}
+			catch (e) {
+
+				this.log.debug("Serial write error: %s", e);
+				return false;
+			}
+			return true;
+		}
+		return false;
+
 	}.bind(this);
 
 	this.on('unload', unload);
-	this.connect();
+	app.emit('serial::new', this);
+	app.on('loaded', this.connect);
 
 	return this;
 };
@@ -101,7 +124,7 @@ serial.prototype.bindListeners = function bindListeners() {
 		}
 		
 		this.log.debug("Serial connection open on %s", this.device.path);
-		this.emit('open', this);
+		this.emit('open');
 		
 	}.bind(this);
 
@@ -109,7 +132,7 @@ serial.prototype.bindListeners = function bindListeners() {
 
 		this.log.debug("Serial connection closed on %s", this.device.path);
 		setTimeout(this.connect, 2000);
-		this.emit('close', this);
+		this.emit('close');
 
 	}.bind(this);
 
@@ -117,13 +140,14 @@ serial.prototype.bindListeners = function bindListeners() {
 
 		this.log.debug("Serial error: %s", err);
 		setTimeout(this.connect, 2000);
-		//this.emit('error', err);
+		this.emit('error', err);
 
 	}.bind(this);
 
 	var onData = function onData(dat) {
 
-		this.parser(this, dat);
+		this.log.debug("Serial data: %s", dat);
+		this.emit('data', dat);
 
 	}.bind(this);
 
