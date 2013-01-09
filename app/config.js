@@ -36,7 +36,7 @@ module.exports = function config(ninja, app) {
 			, { id : 'arduino' }
 			, app
 		);
-
+/*
 		// ninja onboard components
 		ninja.loadModule(
 
@@ -44,7 +44,7 @@ module.exports = function config(ninja, app) {
 			, { components : [ 'rgbled' ] }
 			, app
 		);
-
+*/
 	}
 	
 	ninja.emit('loaded'); // done loading modules
