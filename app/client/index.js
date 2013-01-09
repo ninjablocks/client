@@ -98,7 +98,7 @@ client.prototype.connect = function connect() {
  * Initialize the session with the cloud after a connection
  * has been established. 
  */
- 
+
 client.prototype.initialize = function initialize() {
 
 	var 
@@ -181,7 +181,7 @@ client.prototype.loadModule = function loadModule(name, opts, app) {
 	try {
 
 		var 
-			file = path.resolve(__dirname, 'ninja_modules', name)
+			file = path.resolve(__dirname, '..', 'ninja_modules', name)
 		;
 
 		if(fs.existsSync(file)) {
