@@ -12,7 +12,7 @@ var fs = require('fs'),
     tty,
     config =  {
         client:'beagle',
-        nodeVersion:0.9,
+        nodeVersion:0.91,
         cloudHost: 'zendo.ninja.is',
         cloudStream: 'stream.ninja.is',
         cloudStreamPort: 443,
