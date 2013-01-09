@@ -98,7 +98,6 @@ var connectionParams = {
                     conn.emit('up',res);
                 }
             });
-            utils.changeLEDColor('cyan');
             console.log(utils.timestamp()+' Connecting');
         } else {
             remote.activate(params,function(err,auth) {
