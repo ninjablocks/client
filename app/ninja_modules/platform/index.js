@@ -2,6 +2,11 @@
  * Ninja Blocks arduino controller
  */
 
+var 
+	stream = require('stream')
+	, util = require('util')
+;
+
 function platform(opts, app) {
 	
 	this.app = app;
@@ -37,9 +42,13 @@ function platform(opts, app) {
 		this.dataEvent(type, json);
 	};
 
+	stream.call(this);
+
 	app.on('serial::new', this.newDevice);
 
 };
+
+util.inherits(platform, stream);
 
 platform.prototype.dataEvent = function dataEvent(type, data) {
 
@@ -103,7 +112,7 @@ platform.prototype.deviceHandler = function(dataset) {
 };
 
 platform.prototype.accelerometerData = function(data) {
-	
+
 };
 
 platform.prototype.sendData = function(data) {
