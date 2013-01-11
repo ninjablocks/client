@@ -1,7 +1,7 @@
 var fs = require('fs'),
     util = require('util'),
     http = require('http'),
-    Device = require('../lib/device.js'),
+    Device = require('../../lib/device.js'),
     Inotify = require('inotify-plusplus'),
     directive,
     cameraIv,
@@ -9,6 +9,7 @@ var fs = require('fs'),
     cameraGuid;
 
 module.exports = function() {
+    var self = this;
     var cloud = this;
 
     var camera = new Camera(cloud);
@@ -69,7 +70,6 @@ Camera.prototype._init = function() {
         self.emit('data','1');
     },10000);
     this.emit('data','1');
-    console.log('emitting pluging')
     this.emit('config',{
         G:this.G,
         V:this.V,

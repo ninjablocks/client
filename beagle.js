@@ -12,7 +12,7 @@ var fs = require('fs'),
     tty,
     config =  {
         client:'beagle',
-        nodeVersion:0.8,
+        nodeVersion:0.91,
         cloudHost: 'zendo.ninja.is',
         cloudStream: 'stream.ninja.is',
         cloudStreamPort: 443,
@@ -55,7 +55,6 @@ setTimeout(function() {
         parser: serialport.parsers.readline("\n")
     });
     utils.configure(config,tty);
-    utils.changeLEDColor('cyan');
     var up = upnode(clientHandlers).connect(connectionParams);
     up.on('up',function (remote) {
         utils.initRemote(remote);
@@ -99,7 +98,6 @@ var connectionParams = {
                     conn.emit('up',res);
                 }
             });
-            utils.changeLEDColor('cyan');
             console.log(utils.timestamp()+' Connecting');
         } else {
             remote.activate(params,function(err,auth) {

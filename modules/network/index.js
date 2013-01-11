@@ -1,5 +1,5 @@
 var util = require('util'),
-    Device = require('../lib/device'),
+    Device = require('../../lib/device'),
     os = require('os');
 
 
