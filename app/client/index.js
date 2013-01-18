@@ -123,17 +123,27 @@ client.prototype.initialize = function initialize() {
 			this.cloud = cloud;
 	 		
 			if(this.pulse) { clearInterval(this.pulse) }
-			this.pulse = setInterval(beat, 5000);
+			this.pulse = setInterval(beat.bind(this), 5000);
 			flushBuffer.call(this);
+		}
+		, beat = function beat() {
+
+			this.log.debug("Sending heartbeat");
+			this.cloud.heartbeat(JSON.stringify({ 
+
+				"TIMESTAMP" : (new Date().getTime())
+				, "DEVICE" : [ ]
+
+			}));
 		}
 	;
 
-	this.on('client::authed', initSession);
+	this.on('client::up', initSession);
 };
 
-client.prototype.up = function up() {
+client.prototype.up = function up(cloud) {
 
-	this.emit('client::up', true);
+	this.emit('client::up', cloud);
 	this.log.info("Client connected to cloud");
 };
 
@@ -141,6 +151,10 @@ client.prototype.down = function down() {
 
 	this.emit('client::down', true);
 	this.log.info("Client disconnected from cloud");
+	if(this.pulse) {
+
+		clearInterval(this.pulse);
+	}
 };
 
 client.prototype.reconnect = function reconnect() {
@@ -184,7 +198,7 @@ client.prototype.loadModule = function loadModule(name, opts, app) {
 			file = path.resolve(__dirname, '..', 'ninja_modules', name)
 		;
 
-		if(fs.existsSync(file)) {
+		if(existsSync(file)) {
 
 			var mod = require(file);
 		}
@@ -204,4 +218,9 @@ client.prototype.loadModule = function loadModule(name, opts, app) {
 	return this.addModule(name, opts, mod, app);
 };
 
+function existsSync(file) {
+
+	if(fs.existsSync) { return fs.existsSync(file); }
+	return path.existsSync(file);
+};
 module.exports = client;
