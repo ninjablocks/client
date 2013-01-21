@@ -8,7 +8,7 @@ var
 	, tls = require('tls')
 	, net = require('net')
 	, fs = require('fs')
-	, existsSync = fs.existsSync || path.existsSync;
+	, existsSync = fs.existsSync || path.existsSync
 ;
 
 function client(opts, app) {
@@ -29,13 +29,14 @@ function client(opts, app) {
 		return false;
 	}
 
+
 	stream.call(this);
 
 	this.app = app;
 	this.opts = opts || undefined;
 	this.sendBuffer = [ ];
 	this.log = app.log;
-	creds.call(this);
+	creds.call(this,this.opts);
 
 	this.addModule = function addModule(name, params, mod, app) {
 

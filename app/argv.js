@@ -39,7 +39,7 @@ else if (process.env.NODE_ENV === "hacking") {
 		, logFile : path.resolve(process.env.PWD, 'ninjablock.log')
 		, serialFile : path.resolve(process.env.PWD, 'serial.conf')
 		, tokenFile : path.resolve(process.env.PWD, 'token.conf')
-		, env : 'production'
+		, env : 'hacking'
 		, streamPort : 443
 		, cloudPort : 443
 		, secure : true
