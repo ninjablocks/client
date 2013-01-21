@@ -16,7 +16,7 @@ logger.default = app.log = log;
 app.on('error', function(err) {
 
 	log.error(err);
-	
+
 	/**
 	 * Do more stuff with errors.
 	 * err should include .stack,
@@ -37,9 +37,13 @@ config(ninja, app);
 
 /**
  * Note about apps (event emitters):
- * 
+ *
  * We can instantiate multiple apps to
  * allow our modules to be namespaced/sandboxed
- * if we so desire. This allows us to provide 
+ * if we so desire. This allows us to provide
  * isolation without any additional infrastructure
  */
+
+process.on('uncaughtException',function(err) {
+	log.error(err);
+});

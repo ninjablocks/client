@@ -8,6 +8,7 @@ var
 	, tls = require('tls')
 	, net = require('net')
 	, fs = require('fs')
+	, existsSync = fs.existsSync || path.existsSync;
 ;
 
 function client(opts, app) {
@@ -16,7 +17,7 @@ function client(opts, app) {
 		modules = {}
 	;
 
-	if(!opts || opts == {}) {
+	if(!opts || Object.keys(opts).length === 0) {
 
 		app.log.error("Invalid opts object provided");
 		return false;
@@ -184,7 +185,7 @@ client.prototype.loadModule = function loadModule(name, opts, app) {
 			file = path.resolve(__dirname, '..', '..', 'ninja_modules', name)
 		;
 
-		if(fs.existsSync(file)) {
+		if(existsSync(file)) {
 
 			var mod = require(file);
 		}
