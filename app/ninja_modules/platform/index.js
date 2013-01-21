@@ -42,8 +42,22 @@ function platform(opts, app) {
 		this.dataEvent(type, json);
 	};
 
-	stream.call(this);
+	this.onOpen = function onOpen() {
 
+		this.log.debug("Arduino initialized");
+	};
+
+	this.onClose = function onClose() {
+
+		this.log.debug("Arduino disconnected");
+	};
+
+	this.onError = function onError(err) {
+
+		this.log.error("Arduino error: %s", err);
+	};
+
+	stream.call(this);
 	app.on('serial::new', this.newDevice);
 
 };
