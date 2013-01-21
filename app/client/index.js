@@ -36,7 +36,7 @@ function client(opts, app) {
 	this.opts = opts || undefined;
 	this.sendBuffer = [ ];
 	this.log = app.log;
-	creds.call(this,this.opts);
+	creds.call(this,opts);
 
 	this.addModule = function addModule(name, params, mod, app) {
 

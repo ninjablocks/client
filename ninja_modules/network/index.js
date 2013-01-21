@@ -5,7 +5,7 @@ var util = require('util')
 
 // TODO: modularize functionality
 
-module.exports = function(argv, app) {
+module.exports = function(opts, app) {
 
     this.registerDevice(new Network(this));
 };
@@ -35,7 +35,7 @@ Network.prototype.write = function(data) {
     try {
 
         var da = JSON.parse(data);
-    } 
+    }
     catch(err) {
 
         console.log(cloud.timestamp()+' Network: Invalid Command');
