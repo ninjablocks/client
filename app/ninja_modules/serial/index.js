@@ -6,7 +6,7 @@ var
 ;
 
 function serial(opts, app) {
-	
+		
 	var 
 		opts = opts || {}
 		, ready = false
@@ -22,7 +22,6 @@ function serial(opts, app) {
 		, log = app.log
 	;
 
-	this.app = app;
 	this.log = log;
 
 	if(!opts.device) {
@@ -68,6 +67,7 @@ function serial(opts, app) {
 	this.id = opts.id;
 	this.connect = function connect() {
 
+		this.log.debug("Connecting to serial device...");
 		try {
 
 			this.device = new device(opts.device, this.parser);
@@ -105,7 +105,6 @@ function serial(opts, app) {
 
 	this.on('unload', unload);
 	app.emit('serial::new', this);
-	app.on('loaded', this.connect);
 
 	return this;
 };
@@ -146,7 +145,7 @@ serial.prototype.bindListeners = function bindListeners() {
 
 	var onData = function onData(dat) {
 
-		this.log.debug("Serial data: %s", dat);
+		// this.log.debug("Serial data: %s", dat);
 		this.emit('data', dat);
 
 	}.bind(this);
