@@ -67,5 +67,4 @@ Network.prototype.write = function(data) {
 };
 
 Network.prototype.end = function() {};
-
 Network.prototype.close = function() {};
