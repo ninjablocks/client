@@ -21,6 +21,14 @@ module.exports = function config(ninja, app) {
 	 */
 	if(ninja.opts.device) {
 
+		// arduino controller
+		ninja.loadModule(
+
+			'platform'
+			, { id : 'arduino' }
+			, app
+		);
+
 		// serial device
 		ninja.loadModule(
 
@@ -29,22 +37,12 @@ module.exports = function config(ninja, app) {
 			, app
 		);
 
-		// arduino controller
 		ninja.loadModule(
 
-			'platform'
-			, { id : 'arduino' }
+			'network'
+			, { }
 			, app
 		);
-/*
-		// ninja onboard components
-		ninja.loadModule(
-
-			'embedded'
-			, { components : [ 'rgbled' ] }
-			, app
-		);
-*/
 	}
 	
 	ninja.emit('loaded'); // done loading modules
