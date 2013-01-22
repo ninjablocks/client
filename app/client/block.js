@@ -39,7 +39,7 @@ function block(remote, conn) {
 
 				err = err || 'No credentials received';
 				this.log.error("Error activating (%s)", err);
-				this.emit('client::error', err);
+				this.app.emit('client::error', err);
 			}
 
 			params.token = auth.token || '';
@@ -55,23 +55,23 @@ function block(remote, conn) {
 			if(err) {
 
 				this.log.error("Error pairing block (%s)", err.error);
-				this.emit('client::error', err);
+				this.app.emit('client::error', err);
 			}
 			else {
 
 				this.log.info("Confirmed authorization");
-				this.emit('client::authed', true);
+				this.app.emit('client::authed', true);
 			}
 		}.bind(this)
 	;
 
-	if(token) {
+	if((token) && token.length) {
 
 		remote.handshake(params, token, handshake);
 	}
 	else {
 
-		this.emit('client::activation', true);
+		this.app.emit('client::activation', true);
 		this.log.info("Attempting to activate...");
 
 		remote.activate(params, activate);
