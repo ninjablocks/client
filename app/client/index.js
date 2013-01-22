@@ -196,9 +196,31 @@ client.prototype.registerDevice = function registerDevice(device) {
 	if(!device) { return; }
 
 	device.guid = this.getGuid(device);
-	device.on('data', this.sendData.bind(this));
+	device.on('data', this.dataHandler.call(this, device));
 	this.log.debug("Registering device %s", device.guid);
 	this.devices[device.guid] = device;
+};
+
+client.prototype.dataHandler = function dataHandler(device) {
+
+	var self = this;
+	return function(data) {
+
+		try {
+
+			self.sendData({
+
+				G : device.G
+				, V : device.V
+				, D : device.D
+				, DA : data
+			});
+		}
+		catch(e) {
+
+			self.log.debug("Error sending data (%s)", self.getGuid(device));
+		}
+	}
 };
 
 client.prototype.sendData = function sendData(dat) {
@@ -211,8 +233,6 @@ client.prototype.sendData = function sendData(dat) {
 	if((this.app.cloud) && this.app.cloud.data) {
 
 		var msg = { 'DEVICE' : [ dat ] };
-		console.log(msg);
-
 		return this.app.cloud.data(msg);
 	}
 
