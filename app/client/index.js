@@ -33,25 +33,10 @@ function client(opts, app) {
 	this.app = app;
 	this.opts = opts || undefined;
 	this.sendBuffer = [ ];
+	this.modules = { };
+	this.devices = { };
 	this.log = app.log;
 	creds.call(this);
-
-	this.addModule = function addModule(name, params, mod, app) {
-
-		var newModule = new mod(params, app);
-
-		if(!modules[name]) { modules[name] = {}; }
-
-		modules[name][params.id] = newModule;
-		newModule.on('error', this.moduleError.bind(newModule));
-
-		return modules[name][params.id];
-	};
-
-	this.moduleError = function moduleError(err) {
-
-		this.log.error("Module error: %s", err);
-	};
 
 	this.node = undefined; // upnode
 	this.transport = opts.secure ? tls : net;
@@ -69,13 +54,14 @@ client.prototype.getHandlers = function() {
 		revokeCredentials : function revokeCredentials() {
 
 			this.log.info('Invalid token');
-			this.emit('client::invalidToken', true);
+			this.app.emit('client::invalidToken', true);
 
 		}.bind(this)
 		, execute : function execute(cmd, cb) {
 
 			console.log("Command request: %s", cmd);
-			// execute command
+			this.command(cmd);
+
 		}.bind(this)
 		, update : function update(to) {
 
@@ -96,6 +82,9 @@ client.prototype.getHandlers = function() {
 	}
 };
 
+/**
+ * Connect the block to the cloud
+ */
 client.prototype.connect = function connect() {
 
 	var client = this;
@@ -110,12 +99,12 @@ client.prototype.connect = function connect() {
  * Initialize the session with the cloud after a connection
  * has been established. 
  */
-
 client.prototype.initialize = function initialize() {
 
 	var 
 		flushBuffer = function flushBuffer() {
 
+			if(!this.sendBuffer) { this.sendBuffer = [ ]; return; }
 			if(this.sendBuffer.length > 0) {
 
 				this.log.debug("Sending buffered commands...");
@@ -134,13 +123,13 @@ client.prototype.initialize = function initialize() {
 
 			this.cloud = cloud;
 	 		
-			if(this.pulse) { clearInterval(this.pulse) }
+			if(this.pulse) { clearInterval(this.pulse); }
 			this.pulse = setInterval(beat.bind(this), 5000);
 			flushBuffer.call(this);
 		}
 		, beat = function beat() {
 
-			this.log.debug("Sending heartbeat");
+			// this.log.debug("Sending heartbeat");
 			this.cloud.heartbeat(JSON.stringify({ 
 
 				"TIMESTAMP" : (new Date().getTime())
@@ -150,18 +139,21 @@ client.prototype.initialize = function initialize() {
 		}
 	;
 
-	this.on('client::up', initSession);
+	this.app.on('client::up', initSession);
 };
 
+/**
+ * cloud event handlers
+ */
 client.prototype.up = function up(cloud) {
 
-	this.emit('client::up', cloud);
+	this.app.emit('client::up', cloud);
 	this.log.info("Client connected to cloud");
 };
 
 client.prototype.down = function down() {
 
-	this.emit('client::down', true);
+	this.app.emit('client::down', true);
 	this.log.info("Client disconnected from cloud");
 	if(this.pulse) {
 
@@ -171,10 +163,13 @@ client.prototype.down = function down() {
 
 client.prototype.reconnect = function reconnect() {
 
-	this.emit('client::reconnecting', true);
+	this.app.emit('client::reconnecting', true);
 	this.log.info("Connecting to cloud...");
 };
 
+/**
+ * Generate scoped parameters for dnode connection
+ */
 client.prototype.getParameters = function getParameters(opts) {
 
 	var 
@@ -196,6 +191,86 @@ client.prototype.getParameters = function getParameters(opts) {
 	};
 };
 
+client.prototype.registerDevice = function registerDevice(device) {
+
+	if(!device) { return; }
+
+	device.guid = this.getGuid(device);
+	device.on('data', this.sendData.bind(this));
+	this.log.debug("Registering device %s", device.guid);
+	this.devices[device.guid] = device;
+};
+
+client.prototype.sendData = function sendData(dat) {
+		
+	if(!dat) { return false; }
+
+	dat.GUID = this.getGuid(dat);
+	dat.TIMESTAMP = (new Date().getTime());
+
+	if((this.app.cloud) && this.app.cloud.data) {
+
+		var msg = { 'DEVICE' : [ dat ] };
+		console.log(msg);
+
+		return this.app.cloud.data(msg);
+	}
+
+	this.bufferData(msg);
+};
+
+client.prototype.bufferData = function bufferData(msg) {
+	
+	this.sendBuffer.push(msg);
+
+	if(this.sendBuffer.length > 9) {
+
+		this.sendBuffer.shift();
+	}
+};
+
+client.prototype.command = function command(dat) {
+
+	var 
+		self = this
+		, data = this.getJSON(dat)
+	;
+
+	for(var d = 0, ds = data.DEVICE; d < ds.length; d++) {
+
+		console.log("Executing: ");
+		console.log(ds[d]);
+
+		var 
+			guid = ds[d].GUID
+			, device
+		;
+		delete ds[d].GUID;
+
+		ds[d].G = ds[d].G.toString();
+
+		if((device = this.devices[guid]) && typeof device.write == "function") {
+
+			try {
+
+				return this.devices[guid].write(ds[d].DA);
+			}
+			catch(e) {
+
+				this.log.error("error actuating: %s (%s)", guid, err.message);
+			}
+		}
+		else {
+
+			this.log.debug("actuating %s (%s)", guid, ds[d].DA);
+			// write to TTY
+		}
+	}
+};
+
+/**
+ * Initiate module loading sequence...
+ */
 client.prototype.loadModule = function loadModule(name, opts, app) {
 
 	if(!name) {
@@ -226,8 +301,64 @@ client.prototype.loadModule = function loadModule(name, opts, app) {
 		return false;
 	}
 
-	this.log.info("loadModule success: %s", name);
 	return this.addModule(name, opts, mod, app);
+};
+
+
+client.prototype.addModule = function addModule(name, params, mod, app) {
+
+	if(!mod) { 
+
+		this.log.error(new Error('Invalid module provided'));
+		return false; 
+	}
+
+	var newModule = new mod(params, app);
+
+	this.log.info("loadModule success: %s", name);
+	if(!this.modules[name]) { this.modules[name] = {}; }
+
+	this.modules[name][params.id] = newModule;
+	this.bindModule(newModule);
+
+	return this.modules[name][params.id];
+};
+
+client.prototype.bindModule = function bindModule(mod) {
+	
+	mod.on('register', this.registerDevice.bind(this));
+	mod.on('error', this.moduleError.bind(mod));
+	// set data handlers after registration
+};
+
+client.prototype.moduleError = function moduleError(err) {
+
+	this.log.error("Module error: %s", err);
+};
+
+client.prototype.getGuid = function getGuid(device) {
+
+	return [ 
+
+		this.serial
+		, device.G
+		, device.V
+		, device.D
+		
+	].join('_');	
+};
+
+client.prototype.getJSON = function getJSON(dat) {
+
+	try {
+
+		return JSON.parse(dat);
+	}
+	catch(e) {
+
+		this.log.debug('Invalid JSON: %s', e);
+		return false;
+	}
 };
 
 function existsSync(file) {
@@ -235,4 +366,6 @@ function existsSync(file) {
 	if(fs.existsSync) { return fs.existsSync(file); }
 	return path.existsSync(file);
 };
+
+
 module.exports = client;
