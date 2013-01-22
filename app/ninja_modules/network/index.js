@@ -1,36 +1,41 @@
-var util = require('util')
-    , Device = require('../device')
+var 
+    util = require('util')
+    , stream = require('stream')
     , os = require('os')
 ;
 
-// TODO: modularize functionality
+function network(opts, app) {
 
-module.exports = function(argv, app) {
+    var 
+        self = this
+        , initialize = function(cloud) {
+            
+            self.log.debug("Initializing network module")
+            self.cloud = cloud;
+            self.emit('register', self);
+            process.nextTick(function bump() {
 
-    this.registerDevice(new Network(this));
-};
+                self.emit('data', '{}');
+            });
+        }
+    ;
 
-util.inherits(Network, Device);
-
-function Network(cloud) {
-
-    this._cloud = cloud;
+    this.log = app.log;
     this.readable = true;
     this.writeable = true;
+
     this.V = 0;
     this.D = 1005;
     this.G = "0";
-    var self = this;
-    process.nextTick(function() {
 
-        self.emit('data','{}');
-    });
+    app.on('client::up', initialize);
 };
 
-Network.prototype.write = function(data) {
+util.inherits(network, stream);
 
-    // Implements JSON-RPC
-    var cloud = this._cloud;
+network.prototype.write = function(data) {
+
+    var cloud = this.cloud;
 
     try {
 
@@ -38,7 +43,7 @@ Network.prototype.write = function(data) {
     } 
     catch(err) {
 
-        console.log(cloud.timestamp()+' Network: Invalid Command');
+        this.log.debug("network: Invalid command");
         return false;
     }
 
@@ -46,7 +51,7 @@ Network.prototype.write = function(data) {
 
         case 'SCAN':
 
-            console.log(cloud.timestamp()+' Scanning Interfaces');
+            this.log.debug('network: Scanning interfaces...');
             var networkInterfaces = os.networkInterfaces();
             var DA = {
 
@@ -63,9 +68,17 @@ Network.prototype.write = function(data) {
 
         break;
     }
+
     return true;
 };
 
-Network.prototype.end = function() {};
+network.prototype.end = function() {
 
-Network.prototype.close = function() {};
+};
+
+network.prototype.close = function() {
+
+};
+
+module.exports = network;
+
