@@ -81,6 +81,18 @@ client.prototype.getHandlers = function() {
 
 			// update client
 		}.bind(this)
+		, config : function config(dat, cb) {
+
+			// configure module/device
+		}
+		, install : function install(mod, cb) {
+
+			// install module
+		}.bind(this)
+		, uninstall : function uninstall(mod, cb) {
+
+			// uninstall module
+		}.bind(this)
 	}
 };
 
