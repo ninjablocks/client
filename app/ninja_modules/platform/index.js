@@ -11,7 +11,6 @@ function platform(opts, app) {
 	
 	this.app = app;
 	this.log = app.log;
-	this.id = opts.id;
 
 	this.newDevice = function newDevice(dev) {
 
@@ -19,11 +18,24 @@ function platform(opts, app) {
 
 		app.log.debug("Initializing arduino...");
 
-		dev.on('open', this.onOpen);
-		dev.on('close', this.onClose);
-		dev.on('error', this.onError);
-		dev.on('data', this.onData);
+		dev.on('open', function() {
 
+			console.log("Opened.");
+		});
+		dev.on('close', function() {
+
+			console.log("Closed.");
+		});
+		dev.on('error', function(err) {
+
+			console.log("Error. %s", err);
+		});
+		dev.on('data', function(dat) {
+
+			// console.log("Data: %s", dat);
+		});
+
+		dev.connect();
 	};
 
 	this.onData = function onData(data) {
@@ -42,24 +54,24 @@ function platform(opts, app) {
 		this.dataEvent(type, json);
 	};
 
-	this.onOpen = function onOpen() {
-
-		this.log.debug("Arduino initialized");
-	};
-
-	this.onClose = function onClose() {
-
-		this.log.debug("Arduino disconnected");
-	};
-
-	this.onError = function onError(err) {
-
-		this.log.error("Arduino error: %s", err);
-	};
-
 	stream.call(this);
 	app.on('serial::new', this.newDevice);
 
+};
+
+platform.prototype.onOpen = function onOpen() {
+
+	this.log.debug("Arduino initialized");
+};
+
+platform.prototype.onClose = function onClose() {
+
+	this.log.debug("Arduino disconnected");
+};
+
+platform.prototype.onError = function onError(err) {
+
+	this.log.error("Arduino error: %s", err);
 };
 
 util.inherits(platform, stream);
