@@ -1,6 +1,7 @@
 var
 	path = require('path')
 	, util = require('util')
+	, mkdirp = require('mkdirp')
 	, upnode = require('upnode')
 	, creds = require(path.resolve(__dirname, '..', '..', 'lib', 'credentials'))
 	, logger = require(path.resolve(__dirname, '..', '..', 'lib', 'logger'))
@@ -339,16 +340,78 @@ client.prototype.addModule = function addModule(name, params, mod, app) {
 	if(!this.modules[name]) { this.modules[name] = {}; }
 
 	this.modules[name][params.id] = newModule;
-	this.bindModule(newModule);
+	this.bindModule(newModule, name);
 
 	return this.modules[name][params.id];
 };
 
-client.prototype.bindModule = function bindModule(mod) {
+client.prototype.bindModule = function bindModule(mod, name) {
 	
 	mod.on('register', this.registerDevice.bind(this));
 	mod.on('error', this.moduleError.bind(mod));
+	mod.on('save', this.saveHandler.call(this, name));
 	// set data handlers after registration
+};
+
+client.prototype.saveHandler = function saveHandler(name) {
+	
+	return function saveConfig(mod) {
+
+		var 
+			conf = mod.config || null
+			, file = path.resolve(
+
+				process.cwd()
+				, 'config'
+				, name
+				, 'config.json'
+			)
+			, data = null
+		;
+
+		if(!conf) { 
+
+			this.log.debug("saveConfig: No config to save (%s)", name);
+			return false;
+		}
+
+		data = JSON.stringify({ config : conf }, null, '\t');
+
+		if(!data) {
+
+			this.log.debug("saveConfig: No JSON parsed (%s)", name);
+			return false;
+		}
+
+		this.log.debug("saveConfig: writing config (%s)", file);
+
+		mkdirp(path.dirname(file), ready);
+
+		function ready(err) {
+
+			if(err) {
+
+				return this.log.error(
+
+					"saveConfig: directory error: %s (%s)"
+					, err
+					, path.dirname(file)
+				);
+			}			
+			fs.writeFile(file, data, done);
+		};
+
+		function done(err) {
+
+			if(err) {
+
+				return this.log.error("saveConfig: write failure (%s)", name);
+			}
+			this.log.debug("saveConfig: great success! (%s)", name);
+		};
+
+		return true;
+	}.bind(this);
 };
 
 client.prototype.moduleError = function moduleError(err) {
