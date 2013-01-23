@@ -6,7 +6,7 @@
 
 function block(remote, conn) {
 
-	var 
+	var
 		token = this.token || undefined
 		, params = {
 

@@ -9,6 +9,7 @@ var
 	, tls = require('tls')
 	, net = require('net')
 	, fs = require('fs')
+	, existsSync = fs.existsSync || path.existsSync
 ;
 
 function client(opts, app) {
@@ -17,7 +18,7 @@ function client(opts, app) {
 		modules = {}
 	;
 
-	if(!opts || opts == {}) {
+	if(!opts || Object.keys(opts).length === 0) {
 
 		app.log.error("Invalid opts object provided");
 		return false;
@@ -29,6 +30,7 @@ function client(opts, app) {
 		return false;
 	}
 
+
 	stream.call(this);
 
 	this.app = app;
@@ -37,7 +39,7 @@ function client(opts, app) {
 	this.modules = { };
 	this.devices = { };
 	this.log = app.log;
-	creds.call(this);
+	creds.call(this,opts);
 
 	this.node = undefined; // upnode
 	this.transport = opts.secure ? tls : net;
@@ -98,11 +100,11 @@ client.prototype.connect = function connect() {
 
 /**
  * Initialize the session with the cloud after a connection
- * has been established. 
+ * has been established.
  */
 client.prototype.initialize = function initialize() {
 
-	var 
+	var
 		flushBuffer = function flushBuffer() {
 
 			if(!this.sendBuffer) { this.sendBuffer = [ ]; return; }
@@ -123,15 +125,16 @@ client.prototype.initialize = function initialize() {
 		, initSession = function initSession(cloud) {
 
 			this.cloud = cloud;
-	 		
+
 			if(this.pulse) { clearInterval(this.pulse); }
 			this.pulse = setInterval(beat.bind(this), 5000);
+
 			flushBuffer.call(this);
 		}
 		, beat = function beat() {
 
 			// this.log.debug("Sending heartbeat");
-			this.cloud.heartbeat(JSON.stringify({ 
+			this.cloud.heartbeat(JSON.stringify({
 
 				"TIMESTAMP" : (new Date().getTime())
 				, "DEVICE" : [ ]
@@ -148,14 +151,14 @@ client.prototype.initialize = function initialize() {
  */
 client.prototype.up = function up(cloud) {
 
-	this.app.emit('client::up', cloud);
-	this.log.info("Client connected to cloud");
+	this.emit('client::up', cloud);
+	this.log.info("Client connected to the Ninja Platform");
 };
 
 client.prototype.down = function down() {
 
 	this.app.emit('client::down', true);
-	this.log.info("Client disconnected from cloud");
+	this.log.info("Client disconnected from the Ninja Platform");
 	if(this.pulse) {
 
 		clearInterval(this.pulse);
@@ -173,7 +176,7 @@ client.prototype.reconnect = function reconnect() {
  */
 client.prototype.getParameters = function getParameters(opts) {
 
-	var 
+	var
 		cloudPort = this.opts.cloudPort
 		, cloudHost = this.opts.cloudHost
 		, transport = this.transport
@@ -225,7 +228,7 @@ client.prototype.dataHandler = function dataHandler(device) {
 };
 
 client.prototype.sendData = function sendData(dat) {
-		
+
 	if(!dat) { return false; }
 
 	dat.GUID = this.getGuid(dat);
@@ -241,7 +244,7 @@ client.prototype.sendData = function sendData(dat) {
 };
 
 client.prototype.bufferData = function bufferData(msg) {
-	
+
 	this.sendBuffer.push(msg);
 
 	if(this.sendBuffer.length > 9) {
@@ -252,7 +255,7 @@ client.prototype.bufferData = function bufferData(msg) {
 
 client.prototype.command = function command(dat) {
 
-	var 
+	var
 		self = this
 		, data = this.getJSON(dat)
 	;
@@ -262,7 +265,7 @@ client.prototype.command = function command(dat) {
 		console.log("Executing: ");
 		console.log(ds[d]);
 
-		var 
+		var
 			guid = ds[d].GUID
 			, device
 		;
@@ -302,8 +305,8 @@ client.prototype.loadModule = function loadModule(name, opts, app) {
 
 	try {
 
-		var 
-			file = path.resolve(__dirname, '..', 'ninja_modules', name)
+		var
+			file = path.resolve(__dirname, '..', '..', 'ninja_modules', name)
 		;
 
 		if(existsSync(file)) {
@@ -328,10 +331,10 @@ client.prototype.loadModule = function loadModule(name, opts, app) {
 
 client.prototype.addModule = function addModule(name, params, mod, app) {
 
-	if(!mod) { 
+	if(!mod) {
 
 		this.log.error(new Error('Invalid module provided'));
-		return false; 
+		return false;
 	}
 
 	var newModule = new mod(params, app);
@@ -346,9 +349,9 @@ client.prototype.addModule = function addModule(name, params, mod, app) {
 };
 
 client.prototype.bindModule = function bindModule(mod, name) {
-	
+
 	mod.save = function emitSave() { this.emit('save'); }.bind(mod);
-	
+
 	mod.on('register', this.registerDevice.bind(this));
 	mod.on('error', this.moduleError.bind(mod));
 	mod.on('save', this.saveHandler.call(this, name, mod));
@@ -356,10 +359,10 @@ client.prototype.bindModule = function bindModule(mod, name) {
 };
 
 client.prototype.saveHandler = function saveHandler(name, mod) {
-	
+
 	return function saveConfig() {
 
-		var 
+		var
 			conf = mod.config || null
 			, file = path.resolve(
 
@@ -371,7 +374,7 @@ client.prototype.saveHandler = function saveHandler(name, mod) {
 			, data = null
 		;
 
-		if(!conf) { 
+		if(!conf) {
 
 			this.log.debug("saveConfig: No config to save (%s)", name);
 			return false;
@@ -399,7 +402,7 @@ client.prototype.saveHandler = function saveHandler(name, mod) {
 					, err
 					, path.dirname(file)
 				);
-			}			
+			}
 			fs.writeFile(file, data, done);
 		};
 
@@ -423,14 +426,14 @@ client.prototype.moduleError = function moduleError(err) {
 
 client.prototype.getGuid = function getGuid(device) {
 
-	return [ 
+	return [
 
 		this.serial
 		, device.G
 		, device.V
 		, device.D
-		
-	].join('_');	
+
+	].join('_');
 };
 
 client.prototype.getJSON = function getJSON(dat) {

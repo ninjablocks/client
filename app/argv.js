@@ -1,9 +1,9 @@
 /**
- * argv.js 
+ * argv.js
  * client arguments & defaults
  */
 
-var 
+var
 	fs = require('fs')
 	, path = require('path')
 	, banner = fs.readFileSync(
@@ -12,11 +12,11 @@ var
 			, 'banner'
 		)
 	)
-	, defaults 
+	, defaults
 	, argv
 ;
 
-if(process.env.NODE_ENV == "development") {
+if (process.env.NODE_ENV === "development") {
 
 	defaults = {
 
@@ -29,6 +29,20 @@ if(process.env.NODE_ENV == "development") {
 		, streamPort : 3003
 		, cloudPort : 3001
 		, secure : false
+	}
+}
+else if (process.env.NODE_ENV === "hacking") {
+
+	defaults = {
+		cloudHost : "zendo.ninja.is"
+		, streamHost : "stream.ninja.is"
+		, logFile : path.resolve(process.env.PWD, 'ninjablock.log')
+		, serialFile : path.resolve(process.env.PWD, 'serial.conf')
+		, tokenFile : path.resolve(process.env.PWD, 'token.conf')
+		, env : 'hacking'
+		, streamPort : 443
+		, cloudPort : 443
+		, secure : true
 	}
 }
 else {
