@@ -151,7 +151,7 @@ client.prototype.initialize = function initialize() {
  */
 client.prototype.up = function up(cloud) {
 
-	this.emit('client::up', cloud);
+	this.app.emit('client::up', cloud);
 	this.log.info("Client connected to the Ninja Platform");
 };
 
