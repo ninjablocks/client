@@ -303,7 +303,12 @@ client.prototype.loadModule = function loadModule(name, opts, app) {
 	try {
 
 		var 
-			file = path.resolve(__dirname, '..', 'ninja_modules', name)
+			file = path.resolve(
+
+				process.cwd()
+				, 'ninja_modules'
+				, name
+			)
 		;
 
 		if(existsSync(file)) {
@@ -348,7 +353,7 @@ client.prototype.addModule = function addModule(name, params, mod, app) {
 client.prototype.bindModule = function bindModule(mod, name) {
 	
 	mod.save = function emitSave() { this.emit('save'); }.bind(mod);
-	
+
 	mod.on('register', this.registerDevice.bind(this));
 	mod.on('error', this.moduleError.bind(mod));
 	mod.on('save', this.saveHandler.call(this, name, mod));
