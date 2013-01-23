@@ -306,7 +306,12 @@ client.prototype.loadModule = function loadModule(name, opts, app) {
 	try {
 
 		var
-			file = path.resolve(__dirname, '..', '..', 'ninja_modules', name)
+			file = path.resolve(
+
+				process.cwd()
+				, 'ninja_modules'
+				, name
+			)
 		;
 
 		if(existsSync(file)) {
