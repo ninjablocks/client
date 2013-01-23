@@ -347,6 +347,8 @@ client.prototype.addModule = function addModule(name, params, mod, app) {
 
 client.prototype.bindModule = function bindModule(mod, name) {
 	
+	mod.save = function emitSave() { this.emit('save'); }.bind(mod);
+	
 	mod.on('register', this.registerDevice.bind(this));
 	mod.on('error', this.moduleError.bind(mod));
 	mod.on('save', this.saveHandler.call(this, name, mod));
