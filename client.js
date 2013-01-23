@@ -11,6 +11,8 @@ var
 	, log = new logger(argv)
 ;
 
+process.chdir(__dirname); // avoid relative hacks
+
 logger.default = app.log = log;
 
 app.on('error', function(err) {
