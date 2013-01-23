@@ -349,13 +349,13 @@ client.prototype.bindModule = function bindModule(mod, name) {
 	
 	mod.on('register', this.registerDevice.bind(this));
 	mod.on('error', this.moduleError.bind(mod));
-	mod.on('save', this.saveHandler.call(this, name));
+	mod.on('save', this.saveHandler.call(this, name, mod));
 	// set data handlers after registration
 };
 
-client.prototype.saveHandler = function saveHandler(name) {
+client.prototype.saveHandler = function saveHandler(name, mod) {
 	
-	return function saveConfig(mod) {
+	return function saveConfig() {
 
 		var 
 			conf = mod.config || null
