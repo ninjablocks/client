@@ -22,6 +22,14 @@ function serial(opts, app) {
 		, log = app.log
 	;
 
+	this.retry = {
+
+		delay : 2000
+		, reset : 120 * 1000
+		, count : 0
+		, max : 2
+	};
+
 	this.log = log;
 
 	if(!opts.device) {
@@ -67,7 +75,24 @@ function serial(opts, app) {
 	this.id = opts.id;
 	this.connect = function connect() {
 
-		this.log.debug("Connecting to serial device...");
+		if(this.retry.count >= this.retry.max) {
+
+			this.log.debug(
+
+				"serial: Retrying in %s seconds (%s)"
+				, this.retry.reset / 1000
+				, this.id 
+			);
+			setTimeout(function() {
+
+				this.retry.count = 0;
+				this.connect();
+
+			}.bind(this), this.retry.reset);
+
+			return;
+		}
+		this.log.debug("serial: Connecting... (%s)", this.id);
 		try {
 
 			this.device = new device(opts.device, this.parser);
@@ -77,8 +102,9 @@ function serial(opts, app) {
 		}
 		catch(e) {
 
-			app.emit('error', new Error("Unable to connect to serial device"));
-			setTimeout(this.connect, 2000);
+			++this.retry.count;
+			app.emit('error', new Error("serial: Unable to connect to device"));
+			setTimeout(this.connect, this.retry.delay);
 
 		}
 
@@ -94,7 +120,7 @@ function serial(opts, app) {
 			}
 			catch (e) {
 
-				this.log.debug("Serial write error: %s", e);
+				this.log.debug("serial: Write error: %s", e);
 				return false;
 			}
 			return true;
@@ -115,6 +141,7 @@ serial.prototype.bindListeners = function bindListeners() {
 
 	var onOpen = function onOpen() {
 
+		this.retry.count = 0;
 		if(!this.ready) { 
 
 			this.ready = true;
@@ -130,16 +157,17 @@ serial.prototype.bindListeners = function bindListeners() {
 	var onClose = function onClose() {
 
 		this.log.debug("Serial connection closed on %s", this.device.path);
-		setTimeout(this.connect, 2000);
+		setTimeout(this.connect, this.retry.delay);
 		this.emit('close');
 
 	}.bind(this);
 
 	var onError = function onError(err) {
 
-		this.log.debug("Serial error: %s", err);
-		setTimeout(this.connect, 2000);
-		this.emit('error', err);
+		++this.retry.count;
+		this.log.error("serial: %s (%s)", err, this.id);
+		setTimeout(this.connect, this.retry.delay);
+		// this.emit('error', err);
 
 	}.bind(this);
 
