@@ -136,19 +136,19 @@ client.prototype.initialize = function initialize() {
 client.prototype.up = function up() {
 
 	this.emit('client::up', true);
-	this.log.info("Client connected to the Ninja Blocks Platform");
+	this.log.info("Client connected to the Ninja Platform");
 };
 
 client.prototype.down = function down() {
 
 	this.emit('client::down', true);
-	this.log.info("Client disconnected from the Ninja Blocks Platform");
+	this.log.info("Client disconnected from the Ninja Platform");
 };
 
 client.prototype.reconnect = function reconnect() {
 
 	this.emit('client::reconnecting', true);
-	this.log.info("Connecting to the Ninja Blocks Platform...");
+	this.log.info("Connecting to the Ninja Platform...");
 };
 
 client.prototype.getParameters = function getParameters(opts) {

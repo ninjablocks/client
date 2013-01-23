@@ -1,7 +1,7 @@
 client
 ======
 
-The Node that runs on the Beagle and sends data to the Ninja Blocks Platform
+The Node that runs on the Beagle and sends data to the Ninja Platform
 
 ## License
 
