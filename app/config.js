@@ -38,30 +38,56 @@ module.exports = function config(ninja, app) {
 
 			mods
 				.filter(embedded)
-				.map(function(mod) {
-
-					console.log(">> %s", mod)
-					ninja.loadModule(
-
-						mod
-						, config(mod)
-						, app
-					);
-				})
+				.map(create)
 			;
 		}
-		, config = function config(mod) {
+		, create = function create(mod) {
 
-			/**		
-			 * get config file for module
-			 * either config/<mod>/config.json
-			 * or (default) config parameter from its package.json
-			 */
+			config(mod, launch);
+		}
+		, launch = function launch(mod, conf) {
 
-			 return { };
+			if(conf) {
+
+				ninja.log.error("config: Unable to load config (%s)", mod);
+				return;
+			}
+			ninja.loadModule(
+
+				mod
+				, conf
+				, app
+			);
+		}
+		, config = function config(mod, cb) {
+
+			 var 
+			 	conf = path.resolve(
+
+				 	process.cwd()
+				 	, 'config'
+				 	, mod
+				 	, 'config.json'
+				)
+				, emit = function(err, dat) {
+
+					if(err) {
+
+						if(err.code == "ENOENT") {
+
+							return app.log.info("config: no file (%s)", mod);
+						}
+						app.log.error("config: %s (%s)", err, mod);
+						return cb(mod, null);
+					}
+					cb(mod, ninja.getJSON(dat));
+				}
+			;
+			fs.readFile(conf, emit);
 		}
 		, embedded = function embedded(mod) {
 
+			// TODO: make this better than a horrible ternary
 			return mod == "serial" ? false : mod == "platform" ? false : true
 		}
 	;
