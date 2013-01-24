@@ -277,7 +277,8 @@ client.prototype.command = function command(dat) {
 
 			try {
 
-				return this.devices[guid].write(ds[d].DA);
+				this.devices[guid].write(ds[d].DA);
+				return true;
 			}
 			catch(e) {
 
