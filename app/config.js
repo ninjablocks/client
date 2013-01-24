@@ -75,7 +75,7 @@ module.exports = function config(ninja, app) {
 
 						if(err.code == "ENOENT") {
 
-							return app.log.info("config: no file (%s)", mod);
+							return app.log.info("config: No file (%s)", mod);
 						}
 						app.log.error("config: %s (%s)", err, mod);
 						return cb(mod, null);
@@ -84,7 +84,7 @@ module.exports = function config(ninja, app) {
 
 					if(!parsed.config) {
 
-						return app.log.error("config: Malformed config (%s)", mod);
+						return app.log.error("config: Bad config (%s)", mod);
 					}
 					cb(mod, parsed.config);
 				}
