@@ -359,12 +359,13 @@ client.prototype.bindModule = function bindModule(mod, name) {
 
 	mod.on('register', this.registerDevice.bind(this));
 	mod.on('error', this.moduleError.bind(mod));
-	mod.on('save', this.saveHandler.call(this, name, mod));
+	mod.on('save', this.saveHandler.call(mod, name));
 	// set data handlers after registration
 };
 
-client.prototype.saveHandler = function saveHandler(name, mod) {
+client.prototype.saveHandler = function saveHandler(name) {
 
+	var mod = this;
 	return function saveConfig() {
 
 		var
@@ -416,14 +417,14 @@ client.prototype.saveHandler = function saveHandler(name, mod) {
 
 			if(err) {
 
-				return this.log.error("saveConfig: write failure (%s)", name);
+				return mod.log.error("saveConfig: write failure (%s)", name);
 			}
 			mod.log.debug("saveConfig: great success! (%s)", name);
 		};
 
 		return true;
 
-	}.bind(mod);
+	}.bind(this);
 };
 
 client.prototype.moduleError = function moduleError(err) {
