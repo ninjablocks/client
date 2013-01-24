@@ -318,6 +318,7 @@ client.prototype.loadModule = function loadModule(name, opts, app) {
 		if(existsSync(file)) {
 
 			var mod = require(file);
+			mod.prototype.opts = opts;
 		}
 		else {
 
