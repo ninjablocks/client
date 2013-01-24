@@ -75,7 +75,7 @@ module.exports = function config(ninja, app) {
 
 						if(err.code == "ENOENT") {
 
-							return app.log.info("config: No file (%s)", mod);
+							return init(mod, cb);
 						}
 						app.log.error("config: %s (%s)", err, mod);
 						return cb(mod, null);
@@ -87,6 +87,61 @@ module.exports = function config(ninja, app) {
 						return app.log.error("config: Bad config (%s)", mod);
 					}
 					cb(mod, parsed.config);
+				}
+				, init = function(mod, cb) {
+
+					var 
+						pkg = path.resolve(
+
+							process.cwd()
+							, 'ninja_modules'
+							, mod
+							, 'package.json'
+						)
+						, write = function(err, dat) {
+
+							if(err) {
+
+								if(err.code == "ENOENT") {
+
+									return app.log.error("config: No package file (%s)", mod);
+								}
+								return app.log.error("config: %s (%s)", err, mod);
+							}
+
+							// fs.writeFile()/
+							var parsed = ninja.getJSON(dat);
+							if((!parsed) || !parsed.config) {
+
+								return app.log.error("config: Bad package file! (%s)", mod);
+							}
+
+							fs.writeFile(
+								conf
+								, JSON.stringify({ config : parsed.config }, null, "\t")
+								, function(err) {
+
+									if(err) {
+
+										return app.log.error("config: Unable to write (%s)", mod);
+									}
+							
+									app.log.debug("config: Created (%s)", mod);
+									cb(mod, parsed.config);
+								}
+							);
+						}
+					;
+
+					fs.exists(pkg, function(bool) {
+
+						if(!bool) {
+
+							app.log.error("config: No package file! (%s)", mod);
+							return;
+						}
+						fs.readFile(pkg, write);
+					});
 				}
 			;
 			fs.readFile(conf, emit);
