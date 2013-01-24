@@ -368,7 +368,7 @@ client.prototype.saveHandler = function saveHandler(name, mod) {
 	return function saveConfig() {
 
 		var
-			conf = mod.config || null
+			conf = this.opts || null
 			, file = path.resolve(
 
 				process.cwd()
@@ -401,7 +401,7 @@ client.prototype.saveHandler = function saveHandler(name, mod) {
 
 			if(err) {
 
-				return this.log.error(
+				return mod.log.error(
 
 					"saveConfig: directory error: %s (%s)"
 					, err
@@ -409,6 +409,7 @@ client.prototype.saveHandler = function saveHandler(name, mod) {
 				);
 			}
 			fs.writeFile(file, data, done);
+
 		};
 
 		function done(err) {
@@ -417,11 +418,12 @@ client.prototype.saveHandler = function saveHandler(name, mod) {
 
 				return this.log.error("saveConfig: write failure (%s)", name);
 			}
-			this.log.debug("saveConfig: great success! (%s)", name);
+			mod.log.debug("saveConfig: great success! (%s)", name);
 		};
 
 		return true;
-	}.bind(this);
+
+	}.bind(mod);
 };
 
 client.prototype.moduleError = function moduleError(err) {
