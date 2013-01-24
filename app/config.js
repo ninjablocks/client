@@ -36,15 +36,19 @@ module.exports = function config(ninja, app) {
 				return app.log.error("config: Error loading modules (%s)", err);
 			}
 
-			mods.map(function(mod) {
+			mods
+				.filter(embedded)
+				.map(function(mod) {
 
-				ninja.loadModule(
+					console.log(">> %s", mod)
+					ninja.loadModule(
 
-					mod
-					, config(mod)
-					, app
-				);
-			});
+						mod
+						, config(mod)
+						, app
+					);
+				})
+			;
 		}
 		, config = function config(mod) {
 
@@ -53,7 +57,12 @@ module.exports = function config(ninja, app) {
 			 * either config/<mod>/config.json
 			 * or (default) config parameter from its package.json
 			 */
+
 			 return { };
+		}
+		, embedded = function embedded(mod) {
+
+			return mod == "serial" ? false : mod == "platform" ? false : true
 		}
 	;
 
