@@ -98,7 +98,7 @@ module.exports = function config(ninja, app) {
 							, mod
 							, 'package.json'
 						)
-						, write = function(err, dat) {
+						, parse = function(err, dat) {
 
 							if(err) {
 
@@ -116,20 +116,28 @@ module.exports = function config(ninja, app) {
 								return app.log.error("config: Bad package file! (%s)", mod);
 							}
 
-							fs.writeFile(
-								conf
-								, JSON.stringify({ config : parsed.config }, null, "\t")
-								, function(err) {
+							mkdirp(path.dirname(conf), function(err) {
 
-									if(err) {
+								if(err) {
 
-										return app.log.error("config: Unable to write (%s)", mod);
-									}
-							
-									app.log.debug("config: Created (%s)", mod);
-									cb(mod, parsed.config);
+									return app.log.error("config: Unable to create directory (%s)", path.dirname(conf));
 								}
-							);
+								fs.writeFile(
+
+									conf
+									, JSON.stringify({ config : parsed.config }, null, "\t")
+									, function(err) {
+
+										if(err) {
+
+											return app.log.error("config: Unable to write (%s)", mod);
+										}
+								
+										app.log.debug("config: Created file (%s)", mod);
+										cb(mod, parsed.config);
+									}
+								);
+							});
 						}
 					;
 
@@ -140,7 +148,7 @@ module.exports = function config(ninja, app) {
 							app.log.error("config: No package file! (%s)", mod);
 							return;
 						}
-						fs.readFile(pkg, write);
+						fs.readFile(pkg, parse);
 					});
 				}
 			;
