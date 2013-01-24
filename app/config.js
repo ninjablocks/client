@@ -47,7 +47,7 @@ module.exports = function config(ninja, app) {
 		}
 		, launch = function launch(mod, conf) {
 
-			if(conf) {
+			if(!conf) {
 
 				ninja.log.error("config: Unable to load config (%s)", mod);
 				return;
@@ -80,7 +80,13 @@ module.exports = function config(ninja, app) {
 						app.log.error("config: %s (%s)", err, mod);
 						return cb(mod, null);
 					}
-					cb(mod, ninja.getJSON(dat));
+					var parsed = ninja.getJSON(dat);
+
+					if(!parsed.config) {
+
+						return app.log.error("config: Malformed config (%s)", mod);
+					}
+					cb(mod, parsed.config);
 				}
 			;
 			fs.readFile(conf, emit);
