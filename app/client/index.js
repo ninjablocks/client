@@ -356,8 +356,8 @@ client.prototype.addModule = function addModule(name, params, mod, app) {
 
 client.prototype.bindModule = function bindModule(mod, name) {
 
+	mod.log = this.log;
 	mod.save = function emitSave() { this.emit('save'); }.bind(mod);
-
 	mod.on('register', this.registerDevice.bind(this));
 	mod.on('error', this.moduleError.bind(mod));
 	mod.on('save', this.saveHandler.call(mod, name));
@@ -383,7 +383,7 @@ client.prototype.saveHandler = function saveHandler(name) {
 
 		if(!conf) {
 
-			this.log.debug("saveConfig: No config to save (%s)", name);
+			mod.log.debug("saveConfig: No config to save (%s)", name);
 			return false;
 		}
 
@@ -391,7 +391,7 @@ client.prototype.saveHandler = function saveHandler(name) {
 
 		if(!data) {
 
-			this.log.debug("saveConfig: No JSON parsed (%s)", name);
+			mod.log.debug("saveConfig: No JSON parsed (%s)", name);
 			return false;
 		}
 
