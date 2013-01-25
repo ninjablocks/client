@@ -3,6 +3,13 @@ client
 
 The Node that runs on the Beagle and sends data to the Ninja Platform
 
+### Installation
+```
+git clone https://github.com/ninjablocks/client.git
+cd client
+for f in ninja_modules/*;do npm install $f; done
+```
+
 ## License
 
 Copyright (C) 2012 Ninja Blocks Inc
