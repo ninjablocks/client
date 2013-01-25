@@ -203,7 +203,7 @@ function loadPlatform(ninja, app) {
 	ninja.loadModule(
 
 		'rest'
-		, { ninja: ninja }
+		, ninja
 		, app
 	);
 };
