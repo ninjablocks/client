@@ -1,4 +1,4 @@
-var 
+var
 	mkdirp = require('mkdirp')
 	, path = require('path')
 	, fs = require('fs')
@@ -15,15 +15,15 @@ module.exports = function config(ninja, app) {
 
 		return false;
 	}
-	// default arduino device path	
+	// default arduino device path
 	if(!ninja.opts.client || ninja.opts.client == 'beagle') {
 
 		ninja.opts.device = '/dev/ttyO1';
 	}
 
 	loadPlatform(ninja, app); // embedded arduino
-	
-	var 
+
+	var
 		modPath = path.resolve(process.cwd(), 'ninja_modules')
 		, read = function read() {
 
@@ -61,7 +61,7 @@ module.exports = function config(ninja, app) {
 		}
 		, config = function config(mod, cb) {
 
-			 var 
+			 var
 			 	conf = path.resolve(
 
 				 	process.cwd()
@@ -90,7 +90,7 @@ module.exports = function config(ninja, app) {
 				}
 				, init = function(mod, cb) {
 
-					var 
+					var
 						pkg = path.resolve(
 
 							process.cwd()
@@ -132,7 +132,7 @@ module.exports = function config(ninja, app) {
 
 											return app.log.error("config: Unable to write (%s)", mod);
 										}
-								
+
 										app.log.debug("config: Created file (%s)", mod);
 										cb(mod, parsed.config);
 									}
@@ -156,8 +156,12 @@ module.exports = function config(ninja, app) {
 		}
 		, embedded = function embedded(mod) {
 
-			// TODO: make this better than a horrible ternary
-			return mod == "serial" ? false : mod == "platform" ? false : true
+			var exclude = [
+				'serial',
+				'platform',
+				'rest'
+			]
+			return (exclude.indexOf(mod)===-1)
 		}
 	;
 
@@ -194,4 +198,12 @@ function loadPlatform(ninja, app) {
 			, app
 		);
 	}
+
+	// rest interface
+	ninja.loadModule(
+
+		'rest'
+		, { ninja: ninja }
+		, app
+	);
 };
