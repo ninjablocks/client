@@ -7,7 +7,7 @@ The Node that runs on the Beagle and sends data to the Ninja Platform
 ```
 git clone https://github.com/ninjablocks/client.git
 cd client
-for f in ninja_modules/*;do npm install $f; done
+./bin/install.sh
 ```
 
 ## License
