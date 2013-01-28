@@ -56,12 +56,16 @@ function block(remote, conn) {
 
 				this.log.error("Error pairing block (%s)", err.error);
 				this.app.emit('client::error', err);
+				return;
 			}
-			else {
+			this.log.info("Confirmed authorization");
+			this.app.emit('client::authed', true);
+			if(this.opts.env !== "production") {
 
-				this.log.info("Confirmed authorization");
-				this.app.emit('client::authed', true);
+				this.log.info("Please restart this process to connect!");
 			}
+			process.nextTick(process.exit);
+	
 		}.bind(this)
 	;
 
