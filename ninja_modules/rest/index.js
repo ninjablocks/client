@@ -33,6 +33,10 @@ function rest(ninja) {
   app.get('/rest/v0/device',routes.showDevices);
   app.put('/rest/v0/device/:deviceGuid',routes.actuate);
 
+  ninja.app.on('client::device',function(guid) {
+    console.log('RESTY %s',guid)
+  });
+
   http.createServer(app).listen(app.get('port'), function(){
 
     ninja.log.info("Express server listening on port " + app.get('port'));
