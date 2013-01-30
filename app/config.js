@@ -23,6 +23,7 @@ module.exports = function config(ninja, app) {
 
 	loadPlatform(ninja, app); // embedded arduino
 
+	// TODO: refactor this hack
 	var
 		modPath = path.resolve(process.cwd(), 'ninja_modules')
 		, read = function read() {
@@ -104,7 +105,8 @@ module.exports = function config(ninja, app) {
 
 								if(err.code == "ENOENT") {
 
-									return app.log.error("config: No package file (%s)", mod);
+									cb(mod, { });
+									return app.log.info("config: No package file (%s)", mod);
 								}
 								return app.log.error("config: %s (%s)", err, mod);
 							}
@@ -145,7 +147,8 @@ module.exports = function config(ninja, app) {
 
 						if(!bool) {
 
-							app.log.error("config: No package file! (%s)", mod);
+							cb(mod, {});
+							app.log.info("config: No package file! (%s)", mod);
 							return;
 						}
 						fs.readFile(pkg, parse);
@@ -198,7 +201,6 @@ function loadPlatform(ninja, app) {
 			, app
 		);
 	}
-
 	// rest interface
 	ninja.loadModule(
 
