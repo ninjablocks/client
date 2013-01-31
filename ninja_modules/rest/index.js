@@ -38,7 +38,7 @@ function rest(ninja) {
   app.get('/rest/v0/devices',routes.showDevices);
   app.put('/rest/v0/device/:deviceGuid',routes.actuate);
 
-  ninja.app.on('client::device',function(guid) {
+  ninja.app.on('device::up',function(guid) {
     helpers.fetchDeviceData(ninja,guid,function(err,data) {
 
       if (err) {
