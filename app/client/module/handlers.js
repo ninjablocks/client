@@ -152,6 +152,21 @@ function moduleHandlers(client) {
 		this.app.emit("device::up", device);
 	};
 
+	
+	client.prototype.errorHandler = function(device) {
+		
+		var self = this;
+		return function(err) {
+
+			self.log.error("device: %s", err);
+			if(device.unregister) { 
+
+				process.nextTick(device.unregister);
+			}
+			self.emit("device::down", device);
+		}
+	};
+
 	client.prototype.moduleError = function moduleError(err) {
 
 		this.log.error("Module error: %s", err);

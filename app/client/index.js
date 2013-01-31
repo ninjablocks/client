@@ -212,20 +212,6 @@ client.prototype.dataHandler = function dataHandler(device) {
 	}
 };
 
-client.prototype.errorHandler = function(device) {
-	
-	var self = this;
-	return function(err) {
-
-		self.log.error("device: %s", err);
-		if(device.unregister) { 
-
-			process.nextTick(device.unregister);
-		}
-		self.emit("device::down", device);
-	}
-};
-
 client.prototype.sendData = function sendData(dat) {
 
 	if(!dat) { return false; }
