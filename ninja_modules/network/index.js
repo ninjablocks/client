@@ -56,11 +56,7 @@ network.prototype.write = function(data) {
             var networkInterfaces = os.networkInterfaces();
             var DA = {
 
-                result : {
-
-                    ethernet : networkInterfaces['eth0']
-                    , wifi : networkInterfaces['wlan0']
-                }
+                result : networkInterfaces
                 , error : null
                 , id : da.id
             };

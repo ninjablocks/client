@@ -4,7 +4,7 @@ exports.fetchDeviceData = function(ninja,guid,cb) {
 
   var proto = (ninja.opts.secure) ? 'https://' : 'http://';
   var port = (ninja.opts.secure) ? 443 : 3000;
-  var uri = proto+ninja.opts.cloudHost+':'+port+'/rest/v0/device/'+guid;
+  var uri = proto+'api.ninja.is'+':'+port+'/rest/v0/device/'+guid;
 
   var opts = {
     url:uri,
@@ -16,7 +16,7 @@ exports.fetchDeviceData = function(ninja,guid,cb) {
   };
 
   request(opts,function(e,r,b) {
-
+    console.log(b)
     if (b && b.result===1) {
       cb(null,b.data)
     } else {
