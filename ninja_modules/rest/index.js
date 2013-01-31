@@ -28,14 +28,15 @@ function rest(ninja) {
       // Keep calm and carry on
       next();
     });
+
     app.use(express.bodyParser());
+    app.use(helpers.allowCORS)
     app.use(app.router);
   });
 
-  app.get('/rest/v0/device',helpers.allowCORS,routes.showDevices);
-  app.get('/rest/v0/devices',helpers.allowCORS,routes.showDevices);
-
-  app.put('/rest/v0/device/:deviceGuid',helpers.allowCORS,routes.actuate);
+  app.get('/rest/v0/device',routes.showDevices);
+  app.get('/rest/v0/devices',routes.showDevices);
+  app.put('/rest/v0/device/:deviceGuid',routes.actuate);
 
   ninja.app.on('client::device',function(guid) {
     helpers.fetchDeviceData(ninja,guid,function(err,data) {

@@ -20,9 +20,17 @@ exports.actuate = function(req,res) {
   var device = req.ninja.devices[guid];
   try {
     device.write(req.body.DA);
-    res.send(200);
+    res.json({
+      result:1,
+      error:null,
+      id:0
+    });
   }
   catch (err) {
-    res.send(500);
+    res.json({
+      result:0,
+      error:"Unknown Error",
+      id:500
+    });
   }
 };
