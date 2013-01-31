@@ -70,18 +70,9 @@ client.prototype.getHandlers = function() {
 
 			// update client
 		}.bind(this)
-		, config : function config(dat, cb) {
-
-			// configure module/device
-		}
-		, install : function install(mod, cb) {
-
-			// install module
-		}.bind(this)
-		, uninstall : function uninstall(mod, cb) {
-
-			// uninstall module
-		}.bind(this)
+		, config : this.modules.config.bind(this)
+		, install : this.modules.install.bind(this)
+		, uninstall : this.modules.uninstall.bind(this)
 	}
 };
 
@@ -432,6 +423,14 @@ client.prototype.saveHandler = function saveHandler(name) {
 client.prototype.moduleError = function moduleError(err) {
 
 	this.log.error("Module error: %s", err);
+};
+
+client.prototype.module = {
+
+	config : require('./module/config')
+	, install : require('./module/install')
+	, uninstall : require('./module/uninstall')
+	
 };
 
 client.prototype.getGuid = function getGuid(device) {
