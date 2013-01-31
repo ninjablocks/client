@@ -195,7 +195,11 @@ client.prototype.registerDevice = function registerDevice(device) {
 	device.on('error', this.errorHandler.call(this, device))
 	this.log.debug("Registering device %s", device.guid);
 	this.devices[device.guid] = device;
+<<<<<<< HEAD
 	this.app.emit("device::up", device);
+=======
+	this.app.emit('client::device',device.guid);
+>>>>>>> f6f5820497e5a8f70863f4724534c5f50ae56d00
 };
 
 client.prototype.dataHandler = function dataHandler(device) {

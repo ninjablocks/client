@@ -1,8 +1,7 @@
 var helpers = require('../lib/helpers');
 
 exports.showDevices = function(req, res){
-  var devices = helpers.buildDeviceMap(req.ninja.devices);
-  res.json(devices);
+  res.json({result:1,error:null,id:0,data:req.devices});
 };
 
 exports.actuate = function(req,res) {
@@ -12,14 +11,26 @@ exports.actuate = function(req,res) {
     return;
   }
 
-  if (!req.ninja.devices.hasOwnProperty(req.params.deviceGuid)) {
+  if (!req.devices.hasOwnProperty(req.params.deviceGuid)) {
     res.json({error:'Unkown Device'},404);
     return;
   }
 
   var guid = req.params.deviceGuid;
   var device = req.ninja.devices[guid];
-
-  device.write(req.body.DA);
-  res.send(200);
+  try {
+    device.write(req.body.DA);
+    res.json({
+      result:1,
+      error:null,
+      id:0
+    });
+  }
+  catch (err) {
+    res.json({
+      result:0,
+      error:"Unknown Error",
+      id:500
+    });
+  }
 };
