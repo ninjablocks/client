@@ -5,8 +5,7 @@ function config(dat, cb) {
 	if(!dat.CONFIG || !dat.id) { return; }
 	var res = {
 
-		"CONFIG" : [
-		]
+		"CONFIG" : [ ]
 		, id : dat.id
 	};
 
