@@ -15,7 +15,7 @@ function config(dat, cb) {
 
 		this.cloud.config(res);
 	}
-	
+
 	function processRequest(req) {
 
 		if(req.type == "MODULE") {
@@ -69,33 +69,4 @@ function config(dat, cb) {
 			res.CONFIG.push(configResponse(mod, this.modules[mod].opts))
 		});
 	};
-}
-
-function process(mod) {
-
-	if(mod.type == "MODULE") {
-
-		if(mod.module) {
-
-			if(!mod.data) {
-
-				this.getConfig(mod.module, function(conf) {
-
-					cb(null, {
-
-						"CONFIG" : [{
-							"type" : "MODULE"
-							, "module" : mod.module
-							, "data" : conf
-							, "id" : mod.id
-						}]
-					});
-				})
-				// get single module config
-				return;
-			}
-			// write module config
-		}
-	}
 };
-
