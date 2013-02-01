@@ -15,8 +15,16 @@ function network(opts, app) {
             self.emit('register', self);
             process.nextTick(function bump() {
 
+                var networkInterfaces = os.networkInterfaces();
+                var DA = {
 
-                self.emit('data', '{}');
+                    result : networkInterfaces
+                    , error : null
+                    , id : da.id
+                };
+
+                self.emit('data', JSON.stringify(DA));
+
             });
         }
     ;
