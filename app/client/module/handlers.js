@@ -149,7 +149,7 @@ function moduleHandlers(client) {
 		device.on('error', this.errorHandler.call(this, device))
 		this.log.debug("Registering device %s", device.guid);
 		this.devices[device.guid] = device;
-		this.app.emit("device::up", device);
+		this.app.emit("device::up", device.guid);
 	};
 
 	

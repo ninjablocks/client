@@ -29,7 +29,7 @@ function network(opts, app) {
     this.D = 1005;
     this.G = "0";
 
-    app.on('client::up', initialize);
+    app.once('client::up', initialize);
 };
 
 util.inherits(network, stream);

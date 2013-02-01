@@ -50,8 +50,6 @@ function client(opts, app) {
 util.inherits(client, stream);
 handlers(client);
 
-console.log(client.prototype.loadModule);
-
 client.prototype.block = require('./block');
 
 client.prototype.getHandlers = function() {
@@ -163,6 +161,7 @@ client.prototype.down = function down() {
 client.prototype.reconnect = function reconnect() {
 
 	this.app.emit('client::reconnecting', true);
+
 	this.log.info("Connecting to cloud...");
 };
 
