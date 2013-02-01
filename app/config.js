@@ -74,18 +74,22 @@ module.exports = function config(ninja, app) {
 
 					if(err) {
 
+						// no config/module/config.json
 						if(err.code == "ENOENT") {
 
+							// create one (from package.json if exists)
 							return init(mod, cb);
 						}
+						// other error (parsing)
 						app.log.error("config: %s (%s)", err, mod);
 						return cb(mod, null);
 					}
+					
 					var parsed = ninja.getJSON(dat);
-
 					if(!parsed.config) {
 
-						return app.log.error("config: Bad config (%s)", mod);
+						cb(mod, null)
+						return app.log.info("config: no config (%s)", mod);
 					}
 					cb(mod, parsed.config);
 				}
@@ -115,7 +119,7 @@ module.exports = function config(ninja, app) {
 							var parsed = ninja.getJSON(dat);
 							if((!parsed) || !parsed.config) {
 
-								return app.log.error("config: Bad package file! (%s)", mod);
+								return app.log.info("config: No package (%s)", mod);
 							}
 
 							mkdirp(path.dirname(conf), function(err) {
@@ -170,7 +174,7 @@ module.exports = function config(ninja, app) {
 
 	mkdirp(modPath, read);
 
-	ninja.emit('loaded'); // done loading modules
+	ninja.app.emit('loaded'); // done loading modules
 	ninja.connect();
 
 	return ninja;
