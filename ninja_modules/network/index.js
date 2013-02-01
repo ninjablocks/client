@@ -20,7 +20,7 @@ function network(opts, app) {
 
                     result : networkInterfaces
                     , error : null
-                    , id : da.id
+                    , id : 0
                 };
 
                 self.emit('data', JSON.stringify(DA));
