@@ -50,8 +50,8 @@ module.exports = function config(ninja, app) {
 
 			if(!conf) {
 
-				ninja.log.error("config: Unable to load config (%s)", mod);
-				return;
+				conf = { };
+				ninja.log.info("config: No config for (%s)", mod);
 			}
 			ninja.loadModule(
 
@@ -80,7 +80,7 @@ module.exports = function config(ninja, app) {
 							// create one (from package.json if exists)
 							return init(mod, cb);
 						}
-						// other error (parsing)
+						// other error 
 						app.log.error("config: %s (%s)", err, mod);
 						return cb(mod, null);
 					}
@@ -108,14 +108,13 @@ module.exports = function config(ninja, app) {
 							if(err) {
 
 								if(err.code == "ENOENT") {
-
-									cb(mod, { });
-									return app.log.info("config: No package file (%s)", mod);
+									
+									app.log.info("config: No package file (%s)", mod);									
+									return cb(mod, { });
 								}
 								return app.log.error("config: %s (%s)", err, mod);
 							}
 
-							// fs.writeFile()/
 							var parsed = ninja.getJSON(dat);
 							if((!parsed) || !parsed.config) {
 
@@ -151,7 +150,7 @@ module.exports = function config(ninja, app) {
 
 						if(!bool) {
 
-							cb(mod, {});
+							cb(mod, { });
 							app.log.info("config: No package file! (%s)", mod);
 							return;
 						}
