@@ -1,5 +1,10 @@
+
+
 module.exports = config;
 
+/**
+ * Remote config request (from cloud)
+ */
 function config(dat, cb) {
 
 	if(!dat.CONFIG || !dat.id) { return; }
@@ -15,6 +20,9 @@ function config(dat, cb) {
 		this.cloud.config(res);
 	}
 
+	/**
+	 * Called for each config element in the request
+	 */
 	function processRequest(req) {
 
 		if(req.type == "MODULE") {
@@ -38,6 +46,9 @@ function config(dat, cb) {
 		}
 	}
 
+	/**
+	 * Fetch a requested config
+	 */
 	function getConfig(mod) {
 
 		if(this.modules[mod]) {
@@ -50,6 +61,9 @@ function config(dat, cb) {
 		return null;
 	}
 
+	/**
+	 * Craft a config response object
+	 */ 
 	function configResponse(mod, conf) {
 
 		return {

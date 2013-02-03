@@ -292,7 +292,7 @@ client.prototype.getGuid = function getGuid(device) {
 client.prototype.getJSON = function getJSON(dat) {
 
 	try {
-
+		if(dat instanceof Buffer) { dat = dat.toString(); }
 		return JSON.parse(dat);
 	}
 	catch(e) {

@@ -1,5 +1,6 @@
 var
 	path = require('path')
+	, util = require('util')
 	, fs = require('fs')
 ;
 
@@ -7,14 +8,14 @@ module.exports = moduleHandlers;
 
 function moduleHandlers(client) {
 
-	client.prototype.loadModule = function loadModule(name, opts, app) {
+	client.prototype.loadModule = function loadModule(name, opts, app, cb) {
 
 		if(!name) {
 
 			this.log.error("loadModule error: invalid module name");
-			return false;
+			return cb("Invalid module name", null);
 		}
-
+		cb = cb || function() {};
 		try {
 
 			var
@@ -34,36 +35,35 @@ function moduleHandlers(client) {
 			else {
 
 				this.log.error("loadModule error: No such module '%s'", name);
-				return null;
+				cb(Error(util.format("No such module (%s)", name)), null);
+				return;
 			}
 		}
 		catch(e) {
 
-			this.log.error("loadModule error: %s", e);
-			return false;
+			this.log.error("loadModule error: %s (%s)", e, name);
+			return cb(e, null);
 		}
 
-		return this.addModule(name, opts, mod, app);
+		this.addModule(name, opts, mod, app, cb);
 	};
 
 
-	client.prototype.addModule = function addModule(name, params, mod, app) {
+	client.prototype.addModule = function addModule(name, params, mod, app, cb) {
 
 		if(!mod) {
-
-			this.log.error(new Error('Invalid module provided'));
-			return false;
+			var err = new Error('Invalid module provided');
+			this.log.error(err);
+			return cb(err, null);
 		}
 
 		var newModule = new mod(params, app);
 
 		this.log.info("loadModule success: %s", name);
-		if(!this.modules[name]) { this.modules[name] = {}; }
-
-		this.modules[name][params.id] = newModule;
+		this.modules[name] = newModule;
 		this.bindModule(newModule, name);
 
-		return this.modules[name][params.id];
+		cb(null, newModule);
 	};
 
 	client.prototype.bindModule = function bindModule(mod, name) {
