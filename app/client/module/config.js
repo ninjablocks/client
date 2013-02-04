@@ -13,8 +13,7 @@ function config(dat, cb) {
 		"CONFIG" : [ ]
 		, id : dat.id
 	};
-
-	dat.CONFIG.forEach(processRequest);
+	dat.CONFIG.forEach(processRequest.bind(this));
 	if(res.CONFIG.length > 0) {
 
 		this.cloud.config(res);
@@ -24,7 +23,6 @@ function config(dat, cb) {
 	 * Called for each config element in the request
 	 */
 	function processRequest(req) {
-
 		if(req.type !== "MODULE") { // We only implement MODULE
 
 			return;
@@ -37,7 +35,6 @@ function config(dat, cb) {
 
 		// If a module has a config method, always prefer that
 		if(this.modules[req.module].config) { // Module has implemented a config method
-
 			this.modules[req.module].config(req.data);
 			return;
 		}

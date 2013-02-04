@@ -4,7 +4,7 @@ exports.fetchDeviceData = function(ninja,guid,cb) {
 
   var proto = (ninja.opts.secure) ? 'https://' : 'http://';
   var port = (ninja.opts.secure) ? 443 : 3000;
-  var uri = proto+'api.ninja.is'+':'+port+'/rest/v0/device/'+guid;
+  var uri = proto+'localhost'+':'+port+'/rest/v0/device/'+guid;
 
   var opts = {
     url:uri,
@@ -19,7 +19,7 @@ exports.fetchDeviceData = function(ninja,guid,cb) {
     if (b && b.result===1) {
       cb(null,b.data)
     } else {
-      cb(b&&b.error||"REST: Unkown Error")
+      cb(b&&b.error||"REST: Unknown Error")
     }
   });
 }

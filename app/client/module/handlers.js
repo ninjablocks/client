@@ -153,14 +153,14 @@ function moduleHandlers(client) {
 		this.app.emit("device::up", device.guid);
 	};
 
-	
+
 	client.prototype.errorHandler = function(device) {
-		
+
 		var self = this;
 		return function(err) {
 
 			self.log.error("device: %s", err);
-			if(device.unregister) { 
+			if(device.unregister) {
 
 				process.nextTick(device.unregister);
 			}
