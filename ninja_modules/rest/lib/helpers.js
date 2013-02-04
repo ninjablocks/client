@@ -16,11 +16,10 @@ exports.fetchDeviceData = function(ninja,guid,cb) {
   };
 
   request(opts,function(e,r,b) {
-    console.log(b)
     if (b && b.result===1) {
       cb(null,b.data)
     } else {
-      cb(b.error||"Unkown Error")
+      cb(b&&b.error||"REST: Unkown Error")
     }
   });
 }
