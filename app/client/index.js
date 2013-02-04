@@ -5,6 +5,7 @@ var
 	, upnode = require('upnode')
 	, creds = require(path.resolve(__dirname, '..', '..', 'lib', 'credentials'))
 	, logger = require(path.resolve(__dirname, '..', '..', 'lib', 'logger'))
+	, handlers = require('./module/handlers')
 	, stream = require('stream')
 	, tls = require('tls')
 	, net = require('net')
@@ -47,6 +48,7 @@ function client(opts, app) {
 };
 
 util.inherits(client, stream);
+handlers(client);
 
 client.prototype.block = require('./block');
 
@@ -70,18 +72,9 @@ client.prototype.getHandlers = function() {
 
 			// update client
 		}.bind(this)
-		, config : function config(dat, cb) {
-
-			// configure module/device
-		}
-		, install : function install(mod, cb) {
-
-			// install module
-		}.bind(this)
-		, uninstall : function uninstall(mod, cb) {
-
-			// uninstall module
-		}.bind(this)
+		, config : this.moduleHandlers.config.bind(this)
+		, install : this.moduleHandlers.install.bind(this)
+		, uninstall : this.moduleHandlers.uninstall.bind(this)
 	}
 };
 
@@ -168,6 +161,7 @@ client.prototype.down = function down() {
 client.prototype.reconnect = function reconnect() {
 
 	this.app.emit('client::reconnecting', true);
+
 	this.log.info("Connecting to cloud...");
 };
 
@@ -193,17 +187,6 @@ client.prototype.getParameters = function getParameters(opts) {
 		}
 		, block : this.block.bind(this)
 	};
-};
-
-client.prototype.registerDevice = function registerDevice(device) {
-
-	if(!device) { return; }
-
-	device.guid = this.getGuid(device);
-	device.on('data', this.dataHandler.call(this, device));
-	this.log.debug("Registering device %s", device.guid);
-	this.devices[device.guid] = device;
-	this.app.emit('device::up',device.guid);
 };
 
 client.prototype.dataHandler = function dataHandler(device) {
@@ -294,147 +277,6 @@ client.prototype.command = function command(dat) {
 	}
 };
 
-/**
- * Initiate module loading sequence...
- */
-client.prototype.loadModule = function loadModule(name, opts, app) {
-
-	if(!name) {
-
-		this.log.error("loadModule error: invalid module name");
-		return false;
-	}
-
-	try {
-
-		var
-			file = path.resolve(
-
-				process.cwd()
-				, 'ninja_modules'
-				, name
-			)
-		;
-
-		if(existsSync(file)) {
-
-			var mod = require(file);
-			mod.prototype.opts = opts;
-		}
-		else {
-
-			this.log.error("loadModule error: No such module '%s'", name);
-			return null;
-		}
-	}
-	catch(e) {
-
-		this.log.error("loadModule error: %s", e);
-		return false;
-	}
-
-	return this.addModule(name, opts, mod, app);
-};
-
-
-client.prototype.addModule = function addModule(name, params, mod, app) {
-
-	if(!mod) {
-
-		this.log.error(new Error('Invalid module provided'));
-		return false;
-	}
-
-	var newModule = new mod(params, app);
-
-	this.log.info("loadModule success: %s", name);
-	if(!this.modules[name]) { this.modules[name] = {}; }
-
-	this.modules[name][params.id] = newModule;
-	this.bindModule(newModule, name);
-
-	return this.modules[name][params.id];
-};
-
-client.prototype.bindModule = function bindModule(mod, name) {
-
-	mod.log = this.log;
-	mod.save = function emitSave() { this.emit('save'); }.bind(mod);
-	mod.on('register', this.registerDevice.bind(this));
-	mod.on('error', this.moduleError.bind(mod));
-	mod.on('save', this.saveHandler.call(mod, name));
-	// set data handlers after registration
-};
-
-client.prototype.saveHandler = function saveHandler(name) {
-
-	var mod = this;
-	return function saveConfig() {
-
-		var
-			conf = this.opts || null
-			, file = path.resolve(
-
-				process.cwd()
-				, 'config'
-				, name
-				, 'config.json'
-			)
-			, data = null
-		;
-
-		if(!conf) {
-
-			mod.log.debug("saveConfig: No config to save (%s)", name);
-			return false;
-		}
-
-		data = JSON.stringify({ config : conf }, null, '\t');
-
-		if(!data) {
-
-			mod.log.debug("saveConfig: No JSON parsed (%s)", name);
-			return false;
-		}
-
-		this.log.debug("saveConfig: writing config (%s)", file);
-
-		mkdirp(path.dirname(file), ready);
-
-		function ready(err) {
-
-			if(err) {
-
-				return mod.log.error(
-
-					"saveConfig: directory error: %s (%s)"
-					, err
-					, path.dirname(file)
-				);
-			}
-			fs.writeFile(file, data, done);
-
-		};
-
-		function done(err) {
-
-			if(err) {
-
-				return mod.log.error("saveConfig: write failure (%s)", name);
-			}
-			mod.log.debug("saveConfig: great success! (%s)", name);
-		};
-
-		return true;
-
-	}.bind(this);
-};
-
-client.prototype.moduleError = function moduleError(err) {
-
-	this.log.error("Module error: %s", err);
-};
-
 client.prototype.getGuid = function getGuid(device) {
 
 	return [
@@ -450,7 +292,7 @@ client.prototype.getGuid = function getGuid(device) {
 client.prototype.getJSON = function getJSON(dat) {
 
 	try {
-
+		if(dat instanceof Buffer) { dat = dat.toString(); }
 		return JSON.parse(dat);
 	}
 	catch(e) {
@@ -459,12 +301,5 @@ client.prototype.getJSON = function getJSON(dat) {
 		return false;
 	}
 };
-
-function existsSync(file) {
-
-	if(fs.existsSync) { return fs.existsSync(file); }
-	return path.existsSync(file);
-};
-
 
 module.exports = client;

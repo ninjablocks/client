@@ -40,7 +40,7 @@ function rest(ninja) {
 
   ninja.app.on('device::up',function(guid) {
     helpers.fetchDeviceData(ninja,guid,function(err,data) {
-
+      
       if (err) {
         ninja.log.error(err);
         // TODO decide what to do here
