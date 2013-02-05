@@ -137,7 +137,7 @@ function moduleHandlers(client) {
 					, data : {
 
 						options : options
-						, config : JSON.stringify(mod.opts || { });
+						, config : JSON.stringify(mod.opts || { })
 					}
 				}		
 			};
