@@ -72,9 +72,76 @@ function moduleHandlers(client) {
 		mod.log = this.log;
 		mod.save = function emitSave() { this.emit('save'); }.bind(mod);
 		mod.on('register', this.registerDevice.bind(this));
+		mod.on('config', this.configHandler.call(mod, name));
 		mod.on('error', this.moduleError.bind(mod));
 		mod.on('save', this.saveHandler.call(mod, name));
 		// set data handlers after registration
+	};
+
+	/**
+	 * Called when a module emits a config event
+	 */
+	client.prototype.configHandler = function configHandler(mod, name) {
+
+		var ninja = this;
+		return function requestConfig() {
+
+			var
+				conf = this.opts || null
+				, optionsPath = path.resolve(
+
+					process.cwd()
+					, 'config'
+					, name
+					, 'options.json'
+				)
+				, options = null
+			;
+
+			fs.readFile(optionsPath, optionsResults);
+			function optionsResults(err, dat) {
+
+				if(err) {
+
+					if(err.code == "ENOENT") {
+
+						ninja.log.error(
+
+							"requestConfig: module has no options! (%s)"
+							, name
+						);
+						return;
+					}
+					ninja.log.error("requestConfig: %s (%s)", err, name);
+					return;
+				}
+				options = JSON.stringify({ options : dat }) || undefined;
+				if(!options) {
+
+					ninja.log.error("requestConfig: invalid JSON (%s)", name);
+					return;
+				}
+				ninja.log.debug("requestConfig: sending request (%s)", name);
+				/**
+				 * Send the cloud a config request with 
+				 * the available options and current settings (if any)
+				 */
+				ninja.cloud.config(configRequest);
+			};
+			function configRequest() {
+
+				return {
+
+					type : "MODULE"
+					, module : name
+					, data : {
+
+						options : options
+						, config : JSON.stringify(mod.opts || { });
+					}
+				}		
+			};
+		};
 	};
 
 	client.prototype.saveHandler = function saveHandler(name) {
