@@ -15,10 +15,9 @@ function block(remote, conn) {
 			, id : this.serial || undefined
 			, version : {
 
-				node : process.version
-				, utilities : "v3"
-				, system : "v1"
-				, arduino : "v42"
+				node : "1.0.0"
+				, utilities : "1.0.0"
+				, system : "1.0.0"
 			}
 		}
 		, handshake = function handshake(err, res) {
