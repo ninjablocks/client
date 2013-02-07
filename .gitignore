@@ -18,3 +18,6 @@ npm-debug.log
 
 *.conf
 config
+ninja_modules/ninja-hue
+ninja_modules/ninja-wemo
+ninja_modules/ninja-ipcam
