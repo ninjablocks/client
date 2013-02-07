@@ -105,10 +105,7 @@ function moduleHandlers(client) {
 
 					type : "MODULE"
 					, module : name
-					, data : {
-
-						config : JSON.stringify(conf)
-					}
+					, data : conf
 				}		
 			};
 
