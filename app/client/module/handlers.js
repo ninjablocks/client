@@ -82,7 +82,6 @@ function moduleHandlers(client) {
 	 * Called when a module emits a config event
 	 */
 	client.prototype.configHandler = function configHandler(mod, name) {
-
 		var ninja = this;
 		return function requestConfig() {
 
@@ -123,7 +122,7 @@ function moduleHandlers(client) {
 				}
 				ninja.log.debug("requestConfig: sending request (%s)", name);
 				/**
-				 * Send the cloud a config request with 
+				 * Send the cloud a config request with
 				 * the available options and current settings (if any)
 				 */
 				ninja.cloud.config(configRequest);
@@ -139,7 +138,7 @@ function moduleHandlers(client) {
 						options : options
 						, config : JSON.stringify(mod.opts || { })
 					}
-				}		
+				}
 			};
 		};
 	};
