@@ -1,5 +1,10 @@
+
+
 module.exports = config;
 
+/**
+ * Remote config request (from cloud)
+ */
 function config(dat, cb) {
 
 	if(!dat.CONFIG || !dat.id) { return; }
@@ -8,36 +13,49 @@ function config(dat, cb) {
 		"CONFIG" : [ ]
 		, id : dat.id
 	};
-
-	dat.CONFIG.forEach(processRequest);
+	dat.CONFIG.forEach(processRequest.bind(this));
 	if(res.CONFIG.length > 0) {
 
 		this.cloud.config(res);
 	}
 
+	/**
+	 * Called for each config element in the request
+	 */
 	function processRequest(req) {
+		if(req.type !== "MODULE") { // We only implement MODULE
 
-		if(req.type == "MODULE") {
-
-			if(!req.module) {
-
-				return this.log.debug("Bad module config request");
-			}	
-			if(!req.data) { // GET config request
-
-				var mod = getConfig(req.module);
-				if(mod) {
-
-					res.CONFIG.push(mod);
-				}
-			}
-			if(this.modules[req.module].config) { // PUT config request
-
-				this.modules[req.module].config(req.data);
-			}
+			return;
 		}
+
+		if(!req.module) { // Module doesn't exist locally
+
+			return this.log.debug("Bad module config request");
+		}
+
+		// If a module has a config method, always prefer that
+		if(this.modules[req.module].config) { // Module has implemented a config method
+			this.modules[req.module].config(req.data);
+			return;
+		}
+
+		if (req.data) { // No config method, data so PUT config
+			// TODO write to disk
+
+			var mod = getConfig(req.module);
+			if(mod) {
+
+				res.CONFIG.push(mod);
+			}
+		} else { // No config method, and no data so GET config
+
+		}
+
 	}
 
+	/**
+	 * Fetch a requested config
+	 */
 	function getConfig(mod) {
 
 		if(this.modules[mod]) {
@@ -50,6 +68,9 @@ function config(dat, cb) {
 		return null;
 	}
 
+	/**
+	 * Craft a config response object
+	 */
 	function configResponse(mod, conf) {
 
 		return {

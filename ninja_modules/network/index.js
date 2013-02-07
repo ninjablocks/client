@@ -15,8 +15,16 @@ function network(opts, app) {
             self.emit('register', self);
             process.nextTick(function bump() {
 
+                var networkInterfaces = os.networkInterfaces();
+                var DA = {
 
-                self.emit('data', '{}');
+                    result : networkInterfaces
+                    , error : null
+                    , id : 0
+                };
+
+                self.emit('data', JSON.stringify(DA));
+
             });
         }
     ;
@@ -29,7 +37,7 @@ function network(opts, app) {
     this.D = 1005;
     this.G = "0";
 
-    app.on('client::up', initialize);
+    app.once('client::up', initialize);
 };
 
 util.inherits(network, stream);
@@ -56,11 +64,7 @@ network.prototype.write = function(data) {
             var networkInterfaces = os.networkInterfaces();
             var DA = {
 
-                result : {
-
-                    ethernet : networkInterfaces['eth0']
-                    , wifi : networkInterfaces['wlan0']
-                }
+                result : networkInterfaces
                 , error : null
                 , id : da.id
             };
