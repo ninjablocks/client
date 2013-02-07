@@ -1,3 +1,6 @@
 [submodule "ninja_modules/ninja-hue"]
 	path = ninja_modules/ninja-hue
 	url = https://github.com/thatguydan/ninja-hue.git
+[submodule "ninja_modules/ninja-wemo"]
+	path = ninja_modules/ninja-wemo
+	url = https://github.com/thatguydan/ninja-wemo.git
