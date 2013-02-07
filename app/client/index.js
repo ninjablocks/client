@@ -70,18 +70,9 @@ client.prototype.getHandlers = function() {
 
 			// update client
 		}.bind(this)
-		, config : function config(dat, cb) {
-
-			// configure module/device
-		}
-		, install : function install(mod, cb) {
-
-			// install module
-		}.bind(this)
-		, uninstall : function uninstall(mod, cb) {
-
-			// uninstall module
-		}.bind(this)
+		, config : this.moduleHandlers.config.bind(this)
+		, install : this.moduleHandlers.install.bind(this)
+		, uninstall : this.moduleHandlers.uninstall.bind(this)
 	}
 };
 
@@ -201,8 +192,10 @@ client.prototype.registerDevice = function registerDevice(device) {
 
 	device.guid = this.getGuid(device);
 	device.on('data', this.dataHandler.call(this, device));
+	device.on('error', this.errorHandler.call(this, device))
 	this.log.debug("Registering device %s", device.guid);
 	this.devices[device.guid] = device;
+	this.app.emit("device::up", device);
 };
 
 client.prototype.dataHandler = function dataHandler(device) {
@@ -224,6 +217,20 @@ client.prototype.dataHandler = function dataHandler(device) {
 
 			self.log.debug("Error sending data (%s)", self.getGuid(device));
 		}
+	}
+};
+
+client.prototype.errorHandler = function(device) {
+	
+	var self = this;
+	return function(err) {
+
+		self.log.error("device: %s", err);
+		if(device.unregister) { 
+
+			process.nextTick(device.unregister);
+		}
+		self.emit("device::down", device);
 	}
 };
 
@@ -432,6 +439,14 @@ client.prototype.saveHandler = function saveHandler(name) {
 client.prototype.moduleError = function moduleError(err) {
 
 	this.log.error("Module error: %s", err);
+};
+
+client.prototype.moduleHandlers = {
+
+	config : require('./module/config')
+	, install : require('./module/install')
+	, uninstall : require('./module/uninstall')
+
 };
 
 client.prototype.getGuid = function getGuid(device) {
