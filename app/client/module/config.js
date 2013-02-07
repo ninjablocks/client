@@ -14,15 +14,17 @@ function config(dat, cb) {
 		, id : dat.id
 	};
 	dat.CONFIG.forEach(processRequest.bind(this));
+
 	if(res.CONFIG.length > 0) {
 
-		this.cloud.config(res);
+		this.app.cloud.config(res);
 	}
 
 	/**
 	 * Called for each config element in the request
 	 */
 	function processRequest(req) {
+
 		if(req.type !== "MODULE") { // We only implement MODULE
 
 			return;
@@ -35,6 +37,8 @@ function config(dat, cb) {
 
 		// If a module has a config method, always prefer that
 		if(this.modules[req.module].config) { // Module has implemented a config method
+
+			this.log.info("cloudConfig: Attempting request (%s)", req.module);
 			this.modules[req.module].config(req.data);
 			return;
 		}
@@ -42,7 +46,7 @@ function config(dat, cb) {
 		if (req.data) { // No config method, data so PUT config
 			// TODO write to disk
 
-			var mod = getConfig(req.module);
+			var mod = getConfig.call(this, req.module);
 			if(mod) {
 
 				res.CONFIG.push(mod);
@@ -58,6 +62,7 @@ function config(dat, cb) {
 	 */
 	function getConfig(mod) {
 
+		//console.log(this.modules[mod]);
 		if(this.modules[mod]) {
 
 			if(this.modules[mod].opts) {
