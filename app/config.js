@@ -16,6 +16,12 @@ module.exports = function config(ninja, app) {
 
 		return false;
 	}
+
+	// Give our app opts
+	app.opts = ninja.opts;
+	app.id = ninja.serial;
+	app.token = ninja.token
+
 	// default arduino device path
 	if(!ninja.opts.client || ninja.opts.client == 'beagle') {
 
