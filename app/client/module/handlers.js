@@ -69,10 +69,11 @@ function moduleHandlers(client) {
 
 	client.prototype.bindModule = function bindModule(mod, name) {
 
+		var ninja = this;
 		mod.log = this.log;
 		mod.save = function emitSave() { this.emit('save'); }.bind(mod);
 		mod.on('register', this.registerDevice.bind(this));
-		mod.on('config', this.configHandler.call(mod, name));
+		mod.on('config', this.configHandler.call(ninja, mod, name));
 		mod.on('error', this.moduleError.bind(mod));
 		mod.on('save', this.saveHandler.call(mod, name));
 		// set data handlers after registration
@@ -82,22 +83,35 @@ function moduleHandlers(client) {
 	 * Called when a module emits a config event
 	 */
 	client.prototype.configHandler = function configHandler(mod, name) {
-		var ninja = this;
-		return function requestConfig() {
 
-			var
-				conf = this.opts || null
-				, optionsPath = path.resolve(
+		var
+			ninja = this
+			, name = name || undefined
+		;
 
-					process.cwd()
-					, 'config'
-					, name
-					, 'options.json'
-				)
-				, options = null
-			;
+		return function requestConfig(params) {
 
-			fs.readFile(optionsPath, optionsResults);
+			if(!name) {
+
+				return ninja.log.error("configHandler: Unknown module");
+			}
+			var conf = this.opts || null;
+
+			ninja.app.cloud.config(configRequest(conf));
+
+			function configRequest(conf) {
+
+				return {
+
+					type : "MODULE"
+					, module : name
+					, data : conf
+				}
+			};
+
+			/**
+			 * Not currently used
+			 */
 			function optionsResults(err, dat) {
 
 				if(err) {
@@ -126,19 +140,6 @@ function moduleHandlers(client) {
 				 * the available options and current settings (if any)
 				 */
 				ninja.cloud.config(configRequest);
-			};
-			function configRequest() {
-
-				return {
-
-					type : "MODULE"
-					, module : name
-					, data : {
-
-						options : options
-						, config : JSON.stringify(mod.opts || { })
-					}
-				}
 			};
 		};
 	};
