@@ -3,4 +3,4 @@
 	url = https://github.com/thatguydan/ninja-hue.git
 [submodule "ninja_modules/ninja-wemo"]
 	path = ninja_modules/ninja-wemo
-	url = git@github.com:thatguydan/ninja-wemo.git
+	url = https://github.com/thatguydan/ninja-wemo.git
