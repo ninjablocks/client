@@ -13,7 +13,7 @@ function moduleHandlers(client) {
 
 		if(!name) {
 
-			this.log.error("loadModule error: invalid module name");
+			this.log.error("loadModule: invalid module name");
 			return cb("Invalid module name", null);
 		}
 		cb = cb || function() {};
@@ -35,14 +35,14 @@ function moduleHandlers(client) {
 			}
 			else {
 
-				this.log.error("loadModule error: No such module '%s'", name);
+				this.log.error("loadModule: No such module '%s'", name);
 				cb(Error(util.format("No such module (%s)", name)), null);
 				return;
 			}
 		}
 		catch(e) {
 
-			this.log.error("loadModule error: %s (%s)", e, name);
+			this.log.error("loadModule: %s (%s)", e, name);
 			return cb(e, null);
 		}
 
@@ -60,7 +60,7 @@ function moduleHandlers(client) {
 
 		var newModule = new mod(params, app);
 
-		this.log.info("loadModule success: %s", name);
+		this.log.info("loadModule: %s", name);
 		this.modules[name] = newModule;
 		this.bindModule(newModule, name);
 
@@ -95,17 +95,17 @@ function moduleHandlers(client) {
 
 				return ninja.log.error("configHandler: Unknown module");
 			}
-			var conf = this.opts || null;
+			var req = configRequest(params);
 
-			ninja.app.cloud.config(configRequest(conf));
+			ninja.app.cloud.config(configRequest(params));
 
-			function configRequest(conf) {
+			function configRequest(params) {
 
 				return {
 
 					type : "MODULE"
 					, module : name
-					, data : conf
+					, data : params || { }
 				}
 			};
 
