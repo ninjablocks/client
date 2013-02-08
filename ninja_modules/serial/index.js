@@ -85,7 +85,7 @@ function serial(opts, app) {
 			);
 			setTimeout(function() {
 
-				this.retry.count = 0;
+				this.retry.count--;
 				this.connect();
 
 			}.bind(this), this.retry.reset);
