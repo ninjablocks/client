@@ -53,7 +53,7 @@ function platform(opts, app) {
 	}
 
 	if(!str) {
-		
+
 		this.log.error("platform: Error creating device stream");
 	}
 	function checkPath(path) {
@@ -75,7 +75,6 @@ platform.prototype.createNetStream = function createNetStream(host, port) {
 	mod.deviceHost = host;
 	mod.devicePort = port;
 	mod.device = net.connect(port, host, connectHandler);
-	console.log("host: %s, port: %s", host, port)
 	mod.device.on('error', mod.onError.bind(mod));
 	mod.device.on('close', mod.onClose.bind(mod));
 	mod.log.debug(
