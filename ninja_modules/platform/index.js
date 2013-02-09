@@ -3,7 +3,9 @@
  */
 
 var 
-	serialport = require('serialport')
+	channel = require('./lib/data-channel')
+	, serialport = require('serialport')
+	, through = require('through')
 	, stream = require('stream')
 	, util = require('util')
 	, path = require('path')
@@ -17,12 +19,13 @@ var
  */
 function platform(opts, app) {
 	
-	stream.call(this);
+	var str = undefined;
 
+	stream.call(this);
 	this.app = app;
 	this.log = app.log;
 	this.device = undefined;
-
+	this.channel = undefined;
 	if((!opts.devicePath) && opts.env == "production") {
 
 		opts.devicePath = "/dev/ttyO1";
@@ -30,37 +33,21 @@ function platform(opts, app) {
 	// don't bother if neither are specified
 	if(!opts.devicePath && !opts.deviceHost) {
 
-		return this.log.info("platform: No device path or host specified");
+		return this.log.info("platform: No device specified");
 	}
-
 	if(opts.deviceHost) {
 		
-		var str = this.createNetStream(opts.deviceHost, opts.devicePort);
-	}
+		return str = this.createNetStream(
 
+			opts.deviceHost
+			, opts.devicePort
+		);
+	}
 	else {
-
-		if(!checkPath(opts.devicePath)) { 
-
-			return this.log.error(
-
-				"platform: Device path doesn't exist? (%s)"
-				, opts.devicePath
-			);
-		}
 	
-		var str = this.createSerialStream(opts.devicePath);
+		return str = this.createSerialStream(opts.devicePath);
 	}
-
-	if(!str) {
-
-		this.log.error("platform: Error creating device stream");
-	}
-	function checkPath(path) {
-
-		var exists = fs.existsSync || path.existsSync;
-		return exists(path);
-	};
+	this.log.error("platform: Error creating device stream");
 };
 
 util.inherits(platform, stream);
@@ -71,43 +58,62 @@ platform.prototype.createNetStream = function createNetStream(host, port) {
 
 	if(!host) { return false; }
 	if(!port) { port = 9000; } // default!
-
+	mod.devicePath = undefined;
 	mod.deviceHost = host;
 	mod.devicePort = port;
-	mod.device = net.connect(port, host, connectHandler);
-	mod.device.on('error', mod.onError.bind(mod));
-	mod.device.on('close', mod.onClose.bind(mod));
+	mod.device = net.connect(port, host, function() {
+		
+		mod.log.info("platform: Net connection established");
+	});
+	mod.bindStream(mod.device);
+
 	mod.log.debug(
 
 		"platform: Opening net connection (%s:%s)"
 		, mod.deviceHost
 		, mod.devicePort
 	);
-	function connectHandler() {
-
-		mod.log.info("platform: Net connection established");
-	}
 	return mod.device;
 };
 
 platform.prototype.createSerialStream = function createSerialStream(path) {
 
 	var mod = this;
+
+	if(!fs.existsSync(opts.devicePath)) { 
+
+		mod.log.error(
+
+			"platform: Serial device path unavailable (%s)"
+			, path
+		);
+	}
 	if(!path) { return false; }
+	mod.deviceHost = undefined;
 	mod.devicePath = path;
 	mod.device = new serialport.SerialPort(opts.devicePath, {
 
 		parser : serialport.parsers.readline("\n")
 		, baudrate : 115200
 	});
-	mod.device.on('error', mod.onError.bind(mod));
-	mod.device.on('close', mod.onClose.bind(mod));
+	mod.bindStream(mod.device);
+
 	mod.log.debug(
 
 		"platform: Opening serial connection (%s)"
 		, mod.devicePath
 	);
 	return mod.device;
+};
+
+platform.prototype.bindStream = function bindStream(str) {
+
+	var mod = this;
+	if(!(str instanceof stream)) { return; }
+	str.on('error', mod.onError.bind(mod));
+	str.on('close', mod.onClose.bind(mod));
+	mod.channel = new through(mod.onData.bind(mod));
+	str.pipe(mod.channel).pipe(str);
 };
 
 platform.prototype.onOpen = function onOpen() {
@@ -122,9 +128,21 @@ platform.prototype.onClose = function onClose() {
 
 platform.prototype.onError = function onError(err) {
 
-	this.log.error("platform: %s", err);
+	this.log.error(
+
+		"platform: %s (%s)"
+		, err
+		, this.devicePath || this.deviceHost
+	);
 };
 
+platform.prototype.onData = function onData(dat) {
+	
+	dat = dat.toString() || "";
+	if(!dat) { return; }
+
+	
+};
 platform.prototype.dataEvent = function dataEvent(type, data) {
 
 	var trigger = {
