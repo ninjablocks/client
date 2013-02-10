@@ -3,8 +3,7 @@
  */
 
 var 
-	channel = require('./lib/data-channel')
-	, serialport = require('serialport')
+	serialport = require('serialport')
 	, through = require('through')
 	, stream = require('stream')
 	, util = require('util')
@@ -24,17 +23,30 @@ function platform(opts, app) {
 	stream.call(this);
 	this.app = app;
 	this.log = app.log;
+	this.opts = opts || { };
 	this.device = undefined;
 	this.channel = undefined;
+
 	if((!opts.devicePath) && opts.env == "production") {
 
-		opts.devicePath = "/dev/ttyO1";
+		this.opts.devicePath = "/dev/ttyO1";
 	}
 	// don't bother if neither are specified
 	if(!opts.devicePath && !opts.deviceHost) {
 
 		return this.log.info("platform: No device specified");
 	}
+	if(!this.createStream()) {
+
+		this.log.error("platform: Error creating device stream");
+	}
+};
+
+util.inherits(platform, stream);
+
+platform.prototype.createStream = function createStream(opts) {
+
+	var opts = opts || this.opts;
 	if(opts.deviceHost) {
 		
 		return str = this.createNetStream(
@@ -47,10 +59,8 @@ function platform(opts, app) {
 	
 		return str = this.createSerialStream(opts.devicePath);
 	}
-	this.log.error("platform: Error creating device stream");
+	return false;
 };
-
-util.inherits(platform, stream);
 
 platform.prototype.createNetStream = function createNetStream(host, port) {
 
@@ -141,7 +151,7 @@ platform.prototype.onData = function onData(dat) {
 	dat = dat.toString() || "";
 	if(!dat) { return; }
 
-	
+	this.log.debug(dat);
 };
 platform.prototype.dataEvent = function dataEvent(type, data) {
 
