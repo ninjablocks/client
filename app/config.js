@@ -22,12 +22,6 @@ module.exports = function config(ninja, app) {
 	app.id = ninja.serial;
 	app.token = ninja.token
 
-	// default arduino device path
-	if(!ninja.opts.client || ninja.opts.client == 'beagle') {
-
-		ninja.opts.device = '/dev/ttyO1';
-	}
-
 	loadPlatform(ninja, app); // embedded arduino
 
 	loader(ninja, app);
@@ -43,24 +37,14 @@ module.exports = function config(ninja, app) {
  */
 function loadPlatform(ninja, app) {
 
-	if(ninja.opts.device) {
+	// arduino controller
+	ninja.loadModule(
 
-		// arduino controller
-		ninja.loadModule(
+		'platform'
+		, ninja.opts
+		, app
+	);
 
-			'platform'
-			, { id : 'arduino' }
-			, app
-		);
-
-		// serial device
-		ninja.loadModule(
-
-			'serial'
-			, { device : ninja.opts.device, id : 'arduino' }
-			, app
-		);
-	}
 	// rest interface
 	ninja.loadModule(
 

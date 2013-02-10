@@ -23,8 +23,8 @@ if (process.env.NODE_ENV === "development") {
 		cloudHost : "127.0.0.1"
 		, streamHost : "127.0.0.1"
 		, logFile : path.resolve(process.env.PWD, 'ninjablock.log')
-		, serialFile : path.resolve(process.env.PWD, 'serial.conf')
-		, tokenFile : path.resolve(process.env.PWD, 'token.conf')
+		, serialFile : path.resolve(process.env.PWD, 'serial-development.conf')
+		, tokenFile : path.resolve(process.env.PWD, 'token-development.conf')
 		, env : 'development'
 		, streamPort : 3003
 		, cloudPort : 3001
@@ -37,8 +37,8 @@ else if (process.env.NODE_ENV === "hacking") {
 		cloudHost : "zendo.ninja.is"
 		, streamHost : "stream.ninja.is"
 		, logFile : path.resolve(process.env.PWD, 'ninjablock.log')
-		, serialFile : path.resolve(process.env.PWD, 'serial.conf')
-		, tokenFile : path.resolve(process.env.PWD, 'token.conf')
+		, serialFile : path.resolve(process.env.PWD, 'serial-hacking.conf')
+		, tokenFile : path.resolve(process.env.PWD, 'token-hacking.conf')
 		, env : 'hacking'
 		, streamPort : 443
 		, cloudPort : 443
@@ -69,7 +69,7 @@ argv = require('optimist')
 			, "This process requires certain parameters to run."
 			, "Please see usage information below."
 			, ""
-			, "Example: $0 --device /dev/tty.usb*B"
+			, "Example: $0 --devicePath /dev/tty.usb*B"
 		].join("\n")
 	)
 	.default(defaults)

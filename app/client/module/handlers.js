@@ -13,7 +13,7 @@ function moduleHandlers(client) {
 
 		if(!name) {
 
-			this.log.error("loadModule error: invalid module name");
+			this.log.error("loadModule: invalid module name");
 			return cb("Invalid module name", null);
 		}
 		cb = cb || function() {};
@@ -32,17 +32,19 @@ function moduleHandlers(client) {
 
 				var mod = require(file);
 				mod.prototype.opts = opts;
+				// stub save function for handling save reqs on instantiation
+				mod.prototype.save = function(cfg) { this.queuedSave = cfg; };
 			}
 			else {
 
-				this.log.error("loadModule error: No such module '%s'", name);
+				this.log.error("loadModule: No such module '%s'", name);
 				cb(Error(util.format("No such module (%s)", name)), null);
 				return;
 			}
 		}
 		catch(e) {
 
-			this.log.error("loadModule error: %s (%s)", e, name);
+			this.log.error("loadModule: %s (%s)", e, name);
 			return cb(e, null);
 		}
 
@@ -58,11 +60,10 @@ function moduleHandlers(client) {
 			return cb(err, null);
 		}
 
+		this.log.info("loadModule: %s", name);
 		var newModule = new mod(params, app);
-
-		this.log.info("loadModule success: %s", name);
-		this.modules[name] = newModule;
 		this.bindModule(newModule, name);
+		this.modules[name] = newModule;
 
 		cb(null, newModule);
 	};
@@ -70,12 +71,26 @@ function moduleHandlers(client) {
 	client.prototype.bindModule = function bindModule(mod, name) {
 
 		var ninja = this;
+
 		mod.log = this.log;
-		mod.save = function emitSave() { this.emit('save'); }.bind(mod);
+		mod.save = function emitSave(conf) { 
+
+			this.emit('save', conf); 
+
+		}.bind(mod);
 		mod.on('register', this.registerDevice.bind(this));
 		mod.on('config', this.configHandler.call(ninja, mod, name));
 		mod.on('error', this.moduleError.bind(mod));
 		mod.on('save', this.saveHandler.call(mod, name));
+		if(mod.queuedSave) { 
+
+			process.nextTick(function() {
+
+				var dat = mod.queuedSave;
+				mod.emit('save', dat);
+				mod.queuedSave = undefined; 
+			});
+		}
 		// set data handlers after registration
 	};
 
@@ -95,17 +110,17 @@ function moduleHandlers(client) {
 
 				return ninja.log.error("configHandler: Unknown module");
 			}
-			var conf = this.opts || null;
+			var req = configRequest(params);
 
-			ninja.app.cloud.config(configRequest(conf));
+			//ninja.app.cloud.config(configRequest(params));
 
-			function configRequest(conf) {
+			function configRequest(params) {
 
 				return {
 
 					type : "MODULE"
 					, module : name
-					, data : conf
+					, data : params || { }
 				}
 			};
 
@@ -147,10 +162,10 @@ function moduleHandlers(client) {
 	client.prototype.saveHandler = function saveHandler(name) {
 
 		var mod = this;
-		return function saveConfig() {
+		return function saveConfig(conf) {
 
 			var
-				conf = this.opts || null
+				conf = conf || { }
 				, file = path.resolve(
 
 					process.cwd()
@@ -168,7 +183,6 @@ function moduleHandlers(client) {
 			}
 
 			data = JSON.stringify({ config : conf }, null, '\t');
-
 			if(!data) {
 
 				mod.log.debug("saveConfig: No JSON parsed (%s)", name);
