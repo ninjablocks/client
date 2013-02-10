@@ -32,6 +32,8 @@ function moduleHandlers(client) {
 
 				var mod = require(file);
 				mod.prototype.opts = opts;
+				// stub save function for handling save reqs on instantiation
+				mod.prototype.save = function() { this.saveQueued = true; };
 			}
 			else {
 
@@ -58,11 +60,10 @@ function moduleHandlers(client) {
 			return cb(err, null);
 		}
 
-		var newModule = new mod(params, app);
-
 		this.log.info("loadModule: %s", name);
-		this.modules[name] = newModule;
+		var newModule = new mod(params, app);
 		this.bindModule(newModule, name);
+		this.modules[name] = newModule;
 
 		cb(null, newModule);
 	};
@@ -70,12 +71,18 @@ function moduleHandlers(client) {
 	client.prototype.bindModule = function bindModule(mod, name) {
 
 		var ninja = this;
+
 		mod.log = this.log;
 		mod.save = function emitSave() { this.emit('save'); }.bind(mod);
 		mod.on('register', this.registerDevice.bind(this));
 		mod.on('config', this.configHandler.call(ninja, mod, name));
 		mod.on('error', this.moduleError.bind(mod));
 		mod.on('save', this.saveHandler.call(mod, name));
+		if(mod.saveQueued) { 
+
+			mod.saveQueued = false; 
+			mod.emit('save'); 
+		}
 		// set data handlers after registration
 	};
 
@@ -97,7 +104,7 @@ function moduleHandlers(client) {
 			}
 			var req = configRequest(params);
 
-			ninja.app.cloud.config(configRequest(params));
+			//ninja.app.cloud.config(configRequest(params));
 
 			function configRequest(params) {
 
@@ -168,7 +175,6 @@ function moduleHandlers(client) {
 			}
 
 			data = JSON.stringify({ config : conf }, null, '\t');
-
 			if(!data) {
 
 				mod.log.debug("saveConfig: No JSON parsed (%s)", name);
