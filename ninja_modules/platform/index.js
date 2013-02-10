@@ -68,9 +68,9 @@ platform.prototype.createNetStream = function createNetStream(host, port) {
 
 	if(!host) { return false; }
 	if(!port) { port = 9000; } // default!
-	mod.devicePath = undefined;
-	mod.deviceHost = host;
-	mod.devicePort = port;
+	mod.opts.devicePath = undefined;
+	mod.opts.deviceHost = host;
+	mod.opts.devicePort = port;
 	mod.device = net.connect(port, host, function() {
 		
 		mod.log.info("platform: Net connection established");
@@ -80,8 +80,8 @@ platform.prototype.createNetStream = function createNetStream(host, port) {
 	mod.log.debug(
 
 		"platform: Opening net connection (%s:%s)"
-		, mod.deviceHost
-		, mod.devicePort
+		, mod.opts.deviceHost
+		, mod.opts.devicePort
 	);
 	return mod.device;
 };
@@ -99,19 +99,23 @@ platform.prototype.createSerialStream = function createSerialStream(path) {
 		);
 	}
 	if(!path) { return false; }
-	mod.deviceHost = undefined;
-	mod.devicePath = path;
-	mod.device = new serialport.SerialPort(opts.devicePath, {
+	mod.opts.deviceHost = undefined;
+	mod.opts.devicePath = path;
+	mod.device = new serialport.SerialPort(mod.opts.devicePath, {
 
 		parser : serialport.parsers.readline("\n")
 		, baudrate : 115200
 	});
-	mod.bindStream(mod.device);
+	mod.device.on('open', function() {
+
+		mod.log.info("platform: Serial connection established");
+		mod.bindStream(mod.device);
+	})
 
 	mod.log.debug(
 
 		"platform: Opening serial connection (%s)"
-		, mod.devicePath
+		, mod.opts.devicePath
 	);
 	return mod.device;
 };
@@ -119,21 +123,23 @@ platform.prototype.createSerialStream = function createSerialStream(path) {
 platform.prototype.bindStream = function bindStream(str) {
 
 	var mod = this;
-	if(!(str instanceof stream)) { return; }
+	if(!(str instanceof stream)) { return false; }
 	str.on('error', mod.onError.bind(mod));
 	str.on('close', mod.onClose.bind(mod));
 	mod.channel = new through(mod.onData.bind(mod));
 	str.pipe(mod.channel).pipe(str);
-};
-
-platform.prototype.onOpen = function onOpen() {
-
-	this.log.debug("platform: Connection established");
+	return true;
 };
 
 platform.prototype.onClose = function onClose() {
 
-	this.log.debug("platform: Connection closed");
+	if(this.device.errorEmitted) { return; }
+	this.log.info(
+
+		"platform: Device connection lost (%s)"
+		, this.opts.devicePath || this.opts.deviceHost
+	)
+	setTimeout(this.createStream.bind(this), 2000);
 };
 
 platform.prototype.onError = function onError(err) {
@@ -142,8 +148,9 @@ platform.prototype.onError = function onError(err) {
 
 		"platform: %s (%s)"
 		, err
-		, this.devicePath || this.deviceHost
+		, this.opts.devicePath || this.opts.deviceHost
 	);
+	setTimeout(this.createStream.bind(this), 2000);
 };
 
 platform.prototype.onData = function onData(dat) {
