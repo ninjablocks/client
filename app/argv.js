@@ -69,7 +69,7 @@ argv = require('optimist')
 			, "This process requires certain parameters to run."
 			, "Please see usage information below."
 			, ""
-			, "Example: $0 --device /dev/tty.usb*B"
+			, "Example: $0 --devicePath /dev/tty.usb*B"
 		].join("\n")
 	)
 	.default(defaults)

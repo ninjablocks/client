@@ -3,79 +3,156 @@
  */
 
 var 
-	stream = require('stream')
+	serialport = require('serialport')
+	, through = require('through')
+	, stream = require('stream')
 	, util = require('util')
+	, path = require('path')
+	, net = require('net')
+	, fs = require('fs')
 ;
 
+/**
+ * platform.device = serial / net stream to device data (JSON stream)
+ * 
+ */
 function platform(opts, app) {
 	
-	this.app = app;
-	this.log = app.log;
-
-	this.newDevice = function newDevice(dev) {
-
-		if(dev.id != 'arduino') { return; }
-
-		app.log.debug("Initializing arduino...");
-
-		dev.on('open', function() {
-
-			console.log("Opened.");
-		});
-		dev.on('close', function() {
-
-			console.log("Closed.");
-		});
-		dev.on('error', function(err) {
-
-			console.log("Error. %s", err);
-		});
-		dev.on('data', function(dat) {
-
-			// console.log("Data: %s", dat);
-		});
-
-		dev.connect();
-	};
-
-	this.onData = function onData(data) {
-
-		var 
-			json = this.getJSON(data)
-			, type = Object.keys(json)[0] || undefined
-		;
-
-		if(!json || !type) {
-
-			this.log.debug("Ignoring unexpected JSON (%s)", json);
-			return;
-		}
-
-		this.dataEvent(type, json);
-	};
+	var str = undefined;
 
 	stream.call(this);
-	app.on('serial::new', this.newDevice);
+	this.app = app;
+	this.log = app.log;
+	this.opts = opts || { };
+	this.device = undefined;
+	this.channel = undefined;
 
-};
+	if((!opts.devicePath) && opts.env == "production") {
 
-platform.prototype.onOpen = function onOpen() {
+		this.opts.devicePath = "/dev/ttyO1";
+	}
+	// don't bother if neither are specified
+	if(!opts.devicePath && !opts.deviceHost) {
 
-	this.log.debug("Arduino initialized");
-};
+		return this.log.info("platform: No device specified");
+	}
+	if(!this.createStream()) {
 
-platform.prototype.onClose = function onClose() {
-
-	this.log.debug("Arduino disconnected");
-};
-
-platform.prototype.onError = function onError(err) {
-
-	this.log.error("Arduino error: %s", err);
+		this.log.error("platform: Error creating device stream");
+	}
 };
 
 util.inherits(platform, stream);
 
+platform.prototype.createStream = function createStream(opts) {
+
+	var opts = opts || this.opts;
+	if(opts.deviceHost) {
+		
+		return str = this.createNetStream(
+
+			opts.deviceHost
+			, opts.devicePort
+		);
+	}
+	else {
+	
+		return str = this.createSerialStream(opts.devicePath);
+	}
+	return false;
+};
+
+platform.prototype.createNetStream = function createNetStream(host, port) {
+
+	var mod = this;
+
+	if(!host) { return false; }
+	if(!port) { port = 9000; } // default!
+	mod.devicePath = undefined;
+	mod.deviceHost = host;
+	mod.devicePort = port;
+	mod.device = net.connect(port, host, function() {
+		
+		mod.log.info("platform: Net connection established");
+	});
+	mod.bindStream(mod.device);
+
+	mod.log.debug(
+
+		"platform: Opening net connection (%s:%s)"
+		, mod.deviceHost
+		, mod.devicePort
+	);
+	return mod.device;
+};
+
+platform.prototype.createSerialStream = function createSerialStream(path) {
+
+	var mod = this;
+
+	if(!fs.existsSync(opts.devicePath)) { 
+
+		mod.log.error(
+
+			"platform: Serial device path unavailable (%s)"
+			, path
+		);
+	}
+	if(!path) { return false; }
+	mod.deviceHost = undefined;
+	mod.devicePath = path;
+	mod.device = new serialport.SerialPort(opts.devicePath, {
+
+		parser : serialport.parsers.readline("\n")
+		, baudrate : 115200
+	});
+	mod.bindStream(mod.device);
+
+	mod.log.debug(
+
+		"platform: Opening serial connection (%s)"
+		, mod.devicePath
+	);
+	return mod.device;
+};
+
+platform.prototype.bindStream = function bindStream(str) {
+
+	var mod = this;
+	if(!(str instanceof stream)) { return; }
+	str.on('error', mod.onError.bind(mod));
+	str.on('close', mod.onClose.bind(mod));
+	mod.channel = new through(mod.onData.bind(mod));
+	str.pipe(mod.channel).pipe(str);
+};
+
+platform.prototype.onOpen = function onOpen() {
+
+	this.log.debug("platform: Connection established");
+};
+
+platform.prototype.onClose = function onClose() {
+
+	this.log.debug("platform: Connection closed");
+};
+
+platform.prototype.onError = function onError(err) {
+
+	this.log.error(
+
+		"platform: %s (%s)"
+		, err
+		, this.devicePath || this.deviceHost
+	);
+};
+
+platform.prototype.onData = function onData(dat) {
+	
+	dat = dat.toString() || "";
+	if(!dat) { return; }
+
+	this.log.debug(dat);
+};
 platform.prototype.dataEvent = function dataEvent(type, data) {
 
 	var trigger = {

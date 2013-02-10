@@ -158,7 +158,12 @@ function moduleLoader(ninja, app) {
 
 				return cb(null, { }); 
 			}
-			cb(null, cfg || { });
+			var dat = ninja.getJSON(cfg) || { };
+			if(dat.config) {
+
+				return cb(null, dat.config);
+			}
+			cb(null, { });
 		};
 	};
 
