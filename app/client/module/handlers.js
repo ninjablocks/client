@@ -32,6 +32,8 @@ function moduleHandlers(client) {
 
 				var mod = require(file);
 				mod.prototype.opts = opts;
+				// stub save function for handling save reqs on instantiation
+				mod.prototype.save = function(cfg) { this.queuedSave = cfg; };
 			}
 			else {
 
@@ -71,11 +73,24 @@ function moduleHandlers(client) {
 
 		var ninja = this;
 		mod.log = this.log;
-		mod.save = function emitSave() { this.emit('save'); }.bind(mod);
+		mod.save = function emitSave(conf) { 
+
+			this.emit('save', conf); 
+
+		}.bind(mod);
 		mod.on('register', this.registerDevice.bind(this));
 		mod.on('config', this.configHandler.call(ninja, mod, name));
 		mod.on('error', this.moduleError.bind(mod));
 		mod.on('save', this.saveHandler.call(mod, name));
+		if(mod.queuedSave) { 
+
+			process.nextTick(function() {
+
+				var dat = mod.queuedSave;
+				mod.emit('save', dat);
+				mod.queuedSave = undefined; 
+			});
+		}
 		// set data handlers after registration
 	};
 
@@ -147,10 +162,10 @@ function moduleHandlers(client) {
 	client.prototype.saveHandler = function saveHandler(name) {
 
 		var mod = this;
-		return function saveConfig() {
+		return function saveConfig(conf) {
 
 			var
-				conf = this.opts || null
+				conf = conf || { }
 				, file = path.resolve(
 
 					process.cwd()
