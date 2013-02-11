@@ -82,6 +82,11 @@ function moduleHandlers(client) {
 		mod.on('config', this.configHandler.call(ninja, mod, name));
 		mod.on('error', this.moduleError.bind(mod));
 		mod.on('save', this.saveHandler.call(mod, name));
+		mod.on('data', function(dat) {
+
+			//this.dataHandler.call(this, mod)
+			ninja.sendData(dat);
+		});
 		if(mod.queuedSave) { 
 
 			process.nextTick(function() {
@@ -110,15 +115,26 @@ function moduleHandlers(client) {
 
 				return ninja.log.error("configHandler: Unknown module");
 			}
-			var req = configRequest(params);
+			var req;
+			if(params.type == "MODULE") {
 
-			//ninja.app.cloud.config(configRequest(params));
+				req = moduleConfigRequest(params);
+				if(ninja.cloud) {
 
-			function configRequest(params) {
+					var req = moduleConfigRequest(params);
+					ninja.cloud.config(req);
+				}
+			}
+			else if(params.type == "PLUGIN") {
+
+				ninja.sendConfig(params);
+			}
+
+			function moduleConfigRequest(params) {
 
 				return {
 
-					type : "MODULE"
+					type : params.type || "MODULE"
 					, module : name
 					, data : params || { }
 				}
@@ -225,7 +241,6 @@ function moduleHandlers(client) {
 	client.prototype.registerDevice = function registerDevice(device) {
 
 		if(!device) { return; }
-
 		device.guid = this.getGuid(device);
 		device.on('data', this.dataHandler.call(this, device));
 		device.on('error', this.errorHandler.call(this, device))

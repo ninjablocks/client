@@ -15,7 +15,7 @@ function config(dat, cb) {
 
 	if(res.CONFIG.length > 0) {
 
-		this.app.cloud.config(res);
+		this.cloud.config(res);
 	}
 
 	/**
