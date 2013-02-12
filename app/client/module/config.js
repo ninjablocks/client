@@ -52,8 +52,7 @@ function config(dat, cb) {
 		} else { // No config method, and no data so GET config
 
 		}
-
-	}
+	};
 
 	/**
 	 * Fetch a requested config
@@ -69,7 +68,7 @@ function config(dat, cb) {
 			}
 		}
 		return null;
-	}
+	};
 
 	/**
 	 * Craft a config response object
