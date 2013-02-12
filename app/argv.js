@@ -46,7 +46,7 @@ else if (process.env.NODE_ENV === "hacking") {
 	}
 }
 else {
-
+	
 	defaults = {
 
 		cloudHost : "zendo.ninja.is"
@@ -59,6 +59,7 @@ else {
 		, cloudPort : 443
 		, secure : true
 	}
+	if(!process.env.NODE_ENV) { process.env.NODE_ENV = "production"; }
 }
 
 argv = require('optimist')
