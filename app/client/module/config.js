@@ -30,6 +30,8 @@ function config(dat, cb) {
 	 */
 	function processRequest(req) {
 
+		var ninja = this;
+
 		if(req.type !== "MODULE") { // We only implement MODULE
 
 			return;
