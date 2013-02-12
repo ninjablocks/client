@@ -93,7 +93,7 @@ platform.prototype.createSerialStream = function createSerialStream(path) {
 
 	var mod = this;
 
-	if(!fs.existsSync(opts.devicePath)) { 
+	if(!fs.existsSync(mod.opts.devicePath)) { 
 
 		mod.log.error(
 
