@@ -73,7 +73,7 @@ function config(dat, cb) {
 
 				"cloudConfig: Attempting request (%s:%s)"
 				, req.module
-				, req.id
+				, dat.id
 			);
 			this.modules[req.module].config(req.data || null, response);
 			return;
