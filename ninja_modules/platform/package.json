@@ -1,0 +1,8 @@
+{
+  "name": "ninja-platform",
+  "version": "0.0.1",
+  "private": false,
+  "dependencies": {
+    "through": "~2.2.0"
+  }
+}
