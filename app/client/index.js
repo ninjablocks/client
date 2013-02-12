@@ -17,6 +17,7 @@ function client(opts, app) {
 
 	var
 		modules = {}
+		, mod = this;
 	;
 
 	if(!opts || Object.keys(opts).length === 0) {
@@ -97,8 +98,9 @@ client.prototype.connect = function connect() {
  */
 client.prototype.initialize = function initialize() {
 
-	var
-		flushBuffer = function flushBuffer() {
+	var	
+		mod = this
+		, flushBuffer = function flushBuffer() {
 
 			if(!this.sendBuffer) { this.sendBuffer = [ ]; return; }
 			if(this.sendBuffer.length > 0) {
@@ -117,12 +119,11 @@ client.prototype.initialize = function initialize() {
 		}
 		, initSession = function initSession(cloud) {
 
-			this.cloud = cloud;
+			mod.cloud = cloud;
 
-			if(this.pulse) { clearInterval(this.pulse); }
-			this.pulse = setInterval(beat.bind(this), 5000);
-
-			flushBuffer.call(this);
+			if(mod.pulse) { clearInterval(mod.pulse); }
+			mod.pulse = setInterval(beat.bind(mod), 5000);
+			flushBuffer.call(mod);
 		}
 		, beat = function beat() {
 
@@ -207,6 +208,7 @@ client.prototype.dataHandler = function dataHandler(device) {
 		catch(e) {
 
 			self.log.debug("Error sending data (%s)", self.getGuid(device));
+			self.log.error(e);
 		}
 	}
 };
@@ -217,16 +219,27 @@ client.prototype.sendData = function sendData(dat) {
 
 	dat.GUID = this.getGuid(dat);
 	dat.TIMESTAMP = (new Date().getTime());
+	var msg = { 'DEVICE' : [ dat ] };
 
-	if((this.app.cloud) && this.app.cloud.data) {
+	if((this.cloud) && this.cloud.data) {
 
-		var msg = { 'DEVICE' : [ dat ] };
-		return this.app.cloud.data(msg);
+		return this.cloud.data(msg);
 	}
 
 	this.bufferData(msg);
 };
 
+client.prototype.sendConfig = function sendConfig(dat) {
+
+	if(!dat) { return false; }
+
+	dat.GUID = this.getGuid(dat);
+	dat.TIMESTAMP = (new Date().getTime());
+	if((this.cloud) && this.cloud.config) {
+
+		return this.cloud.config(JSON.stringify(dat));
+	}
+}
 client.prototype.bufferData = function bufferData(msg) {
 
 	this.sendBuffer.push(msg);

@@ -4,3 +4,6 @@
 [submodule "ninja_modules/ninja-wemo"]
 	path = ninja_modules/ninja-wemo
 	url = https://github.com/thatguydan/ninja-wemo.git
+[submodule "ninja_modules/ninja-ipcam"]
+	path = ninja_modules/ninja-ipcam
+	url = https://github.com/ninjablocks/ninja-ipcam.git

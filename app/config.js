@@ -17,6 +17,11 @@ module.exports = function config(ninja, app) {
 		return false;
 	}
 
+	// Give our app opts
+	app.opts = ninja.opts;
+	app.id = ninja.serial;
+	app.token = ninja.token
+
 	loadPlatform(ninja, app); // embedded arduino
 
 	loader(ninja, app);
