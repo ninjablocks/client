@@ -49,8 +49,6 @@ function config(dat, cb) {
 
 				res.CONFIG.push(mod);
 			}
-		} else { // No config method, and no data so GET config
-
 		}
 
 	}
