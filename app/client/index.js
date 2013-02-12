@@ -240,7 +240,8 @@ client.prototype.sendConfig = function sendConfig(dat) {
 
 		return this.cloud.config(JSON.stringify(dat));
 	}
-}
+};
+
 client.prototype.bufferData = function bufferData(msg) {
 
 	this.sendBuffer.push(msg);

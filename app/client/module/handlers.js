@@ -249,7 +249,6 @@ function moduleHandlers(client) {
 		this.app.emit("device::up", device.guid);
 	};
 
-
 	client.prototype.errorHandler = function(device) {
 
 		var self = this;

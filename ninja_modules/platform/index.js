@@ -172,6 +172,7 @@ platform.prototype.onData = function onData(dat) {
 		mod.dataEvent(key, dat[key]);
 	});
 };
+
 platform.prototype.dataEvent = function dataEvent(type, dat) {
 
 	var mod = this;
@@ -245,6 +246,7 @@ platform.prototype.pluginHandler = function(dataset) {
 		mod.sendConfig("PLUGIN", device);
 	});
 };
+
 platform.prototype.transformAccelerometer = function(dat, meta) {
 
 	if(!this.motionSample) {
@@ -299,6 +301,7 @@ platform.prototype.sendConfig = function(type, dat) {
 	dat.type = type;
 	this.emit('config', dat);
 };
+
 platform.prototype.getJSON = function getJSON(data) {
 	
 	try {
