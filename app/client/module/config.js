@@ -6,22 +6,15 @@ module.exports = config;
 function config(dat, cb) {
 
 	if(!dat.CONFIG || !dat.id) { return; }
-	var res = {
 
-		"CONFIG" : [ ]
-		, id : dat.id
-	};
-	dat.CONFIG.forEach(processRequest.bind(this));
-
-	if(res.CONFIG.length > 0) {
-
-		this.app.cloud.config(res);
-	}
+	dat.CONFIG.map(processRequest.bind(this));
 
 	/**
 	 * Called for each config element in the request
 	 */
 	function processRequest(req) {
+
+		var ninja = this;
 
 		if(req.type !== "MODULE") { // We only implement MODULE
 
@@ -34,26 +27,59 @@ function config(dat, cb) {
 		}
 
 		// If a module has a config method, always prefer that
-		if(this.modules[req.module].config) { // Module has implemented a config method
+		if(this.modules[req.module].config) { 
 
-			this.log.info("cloudConfig: Attempting request (%s)", req.module);
-			this.modules[req.module].config(req.data);
+			/**
+			 * Called when a module response comes back
+			 */
+			var response = function(err, res) {
+
+				var 
+					id = dat.id
+					, module = req.module
+				; 
+				// error in module response
+				if(err) {
+
+					// what to do here? 
+					return ninja.log.error(
+
+						"cloudConfig: %s (%s:%s)"
+						, err
+						, module
+						, id
+					);
+				}
+				res.id = id;
+				ninja.log.debug(
+
+					"cloudConfig: Sending response (%s:%s)"
+					, module
+					, id
+				);
+				ninja.cloud.config({
+
+					"CONFIG" : [{
+
+						type : "MODULE"
+						, module : module
+						, data : res
+					}]
+					, id : id
+				});
+			};
+
+			this.log.info(
+
+				"cloudConfig: Attempting request (%s:%s)"
+				, req.module
+				, req.id
+			);
+			this.modules[req.module].config(req.data || null, response);
 			return;
 		}
-
-		if (req.data) { // No config method, data so PUT config
-			// TODO write to disk
-
-			var mod = getConfig.call(this, req.module);
-			if(mod) {
-
-				res.CONFIG.push(mod);
-			}
-		} else { // No config method, and no data so GET config
-
-		}
-
-	}
+		// module has no .config method, send an error or somethign?
+	};
 
 	/**
 	 * Fetch a requested config
@@ -69,7 +95,7 @@ function config(dat, cb) {
 			}
 		}
 		return null;
-	}
+	};
 
 	/**
 	 * Craft a config response object
