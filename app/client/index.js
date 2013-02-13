@@ -88,6 +88,7 @@ client.prototype.connect = function connect() {
 	this.node = upnode(this.getHandlers()).connect(this.parameters);
 
 	this.node.on('reconnect', client.reconnect.bind(client));
+	this.node.on('down', client.down.bind(client));
 	this.node.on('up', client.up.bind(client));
 	this.initialize();
 };

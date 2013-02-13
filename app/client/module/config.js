@@ -7,53 +7,28 @@ function config(dat, cb) {
 
 	if(!dat.CONFIG || !dat.id) { return; }
 
-	dat.CONFIG.map(processRequest.bind(this));
+	var 
+		cloudBuffer = {
 
-	var cloudBuffer = [ ];
+			configResponse : { 
+
+				CONFIG : [ ]
+				, id : dat.id
+			}
+			, requested : 0
+			, responded : 0
+			, timeout : undefined
+		}
+		, ninja = this
+
+	;
+
+	dat.CONFIG.map(processRequest.bind(this));
 
 	/**
 	 * Called for each config element in the request
 	 */
 	function processRequest(req) {
-
-		var 
-			ninja = this
-			, response = function(err, res, mod) {
-
-				var 
-					id = dat.id
-					, module = mod
-				; 
-				// error in module response
-				if(err) {
-
-					// what to do here? 
-					return ninja.log.error(
-
-						"cloudConfig: %s (%s:%s)"
-						, err
-						, module
-						, id
-					);
-				}
-				ninja.log.debug(
-
-					"cloudConfig: Sending response (%s:%s)"
-					, module
-					, id
-				);
-				ninja.cloud.config({
-
-					"CONFIG" : [{
-
-						type : "MODULE"
-						, module : module
-						, data : res
-					}]
-					, id : id
-				});
-			};			
-		;
 
 		if(req.type !== "MODULE") { // We only implement MODULE
 
@@ -62,47 +37,88 @@ function config(dat, cb) {
 
 		if(!req.module) { // probe the bloke~!
 
-			blockProbe(mod, res);
+			// we may want to add filtering of "system" modules from the probes?
+			return blockProbe(req, dat.id);
 		}
 
-		// If a module has a config method, always prefer that
-		if(this.modules[req.module].config) { 
-
-			/**
-			 * Called when a module response comes back
-			 */
-
-			
-			this.log.info(
-
-				"cloudConfig: Attempting request (%s:%s)"
-				, req.module
-				, dat.id
-			);
-			this.modules[req.module].config(req.data || null, function(err, dat) {
-
-				response(err, dat, req.module); 
-			});
-			return;
-		}
-		// module has no .config method, send an error or somethign?
+		moduleProbe(req, dat.id);		
 	};
 
-	function blockProbe(mod, res) {
+	function blockProbe(req, id) {
+
 
 		if(!ninja.modules) { return; }
+		var mods = Object.keys(ninja.modules);
+		cloudBuffer.timeout = setTimeout(sendResponse, 3000);
+		cloudBuffer.requested = mods.length;
 
-		Object.keys(ninja.modules).map(sendRequest);
+		ninja.log.debug("cloudConfig: Initiating requests for %s modules", mods.length);
+		mods.map(sendRequest);
 		function sendRequest(mod) {
 
 			if((ninja.modules[mod] && ninja.modules[mod].config)) {
 
+				ninja.log.debug("cloudConfig: Requesting config from %s", mod);
 				ninja.modules[mod].config(req.data || null, function(err, res) {
-					
-					response(err, res, mod);
+
+					ninja.log.debug("cloudConfig: Received response from %s", mod);
+					configResponse(err, res, mod);
 				});
 			}
 		};
-		return this.log.debug("cloudConfig: Cloud requesting block config");		
-	}
+
+		return ninja.log.debug("cloudConfig: Cloud requesting block config");		
+	};
+
+	function moduleProbe(req, id) {
+
+		ninja.log.info(
+
+			"cloudConfig: Attempting request (%s:%s)"
+			, req.module
+			, id
+		);
+		cloudBuffer.requested = 1;
+		ninja.modules[req.module].config(req.data || { }, function(err, dat) {
+
+			configResponse(err, dat, req.module); 
+		});
+	};
+
+	function configResponse(err, res, mod) {
+
+		if(!cloudBuffer.configResponse.CONFIG) {
+
+			cloudBuffer.configResponse.CONFIG = [ ];
+		}
+		// error in module configResponse
+		if(err) {
+
+			// what to do here? 
+			return ninja.log.error(
+
+				"cloudConfig: %s (%s:%s)"
+				, err
+				, mod
+				, dat.id
+			);
+		}
+		ninja.log.debug("cloudConfig: Pushing module response (%s) onto stack", mod);
+		cloudBuffer.configResponse.CONFIG.push({
+
+			type : "MODULE"
+			, module : mod
+			, data : res
+		})
+		if(++cloudBuffer.responded >= cloudBuffer.requested) {
+
+			sendResponse();
+		}
+	};	
+
+	function sendResponse() {
+
+		ninja.log.debug("cloudConfig: sending config collection");
+		ninja.cloud.config(cloudBuffer.configResponse);
+	}		
 };
