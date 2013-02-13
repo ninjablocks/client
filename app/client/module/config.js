@@ -9,6 +9,8 @@ function config(dat, cb) {
 
 	dat.CONFIG.map(processRequest.bind(this));
 
+	var cloudBuffer = [ ];
+
 	/**
 	 * Called for each config element in the request
 	 */
@@ -34,7 +36,6 @@ function config(dat, cb) {
 						, id
 					);
 				}
-				res.id = id;
 				ninja.log.debug(
 
 					"cloudConfig: Sending response (%s:%s)"
@@ -61,24 +62,7 @@ function config(dat, cb) {
 
 		if(!req.module) { // probe the bloke~!
 
-
-			console.log(req)
-			if(!ninja.modules) { 
-
-				return; 
-			}
-			Object.keys(ninja.modules).map(sendRequest);
-			function sendRequest(mod) {
-
-				if((ninja.modules[mod] && ninja.modules[mod].config)) {
-
-					ninja.modules[mod].config(req.data || null, function(err, res) {
-						
-						response(err, res, mod);
-					});
-				}
-			};
-			return this.log.debug("cloudConfig: Cloud requesting block config");
+			blockProbe(mod, res);
 		}
 
 		// If a module has a config method, always prefer that
@@ -104,41 +88,21 @@ function config(dat, cb) {
 		// module has no .config method, send an error or somethign?
 	};
 
-	/**
-	 * Fetch a requested config
-	 */
-	function getConfig(mod) {
+	function blockProbe(mod, res) {
 
-		//console.log(this.modules[mod]);
-		if(this.modules[mod]) {
+		if(!ninja.modules) { return; }
 
-			if(this.modules[mod].opts) {
+		Object.keys(ninja.modules).map(sendRequest);
+		function sendRequest(mod) {
 
-				return configResponse(mod, this.modules[mod].opts)
+			if((ninja.modules[mod] && ninja.modules[mod].config)) {
+
+				ninja.modules[mod].config(req.data || null, function(err, res) {
+					
+					response(err, res, mod);
+				});
 			}
-		}
-		return null;
-	};
-
-	/**
-	 * Craft a config response object
-	 */
-	function configResponse(mod, conf) {
-
-		return {
-
-			type : "MODULE"
-			, module : mod
-			, data : conf
-		}
-	};
-
-	function getAllConfigs(reqId) {
-
-		// loop all this.modules, send configs in bundle.
-		Object.keys(this.modules).forEach(function(mod) {
-
-			res.CONFIG.push(configResponse(mod, this.modules[mod].opts))
-		});
-	};
+		};
+		return this.log.debug("cloudConfig: Cloud requesting block config");		
+	}
 };
