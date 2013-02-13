@@ -74,13 +74,14 @@ function config(dat, cb) {
 
 	function moduleProbe(req, id) {
 
+		cloudBuffer.timeout = setTimeout(sendResponse, 3000);
+		cloudBuffer.requested = 1;
 		ninja.log.info(
 
 			"cloudConfig: Attempting request (%s:%s)"
 			, req.module
 			, id
 		);
-		cloudBuffer.requested = 1;
 		ninja.modules[req.module].config(req.data || { }, function(err, dat) {
 
 			configResponse(err, dat, req.module); 
@@ -114,6 +115,7 @@ function config(dat, cb) {
 		})
 		if(++cloudBuffer.responded >= cloudBuffer.requested) {
 
+			clearTimeout(cloudBuffer.timeout);
 			sendResponse();
 		}
 	};	
