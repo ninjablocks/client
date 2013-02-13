@@ -14,29 +14,13 @@ function config(dat, cb) {
 	 */
 	function processRequest(req) {
 
-		var ninja = this;
-
-		if(req.type !== "MODULE") { // We only implement MODULE
-
-			return;
-		}
-
-		if(!req.module) { // Module doesn't exist locally
-
-			return this.log.debug("Bad module config request");
-		}
-
-		// If a module has a config method, always prefer that
-		if(this.modules[req.module].config) { 
-
-			/**
-			 * Called when a module response comes back
-			 */
-			var response = function(err, res) {
+		var 
+			ninja = this
+			, response = function(err, res, mod) {
 
 				var 
 					id = dat.id
-					, module = req.module
+					, module = mod
 				; 
 				// error in module response
 				if(err) {
@@ -67,15 +51,54 @@ function config(dat, cb) {
 					}]
 					, id : id
 				});
-			};
+			};			
+		;
 
+		if(req.type !== "MODULE") { // We only implement MODULE
+
+			return;
+		}
+
+		if(!req.module) { // probe the bloke~!
+
+
+			console.log(req)
+			if(!ninja.modules) { 
+
+				return; 
+			}
+			Object.keys(ninja.modules).map(sendRequest);
+			function sendRequest(mod) {
+
+				if((ninja.modules[mod] && ninja.modules[mod].config)) {
+
+					ninja.modules[mod].config(req.data || null, function(err, res) {
+						
+						response(err, res, mod);
+					});
+				}
+			};
+			return this.log.debug("cloudConfig: Cloud requesting block config");
+		}
+
+		// If a module has a config method, always prefer that
+		if(this.modules[req.module].config) { 
+
+			/**
+			 * Called when a module response comes back
+			 */
+
+			
 			this.log.info(
 
 				"cloudConfig: Attempting request (%s:%s)"
 				, req.module
 				, dat.id
 			);
-			this.modules[req.module].config(req.data || null, response);
+			this.modules[req.module].config(req.data || null, function(err, dat) {
+
+				response(err, dat, req.module); 
+			});
 			return;
 		}
 		// module has no .config method, send an error or somethign?
