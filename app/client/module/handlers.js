@@ -73,13 +73,14 @@ function moduleHandlers(client) {
 		var ninja = this;
 
 		mod.log = this.log;
-		mod.save = function emitSave(conf) { 
+		mod.save = function emitSave(conf) {
 
-			this.emit('save', conf); 
+			this.emit('save', conf);
 
 		}.bind(mod);
 		mod.on('register', this.registerDevice.bind(this));
 		mod.on('config', this.configHandler.call(ninja, mod, name));
+		mod.on('announcement', this.announcementHandler.call(ninja, mod, name));
 		mod.on('error', this.moduleError.bind(mod));
 		mod.on('save', this.saveHandler.call(mod, name));
 		mod.on('data', function(dat) {
@@ -87,13 +88,13 @@ function moduleHandlers(client) {
 			//this.dataHandler.call(this, mod)
 			ninja.sendData(dat);
 		});
-		if(mod.queuedSave) { 
+		if(mod.queuedSave) {
 
 			process.nextTick(function() {
 
 				var dat = mod.queuedSave;
 				mod.emit('save', dat);
-				mod.queuedSave = undefined; 
+				mod.queuedSave = undefined;
 			});
 		}
 		// set data handlers after registration
@@ -173,6 +174,32 @@ function moduleHandlers(client) {
 				ninja.cloud.config(configRequest);
 			};
 		};
+	};
+
+	client.prototype.announcementHandler = function(mod,name) {
+
+		var
+			ninja = this
+			, name = name || undefined
+		;
+
+		return function requestAnnouncement(dat) {
+			if(!name) {
+
+				return ninja.log.error("configHandler: Unknown module");
+			}
+
+			var announcementRequest = {
+				CONFIG:[{
+					type:'MODULE_ANNOUNCEMENT'
+					, module:name
+				  , data:dat
+				}]
+			};
+
+			ninja.cloud.config(announcementRequest);
+			ninja.log.debug("requestAnnouncement: sending request (%s)", name);
+		}
 	};
 
 	client.prototype.saveHandler = function saveHandler(name) {
@@ -275,6 +302,8 @@ function moduleHandlers(client) {
 		, uninstall : require('./uninstall')
 
 	};
+
+
 };
 
 function existsSync(file) {
