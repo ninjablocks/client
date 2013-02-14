@@ -78,16 +78,6 @@ function moduleHandlers(client) {
 		mod.log = this.log;
 		mod.save = function emitSave(conf) {
 
-			console.log(">>> save emitting");
-			if(conf) {
-				console.log("conf present");
-			}
-			else {
-
-				console.log("no conf...");
-				console.log(mod.opts);
-				console.log("<<<");
-			}
 			this.emit('save', conf || mod.opts ? mod.opts : { });
 
 		}.bind(mod);
