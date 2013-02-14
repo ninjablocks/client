@@ -176,7 +176,7 @@ function moduleHandlers(client) {
 		};
 	};
 
-	client.prototype.announcementHandler = function(mod,name) {
+	client.prototype.announcementHandler = function(mod, name) {
 
 		var
 			ninja = this
@@ -184,16 +184,18 @@ function moduleHandlers(client) {
 		;
 
 		return function requestAnnouncement(dat) {
+
 			if(!name) {
 
 				return ninja.log.error("configHandler: Unknown module");
 			}
-
 			var announcementRequest = {
-				CONFIG:[{
-					type:'MODULE_ANNOUNCEMENT'
-					, module:name
-				  , data:dat
+
+				CONFIG : [{
+
+					type : 'MODULE_ANNOUNCEMENT'
+					, module : name
+				  	, data : dat
 				}]
 			};
 
