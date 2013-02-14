@@ -33,7 +33,10 @@ function moduleHandlers(client) {
 				var mod = require(file);
 				mod.prototype.opts = opts;
 				// stub save function for handling save reqs on instantiation
-				mod.prototype.save = function(cfg) { this.queuedSave = cfg; };
+				mod.prototype.save = function(cfg) { 
+
+					this.queuedSave = cfg || this.opts ? this.opts : { }; 
+				};
 			}
 			else {
 
@@ -75,12 +78,23 @@ function moduleHandlers(client) {
 		mod.log = this.log;
 		mod.save = function emitSave(conf) {
 
-			this.emit('save', conf);
+			console.log(">>> save emitting");
+			if(conf) {
+				console.log("conf present");
+			}
+			else {
+
+				console.log("no conf...");
+				console.log(mod.opts);
+				console.log("<<<");
+			}
+			this.emit('save', conf || mod.opts ? mod.opts : { });
 
 		}.bind(mod);
+
+		mod.on('announcement', this.announcementHandler.call(ninja, mod, name));
 		mod.on('register', this.registerDevice.bind(this));
 		mod.on('config', this.configHandler.call(ninja, mod, name));
-		mod.on('announcement', this.announcementHandler.call(ninja, mod, name));
 		mod.on('error', this.moduleError.bind(mod));
 		mod.on('save', this.saveHandler.call(mod, name));
 		mod.on('data', function(dat) {
@@ -189,6 +203,7 @@ function moduleHandlers(client) {
 
 				return ninja.log.error("configHandler: Unknown module");
 			}
+
 			var announcementRequest = {
 
 				CONFIG : [{
@@ -201,7 +216,7 @@ function moduleHandlers(client) {
 
 			ninja.cloud.config(announcementRequest);
 			ninja.log.debug("requestAnnouncement: sending request (%s)", name);
-		}
+		};
 	};
 
 	client.prototype.saveHandler = function saveHandler(name) {
