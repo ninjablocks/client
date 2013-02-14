@@ -21,8 +21,8 @@ function platform(opts, app) {
 
 	var 
 		str = undefined
-		, mod = this
 		, devices = { }
+		, mod = this
 	;
 
 	stream.call(this);
@@ -269,12 +269,13 @@ platform.prototype.transformAccelerometer = function(dat, meta) {
 	;
 	if(threshold(diff)) {
 
-		console.log("JIGGLE")
+		console.log("JIGGLE");
+		
 		this.sendData({
 			G : '0'
 			, V : 0
 			, D : 3
-			, DA : 1
+			, DA : "1"
 		});
 	}
 	function three(a) { return a.length == 3; } 
