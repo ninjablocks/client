@@ -139,25 +139,12 @@ function moduleLoader(ninja, app) {
 	 */
 	function moduleConfigData(mod, cb) {
 
-		getModulePackage(mod, packageResults);
+		getModuleConfig(mod, configResults);
 
-		function packageResults(err, pkg) {
-
-			if(err) { return tryModuleConfig(); }
-			cb(null, ninja.getJSON(pkg).config || { });
-		};
-
-		function tryModuleConfig() {
-			
-			getModuleConfig(mod, configResults);
-		};
-		
 		function configResults(err, cfg) {
 
-			if((err) && err.code !== "ENOENT") { 
+			if(err) { return tryModulePackage(); }
 
-				return cb(null, { }); 
-			}
 			var dat = ninja.getJSON(cfg) || { };
 			if(dat.config) {
 
@@ -165,6 +152,15 @@ function moduleLoader(ninja, app) {
 			}
 			cb(null, { });
 		};
+		function tryModulePackage() {
+			
+			getModulePackage(mod, packageResults);
+		};
+		function packageResults(err, pkg) {
+
+			if(err) { return cb(null, { }); }
+			cb(null, ninja.getJSON(pkg).config || { });
+		};		
 	};
 
 	function systemModules(mod) {
