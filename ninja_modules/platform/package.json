@@ -4,5 +4,8 @@
   "private": false,
   "dependencies": {
     "through": "~2.2.0"
-  }
+  },
+  "main": "index.js",
+  "author": "Emily Rose <emily@ninjablocks.com>",
+  "license": "BSD"
 }
