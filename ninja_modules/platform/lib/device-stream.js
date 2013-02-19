@@ -89,46 +89,4 @@ function deviceStream(platform) {
 		str.pipe(mod.channel).pipe(str);
 		return true;
 	};
-	
-	platform.prototype.onOpen = function onOpen() {
-		
-		this.log.info(
-
-			"platform: Device connection established (%s)"
-			, this.opts.devicePath || this.opts.deviceHost
-		)
-	};
-
-	platform.prototype.onClose = function onClose() {
-
-		if(this.device.errorEmitted) { return; }
-		this.log.info(
-
-			"platform: Device connection lost (%s)"
-			, this.opts.devicePath || this.opts.deviceHost
-		)
-		setTimeout(this.createStream.bind(this), 2000);
-	};
-
-	platform.prototype.onError = function onError(err) {
-
-		this.log.error(
-
-			"platform: %s (%s)"
-			, err
-			, this.opts.devicePath || this.opts.deviceHost
-		);
-		setTimeout(this.createStream.bind(this), 2000);
-	};
-
-	platform.prototype.onData = function onData(dat) {
-		
-		var mod = this;
-		dat = this.getJSON(dat) || [ ];
-		if(!dat) { return; }
-		Object.keys(dat).forEach(function(key) {
-
-			mod.dataEvent(key, dat[key]);
-		});
-	};
 };
