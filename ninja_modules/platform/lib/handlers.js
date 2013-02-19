@@ -11,7 +11,7 @@ function deviceHandlers(platform) {
 
 			'ACK' : function(dat) {
 
-				mod.ackHandler(dat.ACK || null);
+				mod.ackHandler(dat || null);
 			}
 			, 'DEVICE' : function(dat) {
 
@@ -20,8 +20,6 @@ function deviceHandlers(platform) {
 			, 'PLUGIN' : function(dat) {
 
 				mod.pluginHandler(dat);
-				mod.log.debug("Device plugin:");
-				console.log(dat)
 			}
 			, 'UNPLUG' : function(dat) {
 
@@ -50,7 +48,6 @@ function deviceHandlers(platform) {
 		var mod = this;
 
 		if(!(dataset instanceof Array)) { return; }
-
 		dataset.map(function(device) {
 
 			if(deviceMeta[device.V][device.D]) {
@@ -82,14 +79,14 @@ function deviceHandlers(platform) {
 	platform.prototype.ackHandler = function(dataset) {
 
 		var mod = this;
-		if(!(dataset) || !dataset.ACK instanceof Array) { return; }
+		if(!(dataset) || !dataset instanceof Array) { return; }
 
-		dataset.ACK.map(function(ack) {
+		dataset.map(function(ack) {
 
 			mod.emit("ack", ack);
 		});
 	};
-	
+
 	platform.prototype.onOpen = function onOpen() {
 		
 		this.log.info(
@@ -125,6 +122,7 @@ function deviceHandlers(platform) {
 		
 		var mod = this;
 		dat = this.getJSON(dat) || [ ];
+
 		if(!dat) { return; }
 		Object.keys(dat).forEach(function(key) {
 

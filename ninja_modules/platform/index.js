@@ -48,33 +48,30 @@ function platform(opts, app) {
 		this.log.error("platform: Error creating device stream");
 	}
 
-
 	this.LED = new platformDevice('0', 0, 1000);
 	this.LED.state = "00FF00";
+	mod.LED.write = function(dat) {
+
+		var res = {
+			
+			DEVICE : [{
+
+				G : '0'
+				, V : 0
+				, D : 1000
+				, DA : dat
+			}]
+		};
+		mod.device.write(JSON.stringify(res));
+	};
 	app.on('client::up', function() {
 
-		mod.LED.write = function(dat) {
-
-			console.log(">>> WRITE %s", dat);
-			var res = {
-				
-				DEVICE : [{
-
-					G : '0'
-					, V : 0
-					, D : 1000
-					, DA : dat
-				}]
-			};
-			mod.device.write(JSON.stringify(res));
-		};
 		mod.emit('register', mod.LED);
 		process.nextTick(function() {
 
-			mod.LED.emit('data', '00FF00')
+			mod.LED.write(mod.LED.state);
 		})
-	});
-	
+	});	
 };
 
 util.inherits(platform, stream);
@@ -87,7 +84,6 @@ platform.prototype.sendData = function(dat) {
 	
 	if(!dat) { return; }
 	this.emit('data', dat);
-	//console.log(dat);
 };
 
 platform.prototype.sendConfig = function(type, dat) {

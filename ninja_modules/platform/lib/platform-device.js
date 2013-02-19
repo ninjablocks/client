@@ -12,7 +12,7 @@ function device(G, V, D) {
 	
 	stream.call(this);
 
-	this.V = 0;
+	this.V = V || 0;
 	this.G = G || "0";
 	this.D = D || undefined;
 

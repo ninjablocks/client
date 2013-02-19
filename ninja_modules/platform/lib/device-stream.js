@@ -80,13 +80,12 @@ function deviceStream(platform) {
 	};
 
 	platform.prototype.bindStream = function bindStream(str) {
-
 		var mod = this;
 		if(!(str instanceof stream)) { return false; }
 		str.on('error', mod.onError.bind(mod));
 		str.on('close', mod.onClose.bind(mod));
 		mod.channel = new through(mod.onData.bind(mod));
-		str.pipe(mod.channel).pipe(str);
+		str.pipe(mod.channel);
 		return true;
 	};
 };
