@@ -42,7 +42,7 @@ function rest(ninja) {
     helpers.fetchDeviceData(ninja,guid,function(err,data) {
       
       if (err) {
-        ninja.log.error(err);
+        ninja.log.error("REST: %s (%s)", err, guid);
         // TODO decide what to do here
       }
 
