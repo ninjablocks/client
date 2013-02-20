@@ -34,6 +34,35 @@ function platform(opts, app) {
 	this.device = undefined;
 	this.channel = undefined;
 	
+	this.statusLights = [
+
+		{
+			state : "client::up"
+			, color : "00FF00"
+		}
+		, {
+			state : "client::down"
+			, color : "FFFF00"
+		}
+		, {
+			state : "client::authed"
+			, color : "00FFFF"
+		}
+		, {
+			state : "client::activation"
+			, color : "FF00FF"
+		}
+		, { 
+			state : "client::invalidToken" 
+			, color : "0000FF"
+		}
+		, {
+			state : "client::reconnecting"
+			, color : "00FFFF"
+		}
+	];
+	
+
 	if((!opts.devicePath) && opts.env == "production") {
 
 		this.opts.devicePath = "/dev/ttyO1";
@@ -48,29 +77,41 @@ function platform(opts, app) {
 		this.log.error("platform: Error creating device stream");
 	}
 
-	this.LED = new platformDevice('0', 0, 1000);
-	this.LED.state = "00FF00";
-	mod.LED.write = function(dat) {
+	this.eyes = new platformDevice('0', 0, 1000);
 
-		var res = {
-			
-			DEVICE : [{
+	/**
+	 * Bind listeners for app state
+	 * make the status LED do its thing
+	 */
+	this.statusLights.forEach(function(state) {
 
-				G : '0'
-				, V : 0
-				, D : 1000
-				, DA : dat
-			}]
-		};
-		mod.device.write(JSON.stringify(res));
-	};
+		app.on(state.state, function() {
+
+			mod.device.write(JSON.stringify({
+				DEVICE : [
+					{ 
+						G : "0"
+						, V : 0
+						, D : 999
+						, DA : state.color
+					}
+				]
+			}));
+		});
+	});
+
+	this.eyes.pipe(this.device).pipe(this.eyes);
+	/**
+	 * Initializing stuff
+	 */
 	app.on('client::up', function() {
 
-		mod.emit('register', mod.LED);
-		process.nextTick(function() {
+		mod.emit('register', mod.eyes);
+		setTimeout(function() {
 
-			mod.LED.write(mod.LED.state);
-		})
+			//mod.status.write(mod.status.state || "00FF00");
+			mod.eyes.write(mod.eyes.state || "00FF00");
+		}, 2000);
 	});	
 };
 

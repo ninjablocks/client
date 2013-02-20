@@ -82,7 +82,7 @@ function deviceHandlers(platform) {
 		if(!(dataset) || !dataset instanceof Array) { return; }
 
 		dataset.map(function(ack) {
-
+		
 			mod.emit("ack", ack);
 		});
 	};

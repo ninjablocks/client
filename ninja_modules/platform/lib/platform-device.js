@@ -16,6 +16,22 @@ function device(G, V, D) {
 	this.G = G || "0";
 	this.D = D || undefined;
 
+	this.write = function(dat) {
+
+		this.state = dat;
+		var res = {
+			
+			DEVICE : [{
+
+				V : this.V
+				, G : this.G
+				, D : this.D
+				, DA : dat
+			}]
+		};
+		this.emit('data', JSON.stringify(res));
+	};
 };
+
 
 util.inherits(device, stream);
