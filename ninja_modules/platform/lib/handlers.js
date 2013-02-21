@@ -67,7 +67,6 @@ function deviceHandlers(platform) {
 			}
 			else {
 
-				console.log(device);
 				mod.sendData(device);
 			}
 		});	
