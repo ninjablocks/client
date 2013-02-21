@@ -57,9 +57,17 @@ function deviceHandlers(platform) {
 
 					mod[meta.method](device, meta);
 				}
+				else {
+
+					/**
+					 * Device with meta data but no methods
+					 */
+					mod.sendData(device);
+				}
 			}
 			else {
 
+				console.log(device);
 				mod.sendData(device);
 			}
 		});	
