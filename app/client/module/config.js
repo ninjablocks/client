@@ -48,7 +48,6 @@ function config(dat, cb) {
 
 	function blockProbe(req, id) {
 
-
 		if(!ninja.modules) { return; }
 		var mods = Object.keys(ninja.modules);
 		cloudBuffer.timeout = setTimeout(sendResponse, 3000);
