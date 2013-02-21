@@ -31,6 +31,11 @@ function device(G, V, D) {
 		};
 		this.emit('data', JSON.stringify(res));
 	};
+
+	this.end = function() {
+
+		this.emit('end');
+	}
 };
 
 
