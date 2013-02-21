@@ -81,12 +81,12 @@ function moduleHandlers(client) {
 			this.emit('save', conf || mod.opts ? mod.opts : { });
 
 		}.bind(mod);
-
 		mod.on('announcement', this.announcementHandler.call(ninja, mod, name));
-		mod.on('register', this.registerDevice.bind(this));
+		mod.on('register', this.registerHandler.call(ninja, name));
 		mod.on('config', this.configHandler.call(ninja, mod, name));
 		mod.on('error', this.moduleError.bind(mod));
 		mod.on('save', this.saveHandler.call(mod, name));
+		mod.on('ack', this.ackHandler.call(ninja, name));
 		mod.on('data', function(dat) {
 
 			//this.dataHandler.call(this, mod)
@@ -97,8 +97,8 @@ function moduleHandlers(client) {
 			process.nextTick(function() {
 
 				var dat = mod.queuedSave;
-				mod.emit('save', dat);
 				mod.queuedSave = undefined;
+				mod.emit('save', dat);
 			});
 		}
 		// set data handlers after registration
@@ -272,15 +272,29 @@ function moduleHandlers(client) {
 		}.bind(this);
 	};
 
-	client.prototype.registerDevice = function registerDevice(device) {
+	client.prototype.ackHandler = function(name) {
+		
+		var ninja = this;
+		return function(dat) {
 
-		if(!device) { return; }
-		device.guid = this.getGuid(device);
-		device.on('data', this.dataHandler.call(this, device));
-		device.on('error', this.errorHandler.call(this, device))
-		this.log.debug("Registering device %s", device.guid);
-		this.devices[device.guid] = device;
-		this.app.emit("device::up", device.guid);
+			ninja.log.debug("ackHandler: (%s)", name);
+			if(!dat) { return; }
+			ninja.sendData(dat);
+		};
+	};
+
+	client.prototype.registerHandler = function registerHandler(name) {
+
+		var ninja = this;
+		return function(device) {
+			device.guid = ninja.getGuid(device);
+			device.module = name || undefined;
+			//device.on('data', ninja.dataHandler.call(ninja, device));
+			device.on('error', ninja.errorHandler.call(ninja, device))
+			ninja.log.debug("Registering device %s", device.guid);
+			ninja.devices[device.guid] = device;
+			ninja.app.emit("device::up", device.guid);
+		};
 	};
 
 	client.prototype.errorHandler = function(device) {
