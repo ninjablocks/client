@@ -289,7 +289,7 @@ function moduleHandlers(client) {
 		return function(device) {
 			device.guid = ninja.getGuid(device);
 			device.module = name || undefined;
-			//device.on('data', ninja.dataHandler.call(ninja, device));
+			device.on('data', ninja.dataHandler.call(ninja, device));
 			device.on('error', ninja.errorHandler.call(ninja, device))
 			ninja.log.debug("Registering device %s", device.guid);
 			ninja.devices[device.guid] = device;
