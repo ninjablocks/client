@@ -99,7 +99,7 @@ client.prototype.connect = function connect() {
  */
 client.prototype.initialize = function initialize() {
 
-	var	
+	var
 		mod = this
 		, flushBuffer = function flushBuffer() {
 
