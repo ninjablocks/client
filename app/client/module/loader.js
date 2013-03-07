@@ -6,7 +6,7 @@ var
 ;
 
 module.exports = moduleLoader;
-
+// TODO: ignore .dotfiles/folders
 function moduleLoader(ninja, app) {
 
 	var 
