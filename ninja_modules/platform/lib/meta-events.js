@@ -102,7 +102,6 @@ function metaEvents(platform) {
 
 	platform.prototype.debounceCommand = function debounceCommand(device, timeout) {
 
-		console.log(">>> Debounce handler!");
 		var
 			mod = this
 			, guid = [ device.G, device.V, device.D ].join("_") || "undefined"
