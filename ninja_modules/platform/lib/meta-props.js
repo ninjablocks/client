@@ -14,7 +14,7 @@ module.exports = {
             , throttleTimeout : 30000
         }
         , '10' : {
-
+            // TODO: samsung distance sensor not implemented
             method : 'transformSamsungDistance'
             , throttle : true
             , throttleSensitivity : 1
@@ -22,7 +22,7 @@ module.exports = {
         }
         , '11' : {
 
-            debounce : true
+            debounceCommands : true
             , debounceTimeout : 300
             , queueCommands : true
         }
