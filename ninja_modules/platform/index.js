@@ -31,8 +31,10 @@ function platform(opts, app) {
 	this.app = app;
 	this.log = app.log;
 	this.opts = opts || { };
+	this.queue = [ ];
 	this.device = undefined;
 	this.channel = undefined;
+	this.debounce = [ ];
 	
 	this.statusLights = [
 
@@ -77,8 +79,6 @@ function platform(opts, app) {
 		this.log.error("platform: Error creating device stream");
 	}
 
-	this.eyes = new platformDevice('0', 0, 1000);
-
 	/**
 	 * Bind listeners for app state
 	 * make the status LED do its thing
@@ -100,19 +100,7 @@ function platform(opts, app) {
 		});
 	});
 
-	this.eyes.pipe(this.device).pipe(this.eyes);
-	/**
-	 * Initializing stuff
-	 */
-	app.on('client::up', function() {
-
-		mod.emit('register', mod.eyes);
-		setTimeout(function() {
-
-			//mod.status.write(mod.status.state || "00FF00");
-			mod.eyes.write(mod.eyes.state || "00FF00");
-		}, 2000);
-	});	
+	app.on('device::command', mod.onCommand.bind(mod));
 };
 
 util.inherits(platform, stream);
