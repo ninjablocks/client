@@ -67,15 +67,10 @@ function deviceStream(platform) {
 		mod.device = new serialport.SerialPort(mod.opts.devicePath, {
 
 			parser : serialport.parsers.readline("\n")
-			, baudrate : 115200
 		});
+		mod.device.on('open', this.onOpen.bind(this));
+		mod.bindStream(mod.device);
 		
-		mod.device.on('open', function() {
-
-			mod.onOpen.call(mod);
-			mod.bindStream(mod.device);
-		});
-
 		mod.log.debug(
 
 			"platform: Opening serial connection (%s)"

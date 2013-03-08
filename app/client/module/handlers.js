@@ -33,9 +33,9 @@ function moduleHandlers(client) {
 				var mod = require(file);
 				mod.prototype.opts = opts;
 				// stub save function for handling save reqs on instantiation
-				mod.prototype.save = function(cfg) { 
+				mod.prototype.save = function(cfg) {
 
-					this.queuedSave = cfg || this.opts ? this.opts : { }; 
+					this.queuedSave = cfg || this.opts ? this.opts : { };
 				};
 			}
 			else {
@@ -273,7 +273,7 @@ function moduleHandlers(client) {
 	};
 
 	client.prototype.ackHandler = function(name) {
-		
+
 		var ninja = this;
 		return function(dat) {
 
@@ -289,7 +289,7 @@ function moduleHandlers(client) {
 		return function(device) {
 			device.guid = ninja.getGuid(device);
 			device.module = name || undefined;
-			//device.on('data', ninja.dataHandler.call(ninja, device));
+			device.on('data', ninja.dataHandler.call(ninja, device));
 			device.on('error', ninja.errorHandler.call(ninja, device))
 			ninja.log.debug("Registering device %s", device.guid);
 			ninja.devices[device.guid] = device;

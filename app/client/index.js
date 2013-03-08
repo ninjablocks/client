@@ -65,7 +65,7 @@ client.prototype.getHandlers = function() {
 		}.bind(this)
 		, execute : function execute(cmd, cb) {
 
-			console.log("Command request: %s", cmd);
+			// console.log("Command request: %s", cmd);
 			this.command(cmd);
 
 		}.bind(this)
@@ -99,7 +99,7 @@ client.prototype.connect = function connect() {
  */
 client.prototype.initialize = function initialize() {
 
-	var	
+	var
 		mod = this
 		, flushBuffer = function flushBuffer() {
 
@@ -261,14 +261,14 @@ client.prototype.command = function command(dat) {
 
 	for(var d = 0, ds = data.DEVICE; d < ds.length; d++) {
 
-		console.log("Executing: ");
-		console.log(ds[d]);
+		// console.log("Executing: ");
+		// console.log(ds[d]);
 
 		var
 			guid = ds[d].GUID
 			, device
 		;
-		delete ds[d].GUID;
+		// delete ds[d].GUID;
 
 		ds[d].G = ds[d].G.toString();
 
@@ -286,8 +286,9 @@ client.prototype.command = function command(dat) {
 		}
 		else {
 
+			// most likely an arduino device (or a bad module)
 			this.log.debug("actuating %s (%s)", guid, ds[d].DA);
-			// write to TTY
+			this.app.emit('device::command', ds[d]);
 		}
 	}
 };

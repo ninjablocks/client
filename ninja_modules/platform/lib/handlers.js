@@ -62,6 +62,14 @@ function deviceHandlers(platform) {
 					/**
 					 * Device with meta data but no methods
 					 */
+					if(meta.debounceCommands && meta.debounceTimeout && !device.DEBOUNCED) {
+
+						return mod.debounceCommand(device, meta.debounceTimeout);
+					}
+					if(meta.queueCommands) {
+
+						return mod.queueCommand(device);
+					}
 					mod.sendData(device);
 				}
 			}
@@ -135,5 +143,26 @@ function deviceHandlers(platform) {
 
 			mod.dataEvent(key, dat[key]);
 		});
+	};
+
+	platform.prototype.onCommand = function onCommand(dat) {
+
+		var mod = this;
+		if(!dat) { return; }
+
+		if(deviceMeta[dat.V][dat.D]) {
+
+			var meta = deviceMeta[dat.V][dat.D];
+			if(meta.debounce === true && meta.debounceTimeout) {
+
+				console.log(">>> debouncing");
+				return mod.debounceCommand(dat);
+			}
+			if(meta.queueCommands === true) {
+
+				return mod.queueCommand(dat);
+			}
+		}
+		// write directly to device
 	};
 };

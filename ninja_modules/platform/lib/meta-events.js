@@ -43,4 +43,86 @@ function metaEvents(platform) {
 			return (diff > meta.sensitivity || diff < -meta.sensitivity)
 		}
 	};
+
+	platform.prototype.queueCommand = function queueCommand(device) {
+
+		var 
+			mod = this
+			, timeout = undefined
+		;
+
+		if(!this.queue) { this.queue = [ ]; }
+
+		function listener(ack) {
+
+			clearTimeout(timeout);
+
+			if(mod.queue.length === 0) { return; }
+
+			mod.queue.shift();
+			if(mod.queue.length > 0) {
+
+				write(mod.queue[0]);
+			}
+		};
+
+		function write(dat) {
+
+			var guid = dat.GUID || undefined;
+
+			delete dat.GUID;
+			if(!guid) { return; }
+
+			timeout = setTimeout(function queueTimeout() {
+
+				mod.log.info(
+
+					"platform: Queued write timeout (%s:%s)"
+					, guid
+					, dat.DA || "???"
+				);
+
+				listener([ dat ]);
+
+			}, 2000);
+
+			mod.once("ack", listener);
+			mod.device.write(JSON.stringify({ 
+
+				"DEVICE" : [ dat ]
+			}));
+		};
+
+		this.queue.push(device);
+		if(this.queue.length === 1) {
+
+			write(device);
+		}
+	};
+
+	platform.prototype.debounceCommand = function debounceCommand(device, timeout) {
+
+		var
+			mod = this
+			, guid = [ device.G, device.V, device.D ].join("_") || "undefined"
+			, sendData = true
+			, lastBounce
+			, now
+		;
+
+		if(!guid) { return; }
+		now = (new Date()).valueOf();
+		lastBounce = this.debounce[guid] || undefined;
+
+		if((lastBounce) && lastBounce.TIMESTAMP + timeout >= now) {
+
+			sendData = false;
+		}
+		device.TIMESTAMP = (new Date()).valueOf();
+		device.DEBOUNCED = true;
+		this.debounce[guid] = device;
+
+		if(!sendData) { return; }			
+		this.sendData(device);
+	};
 };
