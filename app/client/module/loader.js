@@ -20,7 +20,7 @@ function moduleLoader(ninja, app) {
 			return ninja.log.error("moduleLoader: %s", err);
 		}
 
-		var mods = files.filter(systemModules);
+		var mods = files.filter(systemModules).filter(dotFiles);
 		if(!mods.length) {
 
 			return ninja.log.debug(
@@ -172,5 +172,10 @@ function moduleLoader(ninja, app) {
 			, 'rest'
 		]
 		return (exclude.indexOf(mod) === -1)
+	};
+
+	function dotFiles(mod) {
+
+		return (!mod.match(/^\..*$/))
 	};
 };
