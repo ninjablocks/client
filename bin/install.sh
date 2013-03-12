@@ -2,7 +2,7 @@
 git submodule init
 git submodule update
 npm install
-for f in ninja_modules/*;
+for f in drivers/*;
   do cd $f;
   npm install;
   cd ../..;

@@ -18,4 +18,4 @@ npm-debug.log
 
 *.conf
 config
-ninja_modules/dev-*
+drivers/dev-*

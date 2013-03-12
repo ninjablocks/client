@@ -9,8 +9,8 @@ module.exports = moduleLoader;
 // TODO: ignore .dotfiles/folders
 function moduleLoader(ninja, app) {
 
-	var 
-		moduleDir = ninja.opts.moduleDir || "ninja_modules"
+	var
+		moduleDir = ninja.opts.moduleDir || "drivers"
 	;
 
 	getAllModuleFiles(function(err, files) {
@@ -59,7 +59,7 @@ function moduleLoader(ninja, app) {
 			if(err) { return cb(err, null); }
 			cb(null, function(cb) {
 
-				loadModule(dat, cb); 
+				loadModule(dat, cb);
 			});
 		};
 		function loadModule(conf, cb) {
@@ -70,7 +70,7 @@ function moduleLoader(ninja, app) {
 				, conf
 				, app
 				, cb
-			);					
+			);
 		};
 	};
 	/**
@@ -131,7 +131,7 @@ function moduleLoader(ninja, app) {
 
 			if(err) { return cb(err, null); }
 			cb(null, dat);
-		}		
+		}
 	};
 
 	/**
@@ -153,14 +153,14 @@ function moduleLoader(ninja, app) {
 			cb(null, { });
 		};
 		function tryModulePackage() {
-			
+
 			getModulePackage(mod, packageResults);
 		};
 		function packageResults(err, pkg) {
 
 			if(err) { return cb(null, { }); }
 			cb(null, ninja.getJSON(pkg).config || { });
-		};		
+		};
 	};
 
 	function systemModules(mod) {

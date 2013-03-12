@@ -23,7 +23,7 @@ function moduleHandlers(client) {
 				file = path.resolve(
 
 					process.cwd()
-					, 'ninja_modules'
+					, 'drivers'
 					, name
 				)
 			;

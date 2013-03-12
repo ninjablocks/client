@@ -1,12 +1,12 @@
-[submodule "ninja_modules/ninja-hue"]
-	path = ninja_modules/ninja-hue
+[submodule "drivers/ninja-hue"]
+	path = drivers/ninja-hue
 	url = https://github.com/thatguydan/ninja-hue.git
-[submodule "ninja_modules/ninja-wemo"]
-	path = ninja_modules/ninja-wemo
+[submodule "drivers/ninja-wemo"]
+	path = drivers/ninja-wemo
 	url = https://github.com/thatguydan/ninja-wemo.git
-[submodule "ninja_modules/ninja-ipcam"]
-	path = ninja_modules/ninja-ipcam
+[submodule "drivers/ninja-ipcam"]
+	path = drivers/ninja-ipcam
 	url = https://github.com/ninjablocks/ninja-ipcam.git
-[submodule "ninja_modules/ninja-limitlessLED"]
-	path = ninja_modules/ninja-limitlessLED
+[submodule "drivers/ninja-limitlessLED"]
+	path = drivers/ninja-limitlessLED
 	url = https://github.com/jzGreen/ninja-limitlessLED.git

@@ -2,7 +2,7 @@
 git pull
 git fetch --recurse-submodules=yes
 npm install
-for f in ninja_modules/*;
+for f in drivers/*;
   do cd $f;
   npm install;
   cd ../..;
