@@ -55,7 +55,13 @@ function deviceHandlers(platform) {
 				var meta = deviceMeta[device.V][device.D];
 				if(mod[meta.method]) {
 
-					mod[meta.method](device, meta);
+					mod.log.debug(
+
+						"platform: Device write \"%s\" (%s)"
+						, device.DA
+						, device.D
+					);
+					return mod[meta.method](device, meta);
 				}
 				else {
 
@@ -64,19 +70,23 @@ function deviceHandlers(platform) {
 					 */
 					if(meta.debounceCommands && meta.debounceTimeout && !device.DEBOUNCED) {
 
+						mod.log.debug(
+
+							"platform: Device debounceable data \"%s\" (%s)"
+							, device.DA
+							, device.D
+						);
 						return mod.debounceCommand(device, meta.debounceTimeout);
 					}
-					if(meta.queueCommands) {
-
-						return mod.queueCommand(device);
-					}
-					mod.sendData(device);
 				}
 			}
-			else {
+			mod.log.debug(
 
-				mod.sendData(device);
-			}
+				"platform: Device data \"%s\" (%s)"
+				, device.DA
+				, device.D
+			);
+			mod.sendData(device);
 		});	
 	};
 
@@ -84,9 +94,9 @@ function deviceHandlers(platform) {
 		
 		var mod = this;
 		if(!(dataset instanceof Array)) { return; }
-
 		dataset.map(function(device) {
 
+			mod.log.debug("platform: Device plugged in (%s)", device.GUID);
 			mod.sendConfig("PLUGIN", device);
 		});
 	};
@@ -150,12 +160,12 @@ function deviceHandlers(platform) {
 		var mod = this;
 		if(!dat) { return; }
 
+		mod.log.debug("platform: Command sent to %s", dat.GUID);
 		if(deviceMeta[dat.V][dat.D]) {
 
 			var meta = deviceMeta[dat.V][dat.D];
 			if(meta.debounce === true && meta.debounceTimeout) {
 
-				console.log(">>> debouncing");
 				return mod.debounceCommand(dat);
 			}
 			if(meta.queueCommands === true) {
