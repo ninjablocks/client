@@ -50,6 +50,16 @@ function deviceHandlers(platform) {
 		if(!(dataset instanceof Array)) { return; }
 		dataset.map(function(device) {
 
+			if(device.D !== 2) {
+
+				mod.log.debug(
+
+					"platform: Device data \"%s\" (%s)"
+					, device.DA
+					, device.D
+				);
+			}
+
 			if(deviceMeta[device.V][device.D]) {
 
 				var meta = deviceMeta[device.V][device.D];
@@ -84,9 +94,9 @@ function deviceHandlers(platform) {
 		
 		var mod = this;
 		if(!(dataset instanceof Array)) { return; }
-
 		dataset.map(function(device) {
 
+			mod.log.debug("platform: Device plugged in (%s)", device.GUID);
 			mod.sendConfig("PLUGIN", device);
 		});
 	};
@@ -150,12 +160,12 @@ function deviceHandlers(platform) {
 		var mod = this;
 		if(!dat) { return; }
 
+		mod.log.debug("platform: Command sent to %s", dat.GUID);
 		if(deviceMeta[dat.V][dat.D]) {
 
 			var meta = deviceMeta[dat.V][dat.D];
 			if(meta.debounce === true && meta.debounceTimeout) {
 
-				console.log(">>> debouncing");
 				return mod.debounceCommand(dat);
 			}
 			if(meta.queueCommands === true) {
