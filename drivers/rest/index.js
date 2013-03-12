@@ -38,17 +38,19 @@ function rest(ninja) {
   app.get('/rest/v0/devices',routes.showDevices);
   app.put('/rest/v0/device/:deviceGuid',routes.actuate);
   app.post('/rest/v0/device/:deviceGuid',routes.actuate);
-  
-  ninja.app.on('device::up',function(guid) {
-    helpers.fetchDeviceData(ninja,guid,function(err,data) {
-      
-      if (err) {
-        ninja.log.error("REST: %s (%s)", err, guid);
-        // TODO decide what to do here
-      }
 
-      devices[guid] = data;
-    });
+  ninja.app.on('device::up',function(guid) {
+    setTimeout(function() {
+      helpers.fetchDeviceData(ninja,guid,function(err,data) {
+
+        if (err) {
+          ninja.log.error("REST: %s (%s)", err, guid);
+          // TODO decide what to do here
+        }
+
+        devices[guid] = data;
+      });
+    },2000);
   });
 
   http.createServer(app).listen(app.get('port'), function(){
