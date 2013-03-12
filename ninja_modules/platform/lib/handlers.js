@@ -50,22 +50,18 @@ function deviceHandlers(platform) {
 		if(!(dataset instanceof Array)) { return; }
 		dataset.map(function(device) {
 
-			if(device.D !== 2) {
-
-				mod.log.debug(
-
-					"platform: Device data \"%s\" (%s)"
-					, device.DA
-					, device.D
-				);
-			}
-
 			if(deviceMeta[device.V][device.D]) {
 
 				var meta = deviceMeta[device.V][device.D];
 				if(mod[meta.method]) {
 
-					mod[meta.method](device, meta);
+					mod.log.debug(
+
+						"platform: Device write \"%s\" (%s)"
+						, device.DA
+						, device.D
+					);
+					return mod[meta.method](device, meta);
 				}
 				else {
 
@@ -74,19 +70,23 @@ function deviceHandlers(platform) {
 					 */
 					if(meta.debounceCommands && meta.debounceTimeout && !device.DEBOUNCED) {
 
+						mod.log.debug(
+
+							"platform: Device debounceable data \"%s\" (%s)"
+							, device.DA
+							, device.D
+						);
 						return mod.debounceCommand(device, meta.debounceTimeout);
 					}
-					if(meta.queueCommands) {
-
-						return mod.queueCommand(device);
-					}
-					mod.sendData(device);
 				}
 			}
-			else {
+			mod.log.debug(
 
-				mod.sendData(device);
-			}
+				"platform: Device data \"%s\" (%s)"
+				, device.DA
+				, device.D
+			);
+			mod.sendData(device);
 		});	
 	};
 
