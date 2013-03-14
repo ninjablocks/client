@@ -4,6 +4,6 @@ git fetch --recurse-submodules=yes
 npm install
 for f in drivers/*;
   do cd $f;
-  npm install;
+  npm install --force;
   cd ../..;
 done
