@@ -1,11 +1,15 @@
 {
-  "name": "ninja-platform",
+  "name": "platform",
   "version": "0.0.1",
-  "private": false,
-  "dependencies": {
-    "through": "~2.2.0"
-  },
+  "description": "ERROR: No README.md file found!",
   "main": "index.js",
-  "author": "Emily Rose <emily@ninjablocks.com>",
-  "license": "BSD"
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": "",
+  "author": "",
+  "license": "BSD",
+  "dependencies": {
+    "serialport": "git://github.com/ninjablocks/node-serialport.git"
+  }
 }

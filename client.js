@@ -7,6 +7,7 @@ var
 	, client = require(path.resolve(__dirname, 'app', 'client'))
 	, config = require(path.resolve(__dirname, 'app', 'config'))
 	, logger = require(path.resolve(__dirname, 'lib', 'logger'))
+	, domain = require('domain')
 	, app = new events.EventEmitter()
 	, log = new logger(argv)
 ;
@@ -14,6 +15,24 @@ var
 process.chdir(__dirname); // avoid relative hacks
 
 logger.default = app.log = log;
+
+d = domain.create();
+
+d.on('error', function(err) {
+
+	log.error(err);
+
+	/**
+	 * Do more stuff with errors.
+	 * err should include .stack,
+	 * which we could pipe to the cloud
+	 * at some point, it would be useful!
+	 */
+});
+
+d.add(app);
+
+
 
 app.on('error', function(err) {
 
@@ -28,6 +47,8 @@ app.on('error', function(err) {
 });
 
 var ninja = new client(argv, app);
+
+d.add(ninja);
 
 if(!ninja) {
 

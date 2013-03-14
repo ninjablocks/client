@@ -3,6 +3,7 @@ var
 	, mkdirp = require('mkdirp')
 	, util = require('util')
 	, fs = require('fs')
+	, domain = require('domain')
 ;
 
 module.exports = moduleHandlers;
@@ -46,7 +47,6 @@ function moduleHandlers(client) {
 			}
 		}
 		catch(e) {
-
 			this.log.error("loadModule: %s (%s)", e, name);
 			return cb(e, null);
 		}
@@ -64,11 +64,24 @@ function moduleHandlers(client) {
 		}
 
 		this.log.info("loadModule: %s", name);
-		var newModule = new mod(params, app);
-		this.bindModule(newModule, name);
-		this.modules[name] = newModule;
 
-		cb(null, newModule);
+
+		var d = domain.create();
+
+		d.on('error',function(err) {
+			this.log.error('(%s) had the following error:\n\n%s\n',name,err.stack);
+		}.bind(this));
+
+		d.run(function() {
+
+			var newModule = new mod(params, app);
+			this.bindModule(newModule, name);
+			this.modules[name] = newModule;
+
+			cb(null, newModule);
+
+		}.bind(this));
+
 	};
 
 	client.prototype.bindModule = function bindModule(mod, name) {

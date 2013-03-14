@@ -83,10 +83,8 @@ client.prototype.getHandlers = function() {
  * Connect the block to the cloud
  */
 client.prototype.connect = function connect() {
-
 	var client = this;
 	this.node = upnode(this.getHandlers()).connect(this.parameters);
-
 	this.node.on('reconnect', client.reconnect.bind(client));
 	this.node.on('down', client.down.bind(client));
 	this.node.on('up', client.up.bind(client));
@@ -146,7 +144,13 @@ client.prototype.initialize = function initialize() {
  */
 client.prototype.up = function up(cloud) {
 
-	this.app.emit('client::up', cloud);
+
+	try {
+		this.app.emit('client::up', cloud);
+	} catch(err) {
+		this.log.error('An unknown module had the following error:\n\n%s\n',err.stack);
+	}
+
 	this.log.info("Client connected to the Ninja Platform");
 };
 
