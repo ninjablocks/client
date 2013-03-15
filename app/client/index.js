@@ -144,7 +144,6 @@ client.prototype.initialize = function initialize() {
  */
 client.prototype.up = function up(cloud) {
 
-
 	try {
 		this.app.emit('client::up', cloud);
 	} catch(err) {
