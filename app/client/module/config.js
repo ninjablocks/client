@@ -88,10 +88,16 @@ function config(dat, cb) {
 			, req.module
 			, id
 		);
-		ninja.modules[req.module].config(req.data || { }, function(err, dat) {
+		try {
 
-			configResponse(err, dat, req.module);
-		});
+			ninja.modules[req.module].config(req.data || { }, function(err, dat) {
+
+				configResponse(err, dat, req.module);
+			});
+
+		} catch (err) {
+			return ninja.log.error('(%s) config error: %s',req.module,err.stack);
+		}
 	};
 
 	function configResponse(err, res, mod) {
