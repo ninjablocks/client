@@ -2,9 +2,8 @@
  * Ninja Blocks arduino controller
  */
 
-var 
+var
 	serialport = require('serialport')
-	, through = require('through')
 	, stream = require('stream')
 	, util = require('util')
 	, path = require('path')
@@ -18,11 +17,11 @@ var
 
 /**
  * platform.device = serial / net stream to device data (JSON stream)
- * 
+ *
  */
 function platform(opts, app) {
 
-	var 
+	var
 		str = undefined
 		, mod = this
 	;
@@ -35,7 +34,7 @@ function platform(opts, app) {
 	this.device = undefined;
 	this.channel = undefined;
 	this.debounce = [ ];
-	
+
 	this.statusLights = [
 
 		{
@@ -54,8 +53,8 @@ function platform(opts, app) {
 			state : "client::activation"
 			, color : "FF00FF"
 		}
-		, { 
-			state : "client::invalidToken" 
+		, {
+			state : "client::invalidToken"
 			, color : "0000FF"
 		}
 		, {
@@ -63,7 +62,7 @@ function platform(opts, app) {
 			, color : "00FFFF"
 		}
 	];
-	
+
 
 	if((!opts.devicePath) && opts.env == "production") {
 
@@ -89,7 +88,7 @@ function platform(opts, app) {
 
 			mod.device.write(JSON.stringify({
 				DEVICE : [
-					{ 
+					{
 						G : "0"
 						, V : 0
 						, D : 999
@@ -110,24 +109,24 @@ deviceStream(platform);
 metaEvents(platform);
 
 platform.prototype.sendData = function(dat) {
-	
+
 	if(!dat) { return; }
 	this.emit('data', dat);
 };
 
 platform.prototype.sendConfig = function(type, dat) {
-	
+
 	if(!dat) { return; }
 	dat.type = type;
 	this.emit('config', dat);
 };
 
 platform.prototype.getJSON = function getJSON(data) {
-	
+
 	try {
 
 		return JSON.parse(data);
-	}	
+	}
 	catch(e) { }
 	return null;
 };
