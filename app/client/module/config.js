@@ -7,10 +7,10 @@ function config(dat, cb) {
 
 	if(!dat.CONFIG || !dat.id) { return; }
 
-	var 
+	var
 		cloudBuffer = {
 
-			configResponse : { 
+			configResponse : {
 
 				CONFIG : [ ]
 				, id : dat.id
@@ -43,7 +43,7 @@ function config(dat, cb) {
 			return blockProbe(req, dat.id);
 		}
 
-		moduleProbe(req, dat.id);		
+		moduleProbe(req, dat.id);
 	};
 
 	function blockProbe(req, id) {
@@ -60,15 +60,22 @@ function config(dat, cb) {
 			if((ninja.modules[mod] && ninja.modules[mod].config)) {
 
 				ninja.log.debug("cloudConfig: Requesting config from %s", mod);
-				ninja.modules[mod].config(req.data || null, function(err, res) {
 
-					ninja.log.debug("cloudConfig: Received response from %s", mod);
-					configResponse(err, res, mod);
-				});
+				try {
+
+					ninja.modules[mod].config(req.data || null, function(err, res) {
+
+						ninja.log.debug("cloudConfig: Received response from %s", mod);
+						configResponse(err, res, mod);
+					});
+
+				} catch (err) {
+					return ninja.log.error('(%s) config error: %s',mod,err.stack);
+				}
 			}
 		};
 
-		return ninja.log.debug("cloudConfig: Cloud requesting block config");		
+		return ninja.log.debug("cloudConfig: Cloud requesting block config");
 	};
 
 	function moduleProbe(req, id) {
@@ -83,7 +90,7 @@ function config(dat, cb) {
 		);
 		ninja.modules[req.module].config(req.data || { }, function(err, dat) {
 
-			configResponse(err, dat, req.module); 
+			configResponse(err, dat, req.module);
 		});
 	};
 
@@ -96,7 +103,7 @@ function config(dat, cb) {
 		// error in module configResponse
 		if(err) {
 
-			// what to do here? 
+			// what to do here?
 			return ninja.log.error(
 
 				"cloudConfig: %s (%s:%s)"
@@ -117,11 +124,11 @@ function config(dat, cb) {
 			clearTimeout(cloudBuffer.timeout);
 			sendResponse();
 		}
-	};	
+	};
 
 	function sendResponse() {
 
 		ninja.log.debug("cloudConfig: sending config collection");
 		ninja.cloud.config(cloudBuffer.configResponse);
-	}		
+	}
 };
