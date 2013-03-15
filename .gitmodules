@@ -1,8 +1,8 @@
-[submodule "drivers/ninja-hue"]
-	path = drivers/ninja-hue
+[submodule "drivers/ninja-philips-hue"]
+	path = drivers/ninja-philips-hue
 	url = https://github.com/thatguydan/ninja-hue.git
-[submodule "drivers/ninja-wemo"]
-	path = drivers/ninja-wemo
+[submodule "drivers/ninja-belkin-wemo"]
+	path = drivers/ninja-belkin-wemo
 	url = https://github.com/thatguydan/ninja-wemo.git
 [submodule "drivers/ninja-ipcam"]
 	path = drivers/ninja-ipcam
