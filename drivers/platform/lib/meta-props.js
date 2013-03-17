@@ -38,6 +38,10 @@ module.exports = {
 
             queueCommands : true
         }
+        , '1003' : {
+
+            ackMethod : 'arduinoVersion'
+        }
         , '1007' : {
 
             queueCommands : true
