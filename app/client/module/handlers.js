@@ -68,20 +68,28 @@ function moduleHandlers(client) {
 
 		var d = domain.create();
 
-		d.on('error',function(err) {
-			this.log.error('(%s) had the following error:\n\n%s\n',name,err.stack);
+		d.on('error', function(err) {
+
+			this.log.error(
+
+				'(%s) had the following error:\n\n%s\n'
+				, name
+				, err.stack
+			);
 		}.bind(this));
 
 		d.run(function() {
 
-			var newModule = new mod(params, app);
+			var 
+				version = this.versionMethod(name, mod)
+				, newModule = new mod(params, app, version)
+			;
 			this.bindModule(newModule, name);
 			this.modules[name] = newModule;
 
 			cb(null, newModule);
 
 		}.bind(this));
-
 	};
 
 	client.prototype.bindModule = function bindModule(mod, name) {
@@ -290,7 +298,7 @@ function moduleHandlers(client) {
 		var ninja = this;
 		return function(dat) {
 
-			ninja.log.debug("ackHandler: (%s)", name);
+			//ninja.log.debug("ackHandler: (%s)", name);
 			if(!dat) { return; }
 			ninja.sendData(dat);
 		};
