@@ -1,13 +1,20 @@
 {
   "name": "platform",
   "version": "0.0.1",
-  "description": "ERROR: No README.md file found!",
+  "description": "ninja blocks arduino driver",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "repository": "",
-  "author": "",
+  "author": "Ninja Blocks <support@ninjablocks.com>",
+  "contributors": [
+    {
+      "name": "Emily Rose",
+      "email": "emily@ninjablocks.com"
+    },
+    {
+      "name": "Daniel Friedman",
+       "email" : "dan@ninjablocks.com"
+    }
+  ],
   "license": "BSD",
   "dependencies": {
     "serialport": "git://github.com/ninjablocks/node-serialport.git",
