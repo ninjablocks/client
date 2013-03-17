@@ -10,14 +10,14 @@ function block(remote, conn) {
 		token = this.token || undefined
 		, params = {
 
-			//TODO: better client default/detection?
-			client : this.opts.client || 'beagle'
+			// assume we're on a random system (e.g. not official ninja block)
+			client : this.opts.client || 'ninja-client'
 			, id : this.serial || undefined
-			, version : {
+			, version : this.version || {
 
-				node : "1.0.0"
-				, utilities : "1.0.0"
-				, system : "1.0.0"
+				node : undefined
+				, utilities : undefined
+				, system : undefined
 			}
 		}
 		, handshake = function handshake(err, res) {
@@ -68,6 +68,10 @@ function block(remote, conn) {
 		}.bind(this)
 	;
 
+	if(!this.version) {
+
+		this.log.warn("This client does not have proper version information");
+	}
 	if((token) && token.length) {
 
 		remote.handshake(params, token, handshake);
