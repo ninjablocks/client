@@ -3,14 +3,21 @@ var
 	, util = require('util')
 	, mkdirp = require('mkdirp')
 	, upnode = require('upnode')
-	, creds = require(path.resolve(__dirname, '..', '..', 'lib', 'credentials'))
-	, logger = require(path.resolve(__dirname, '..', '..', 'lib', 'logger'))
 	, handlers = require('./module/handlers')
 	, stream = require('stream')
 	, tls = require('tls')
 	, net = require('net')
 	, fs = require('fs')
 	, existsSync = fs.existsSync || path.existsSync
+	, versioning = require(path.resolve(
+		__dirname, '..', '..', 'lib', 'versioning'
+	))
+	, creds = require(path.resolve(
+		__dirname, '..', '..', 'lib', 'credentials'
+	))
+	, logger = require(path.resolve(
+		__dirname, '..', '..', 'lib', 'logger'
+	))
 ;
 
 function client(opts, app) {
@@ -41,11 +48,14 @@ function client(opts, app) {
 	this.modules = { };
 	this.devices = { };
 	this.log = app.log;
-	creds.call(this,opts);
+	creds.call(this, opts);
+	versioning.call(this, opts);
 
 	this.node = undefined; // upnode
 	this.transport = opts.secure ? tls : net;
 	this.parameters = this.getParameters.call(this, opts);
+
+	this.versionClient();
 };
 
 util.inherits(client, stream);
@@ -83,6 +93,7 @@ client.prototype.getHandlers = function() {
  * Connect the block to the cloud
  */
 client.prototype.connect = function connect() {
+	
 	var client = this;
 	this.node = upnode(this.getHandlers()).connect(this.parameters);
 	this.node.on('reconnect', client.reconnect.bind(client));
@@ -145,9 +156,11 @@ client.prototype.initialize = function initialize() {
 client.prototype.up = function up(cloud) {
 
 	try {
+
 		this.app.emit('client::up', cloud);
 	} catch(err) {
-		this.log.error('An unknown module had the following error:\n\n%s\n',err.stack);
+
+		this.log.error('An unknown module had the following error:\n\n%s\n', err.stack);
 	}
 
 	this.log.info("Client connected to the Ninja Platform");
