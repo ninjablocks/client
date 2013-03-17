@@ -19,7 +19,7 @@ var
  * platform.device = serial / net stream to device data (JSON stream)
  *
  */
-function platform(opts, app) {
+function platform(opts, app, version) {
 
 	var
 		str = undefined
@@ -97,6 +97,30 @@ function platform(opts, app) {
 				]
 			}));
 		});
+	});
+
+	/**
+	 * Get version from arduino
+	 */
+	function getVersion() { mod.device.write('{"DEVICE":[{"G":"0","V":0,"D":1003,"DA":"VNO"}]}'); }
+
+	this.once('open', function() {
+
+		var versionSpam = setInterval(function() {
+
+			getVersion();
+		}, 500);
+
+		mod.once('version', function(ver) {
+
+			version(ver);
+			clearTimeout(versionSpam);
+		});
+		
+		setTimeout(function() {
+
+			clearTimeout(versionSpam);
+		}, 2000);
 	});
 
 	app.on('device::command', mod.onCommand.bind(mod));
