@@ -6,7 +6,7 @@ var
 ;
 
 module.exports = moduleLoader;
-// TODO: ignore .dotfiles/folders
+
 function moduleLoader(ninja, app) {
 
 	var
@@ -40,7 +40,7 @@ function moduleLoader(ninja, app) {
 		async.map(mods, makeLoadable, loadableResults);
 		function loadableResults(err, mods) {
 
-			if(err) { return ninja.log.error("moduleLoader: %s". err); }
+			if(err) { return ninja.log.error("moduleLoader: %s", err); }
 
 			async.parallel(mods, loadModuleResults);
 		};
