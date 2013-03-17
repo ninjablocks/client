@@ -11,7 +11,6 @@ var
 
 module.exports = function config(ninja, app) {
 
-
 	if((!ninja) || !ninja.opts) {
 
 		return false;
@@ -25,7 +24,11 @@ module.exports = function config(ninja, app) {
 	loadPlatform(ninja, app); // embedded arduino
 
 	loader(ninja, app);
-	ninja.connect();
+
+	setTimeout(function waitThreeSeconds() {
+
+		ninja.connect();
+	}, 3000);
 
 	return ninja;
 };
