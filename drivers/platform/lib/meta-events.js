@@ -125,4 +125,10 @@ function metaEvents(platform) {
 		if(!sendData) { return; }			
 		this.sendData(device);
 	};
+
+	platform.prototype.arduinoVersion = function arduinoVersion(dat) {
+
+		this.log.debug("platform: arduino version: %s", dat);
+		this.emit('version', dat);
+	};
 };
