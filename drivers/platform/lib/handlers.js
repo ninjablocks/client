@@ -55,12 +55,13 @@ function deviceHandlers(platform) {
 				var meta = deviceMeta[device.V][device.D];
 				if(mod[meta.method]) {
 
-					mod.log.debug(
+					// a little too verbose
+					// mod.log.debug(
 
-						"platform: Device write \"%s\" (%s)"
-						, device.DA
-						, device.D
-					);
+					// 	"platform: Device write \"%s\" (%s)"
+					// 	, device.DA
+					// 	, device.D
+					// );
 					return mod[meta.method](device, meta);
 				}
 				else {
@@ -107,11 +108,18 @@ function deviceHandlers(platform) {
 		if(!(dataset) || !dataset instanceof Array) { return; }
 
 		dataset.map(function(ack) {
-		
+			
+			var meta = deviceMeta[ack.V][ack.D] || undefined;
+			if(meta && meta.ackMethod && mod[meta.ackMethod]) {
+
+				mod[meta.ackMethod](ack.DA || "unknown");
+			}
 			mod.emit("ack", ack);
 		});
 	};
 
+	// device has been opened
+	// TODO: move device stuff into device module
 	platform.prototype.onOpen = function onOpen() {
 		
 		this.log.info(
@@ -119,6 +127,7 @@ function deviceHandlers(platform) {
 			"platform: Device connection established (%s)"
 			, this.opts.devicePath || this.opts.deviceHost
 		)
+		this.emit('open'); // emit for platform once listener
 	};
 
 	platform.prototype.onClose = function onClose() {
