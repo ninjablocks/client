@@ -93,7 +93,7 @@ client.prototype.getHandlers = function() {
  * Connect the block to the cloud
  */
 client.prototype.connect = function connect() {
-	
+
 	var client = this;
 	this.node = upnode(this.getHandlers()).connect(this.parameters);
 	this.node.on('reconnect', client.reconnect.bind(client));
@@ -216,7 +216,7 @@ client.prototype.dataHandler = function dataHandler(device) {
 
 			self.sendData({
 
-				G : device.G
+				G : device.G.toString()
 				, V : device.V
 				, D : device.D
 				, DA : data
