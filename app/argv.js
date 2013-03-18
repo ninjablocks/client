@@ -22,12 +22,14 @@ if (process.env.NODE_ENV === "development") {
 
 		cloudHost : "127.0.0.1"
 		, streamHost : "127.0.0.1"
+		, apiHost : "127.0.0.1"
 		, logFile : path.resolve(process.env.PWD, 'ninjablock.log')
 		, serialFile : path.resolve(process.env.PWD, 'serial-development.conf')
 		, tokenFile : path.resolve(process.env.PWD, 'token-development.conf')
 		, env : 'development'
 		, streamPort : 3003
 		, cloudPort : 3001
+		, apiPort		: 3000
 		, secure : false
 	}
 }
@@ -35,6 +37,7 @@ else if (process.env.NODE_ENV === "hacking") {
 
 	defaults = {
 		cloudHost : "zendo.ninja.is"
+		, apiHost : "api.ninja.is"
 		, streamHost : "stream.ninja.is"
 		, logFile : path.resolve(process.env.PWD, 'ninjablock.log')
 		, serialFile : path.resolve(process.env.PWD, 'serial-hacking.conf')
@@ -42,21 +45,24 @@ else if (process.env.NODE_ENV === "hacking") {
 		, env : 'hacking'
 		, streamPort : 443
 		, cloudPort : 443
+		, apiPort 	: 443
 		, secure : true
 	}
 }
 else {
-	
+
 	defaults = {
 
 		cloudHost : "zendo.ninja.is"
 		, streamHost : "stream.ninja.is"
+		, apiHost : "zendo.ninja.is"
 		, logFile : '/var/log/ninjablock.log'
 		, serialFile : '/etc/opt/ninja/serial.conf'
 		, tokenFile : '/etc/opt/ninja/token.conf'
 		, env : 'production'
 		, streamPort : 443
 		, cloudPort : 443
+		, apiPort		: 443
 		, secure : true
 	}
 	if(!process.env.NODE_ENV) { process.env.NODE_ENV = "production"; }
