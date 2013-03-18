@@ -55,7 +55,7 @@ else {
 
 		cloudHost : "zendo.ninja.is"
 		, streamHost : "stream.ninja.is"
-		, apiHost : "zendo.ninja.is"
+		, apiHost : "api.ninja.is"
 		, logFile : '/var/log/ninjablock.log'
 		, serialFile : '/etc/opt/ninja/serial.conf'
 		, tokenFile : '/etc/opt/ninja/token.conf'
