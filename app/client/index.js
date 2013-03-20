@@ -4,6 +4,7 @@ var
 	, mkdirp = require('mkdirp')
 	, upnode = require('upnode')
 	, handlers = require('./module/handlers')
+	, updater = require('./updater')
 	, stream = require('stream')
 	, tls = require('tls')
 	, net = require('net')
@@ -60,6 +61,7 @@ function client(opts, app) {
 
 util.inherits(client, stream);
 handlers(client);
+updater(client);
 
 client.prototype.block = require('./block');
 
@@ -81,7 +83,7 @@ client.prototype.getHandlers = function() {
 		}.bind(this)
 		, update : function update(to) {
 
-			// update client
+			this.updateHandler(to);
 		}.bind(this)
 		, config : this.moduleHandlers.config.bind(this)
 		, install : this.moduleHandlers.install.bind(this)
