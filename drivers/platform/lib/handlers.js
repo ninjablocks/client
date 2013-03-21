@@ -122,6 +122,7 @@ function deviceHandlers(platform) {
 	// TODO: move device stuff into device module
 	platform.prototype.onOpen = function onOpen() {
 		
+		this.retry.count = 0;
 		this.log.info(
 
 			"platform: Device connection established (%s)"
@@ -132,24 +133,40 @@ function deviceHandlers(platform) {
 
 	platform.prototype.onClose = function onClose() {
 
-		if(this.device.errorEmitted) { return; }
-		this.log.info(
+		if(!this.device.errorEmitted) { 
+			
+			this.log.info(
 
-			"platform: Device connection lost (%s)"
-			, this.opts.devicePath || this.opts.deviceHost
-		)
-		setTimeout(this.createStream.bind(this), 2000);
+				"platform: Device connection lost (%s)"
+				, this.opts.devicePath || this.opts.deviceHost
+			)
+		}
+		this.retry.timer = setTimeout(
+
+			this.createStream.bind(this)
+			, this.retry.delay
+		);
 	};
 
 	platform.prototype.onError = function onError(err) {
 
-		this.log.error(
+		if(err.code == "ECONNREFUSED") {
 
-			"platform: %s (%s)"
-			, err
-			, this.opts.devicePath || this.opts.deviceHost
-		);
-		setTimeout(this.createStream.bind(this), 2000);
+			this.log.error(
+
+				"platform: Connection refused (%s)"
+				, this.opts.deviceHost
+			);
+		}
+		else {
+
+			this.log.error(
+
+				"platform: %s (%s)"
+				, err
+				, this.opts.devicePath || this.opts.deviceHost
+			);
+		}
 	};
 
 	platform.prototype.onData = function onData(dat) {
