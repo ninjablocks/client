@@ -19,3 +19,4 @@ npm-debug.log
 *.conf
 config
 drivers/dev-*
+versions.json
