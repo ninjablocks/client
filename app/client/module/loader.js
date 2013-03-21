@@ -170,6 +170,7 @@ function moduleLoader(ninja, app) {
 			'serial'
 			, 'platform'
 			, 'rest'
+			, 'common'
 		]
 		return (exclude.indexOf(mod) === -1)
 	};
