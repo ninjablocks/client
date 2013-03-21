@@ -26,6 +26,14 @@ function platform(opts, app, version) {
 		, mod = this
 	;
 
+	this.retry = {
+
+		delay : 3000
+		, timer : null
+		, count : 0
+		, max : 3
+	};
+
 	stream.call(this);
 	this.app = app;
 	this.log = app.log;
@@ -61,6 +69,10 @@ function platform(opts, app, version) {
 			state : "client::reconnecting"
 			, color : "00FFFF"
 		}
+		, {
+			state : "client::updating"
+			, color : "FFFFFF"
+		}
 	];
 
 
@@ -73,9 +85,12 @@ function platform(opts, app, version) {
 
 		return this.log.info("platform: No device specified");
 	}
-	if(!this.createStream()) {
+	else {
 
-		this.log.error("platform: Error creating device stream");
+		if(!this.createStream()) {
+
+			this.log.error("platform: Error creating device stream");
+		}
 	}
 
 	/**
@@ -86,6 +101,7 @@ function platform(opts, app, version) {
 
 		app.on(state.state, function() {
 
+			if(!mod.device) { return; }
 			mod.device.write(JSON.stringify({
 				DEVICE : [
 					{
@@ -102,7 +118,11 @@ function platform(opts, app, version) {
 	/**
 	 * Get version from arduino
 	 */
-	function getVersion() { mod.device.write('{"DEVICE":[{"G":"0","V":0,"D":1003,"DA":"VNO"}]}'); }
+	function getVersion() { 
+
+		if(!mod.device) { return; } 
+		mod.device.write('{"DEVICE":[{"G":"0","V":0,"D":1003,"DA":"VNO"}]}'); 
+	};
 
 	this.once('open', function() {
 
