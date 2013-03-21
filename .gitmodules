@@ -7,3 +7,9 @@
 [submodule "drivers/ninja-limitlessLED"]
 	path = drivers/ninja-limitlessLED
 	url = https://github.com/jzGreen/ninja-limitlessLED.git
+[submodule "drivers/common/libNBComms"]
+	path = drivers/common/libNBComms
+	url = https://github.com/ninjablocks/libNBComms.git
+[submodule "drivers/ninja-zwave"]
+	path = drivers/ninja-zwave
+	url = https://github.com/ninjablocks/ninja-zwave.git
