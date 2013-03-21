@@ -12,7 +12,20 @@ function deviceStream(platform) {
 
 	platform.prototype.createStream = function createStream(opts) {
 
-		var opts = opts || this.opts;
+		var 
+			opts = opts || this.opts
+			, mod = this
+			, str
+		;
+		if(this.retry.count++ >= this.retry.max) {
+
+			this.log.debug(
+
+				"platform: Unable to connect to device (%s)"
+				, this.opts.devicePath || this.opts.deviceHost
+			);
+			return;
+		}
 		if(opts.deviceHost) {
 			
 			return str = this.createNetStream(
@@ -60,6 +73,7 @@ function deviceStream(platform) {
 				"platform: Serial device path unavailable (%s)"
 				, path
 			);
+			return;
 		}
 		if(!path) { return false; }
 		mod.opts.deviceHost = undefined;
