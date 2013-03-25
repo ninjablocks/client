@@ -11,21 +11,21 @@ function metaEvents(platform) {
 		var samples = split(this.motionSample);
 		if(!three(samples)){ return reset(); }
 
-		var 
+		var
 			sampleSum = reduce(samples)
 			, current = split(dat)
 		;
 		if(!three(current)) { return reset(); }
 		this.motionSample = dat;
 
-		var 
+		var
 			currentSum = reduce(current)
 			, diff = currentSum - sampleSum
 		;
 		if(threshold(diff)) {
 
 			console.log("JIGGLE");
-			
+
 			this.emit('data', {
 				G : '0'
 				, V : 0
@@ -33,9 +33,9 @@ function metaEvents(platform) {
 				, DA : 1
 			});
 		}
-		function three(a) { return a.length == 3; } 
+		function three(a) { return a.length == 3; }
 		function split(a) { return a.DA.split(','); }
-		function reduce(s) { return s.reduce(add); }; 
+		function reduce(s) { return s.reduce(add); };
 		function add(v, i) { return parseInt(v) + parseInt(i); }
 		function reset() { this.motionSample = undefined; }
 		function threshold(diff) {
@@ -46,7 +46,7 @@ function metaEvents(platform) {
 
 	platform.prototype.queueCommand = function queueCommand(device) {
 
-		var 
+		var
 			mod = this
 			, timeout = undefined
 		;
@@ -87,7 +87,7 @@ function metaEvents(platform) {
 			}, 2000);
 
 			mod.once("ack", listener);
-			mod.device.write(JSON.stringify({ 
+			mod.device.write(JSON.stringify({
 
 				"DEVICE" : [ dat ]
 			}));
@@ -122,13 +122,24 @@ function metaEvents(platform) {
 		device.DEBOUNCED = true;
 		this.debounce[guid] = device;
 
-		if(!sendData) { return; }			
+		if(!sendData) { return; }
 		this.sendData(device);
 	};
 
-	platform.prototype.arduinoVersion = function arduinoVersion(dat) {
+	platform.prototype.arduinoVersion = function arduinoVersion(stdout) {
 
-		this.log.debug("platform: arduino version: %s", dat);
-		this.emit('version', dat);
+		var v = {};
+
+		if (stdout && stdout.indexOf('_')>-1) {
+			var parts = stdout.split('_');
+			v.arduinoModel = parts[0];
+			v.arduinoVersion = parseFloat(parts[1]);
+		} else if (stdout && stdout.length>0) {
+			v.arduinoModel = 'V11';
+			v.arduinoVersion = 0.36
+		}
+
+		this.log.debug("platform: arduino version: %s", v);
+		this.emit('version', v);
 	};
 };
