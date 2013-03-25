@@ -13,3 +13,6 @@
 [submodule "drivers/ninja-zwave"]
 	path = drivers/ninja-zwave
 	url = https://github.com/ninjablocks/ninja-zwave.git
+[submodule "drivers/ninja-usbcam"]
+	path = drivers/ninja-usbcam
+	url = https://github.com/nexxy/ninja-usbcam.git
