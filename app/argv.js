@@ -80,6 +80,7 @@ argv = require('optimist')
 		].join("\n")
 	)
 	.default(defaults)
+	.boolean('secure')
 	.argv
 ;
 
