@@ -11,7 +11,7 @@ var fs = require('fs'),
     rebootIv,
     tty,
     config =  {
-        client:'beagle',
+        client:'beagle-armv7l',
         nodeVersion:0.92,
         cloudHost: 'zendo.ninja.is',
         cloudStream: 'stream.ninja.is',
