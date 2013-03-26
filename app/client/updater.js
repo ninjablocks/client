@@ -14,6 +14,14 @@ function updater(client) {
 		updateList.map(updateCheck);
 		function updateCheck(update) {
 
+			try {
+
+				fs.unlinkSync(this.opts.updateLock + '_' + update);
+			} 
+			catch(e) {
+
+				this.log.error("client: Update lock: %s", e);
+			}
 			if(update == 'node') { // client update!
 
 				mod.app.emit('client::updating');
