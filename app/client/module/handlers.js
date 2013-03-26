@@ -80,7 +80,7 @@ function moduleHandlers(client) {
 
 		d.run(function() {
 
-			var 
+			var
 				version = this.versionMethod(name, mod)
 				, newModule = new mod(params, app, version)
 			;
@@ -225,8 +225,11 @@ function moduleHandlers(client) {
 				}]
 			};
 
-			ninja.cloud.config(announcementRequest);
-			ninja.log.debug("requestAnnouncement: sending request (%s)", name);
+			process.nextTick(function() {
+
+				ninja.cloud.config(announcementRequest);
+				ninja.log.debug("requestAnnouncement: sending request (%s)", name);
+			});
 		};
 	};
 
