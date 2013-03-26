@@ -20,7 +20,7 @@ function updater(client) {
 			} 
 			catch(e) {
 
-				this.log.error("updater: Update lock: %s", e);
+				this.log.error("client: Update lock: %s", e);
 			}
 			if(update == 'node') { // client update!
 
