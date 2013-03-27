@@ -27,10 +27,10 @@ var fs = require('fs'),
     };
     config.id=fs.readFileSync(config.serialFile).toString().replace(/\n/g,'');
     config.utilitiesVersion=(path.existsSync('/opt/utilities/version'))
-        ? fs.readFileSync('/opt/utilities/version').toString()
+        ? fs.readFileSync('/opt/utilities/version').toString().replace(/\n/g,'')
         : 0.4;
     config.systemVersion=(path.existsSync('/opt/utilities/sys_version'))
-        ? fs.readFileSync('/opt/utilities/sys_version').toString()
+        ? fs.readFileSync('/opt/utilities/sys_version').toString().replace(/\n/g,'')
         : 0.4;
 
 console.log(utils.timestamp()+' Ninja Block Starting Up');
