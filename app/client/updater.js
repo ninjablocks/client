@@ -3,24 +3,23 @@ var
 	, path = require('path')
 	, node_updater = '/opt/utilities/ninja_update_node'
 	, otherTimeout = 2000 //timeout in ms for non-node updates
+	, fs = require('fs')
 ;
 
 module.exports = updater;
 function updater(client) {
-	
-	client.prototype.updateHandler = function updateHandler(updateList) {
 
+	client.prototype.updateHandler = function updateHandler(updateList) {
 		var mod = this;
 		updateList.map(updateCheck);
 		function updateCheck(update) {
-
 			try {
 
-				fs.unlinkSync(this.opts.updateLock + '_' + update);
-			} 
+				fs.unlinkSync(mod.opts.updateLock + '_' + update);
+			}
 			catch(e) {
 
-				this.log.error("client: Update lock: %s", e);
+				mod.log.error("client: Update lock: %s", e);
 			}
 			if(update == 'node') { // client update!
 
