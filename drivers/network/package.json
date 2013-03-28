@@ -1,0 +1,21 @@
+{
+  "name": "network",
+  "version": "0.0.1",
+  "description": "ninja blocks network driver",
+  "main": "index.js",
+  "repository": "",
+  "author": "Ninja Blocks <support@ninjablocks.com>",
+  "contributors": [
+    {
+      "name": "Emily Rose",
+      "email": "emily@ninjablocks.com"
+    },
+    {
+      "name": "Daniel Friedman",
+       "email" : "dan@ninjablocks.com"
+    }
+  ],
+  "license": "BSD",
+  "dependencies": { },
+  "verson": "0.0.1"
+}

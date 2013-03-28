@@ -1,0 +1,15 @@
+{
+  "name": "serial",
+  "version": "0.0.1",
+  "description": "ERROR: No README.md file found!",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": "",
+  "author": "",
+  "license": "BSD",
+  "dependencies": {
+    "serialport": "git://github.com/ninjablocks/node-serialport.git"
+  }
+}

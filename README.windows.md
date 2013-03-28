@@ -1,14 +1,39 @@
-client
-======
+client - Windows Instructions
+===========================
 
-The Node that runs on the Beagle and sends data to the Ninja Platform
+There are no guarantees anything will work on Windows, but this might get you a little closer.
+
+Tested on Windows 8 with VS2012
+
+### Requirements
+
+Visual Studio 2010 or 2012
+
+<strike>
+LibXML2
+Get the batch file from https://gist.github.com/shimondoodkin/4341933/download
+Unpack ftp://xmlsoft.org/libxml2/win32/libxml2-2.7.8.win32.zip
+Add both to path
+</strike>
 
 ### Installation
+Run these from the VS command prompt
 ```
 git clone https://github.com/ninjablocks/client.git
 cd client
-./bin/install.sh
+./bin/install.bat
 ```
+
+## If it all goes wrong...
+
+If you have VS2012, you may need to set an environment variable
+```
+VisualStudioVersion=11.0
+```
+You may also need to update npm's built-in node-gyp
+https://github.com/TooTallNate/node-gyp/wiki/Updating-npm's-bundled-node-gyp
+
+If npm errors out fetching dependencies via git, check that git.exe (*not just git.cmd*) is on the path
 
 ## License
 

@@ -1,0 +1,18 @@
+[submodule "drivers/ninja-philips-hue"]
+	path = drivers/ninja-philips-hue
+	url = https://github.com/thatguydan/ninja-hue.git
+[submodule "drivers/ninja-ipcam"]
+	path = drivers/ninja-ipcam
+	url = https://github.com/ninjablocks/ninja-ipcam.git
+[submodule "drivers/ninja-limitlessLED"]
+	path = drivers/ninja-limitlessLED
+	url = https://github.com/jzGreen/ninja-limitlessLED.git
+[submodule "drivers/common/libNBComms"]
+	path = drivers/common/libNBComms
+	url = https://github.com/ninjablocks/libNBComms.git
+[submodule "drivers/ninja-zwave"]
+	path = drivers/ninja-zwave
+	url = https://github.com/ninjablocks/ninja-zwave.git
+[submodule "drivers/ninja-usbcam"]
+	path = drivers/ninja-usbcam
+	url = https://github.com/nexxy/ninja-usbcam.git
