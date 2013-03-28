@@ -1,7 +1,7 @@
 var
 	exec = require('child_process').exec
 	, path = require('path')
-	, node_updater = '/opt/utilities/ninja_update_node'
+	, node_updater = '/opt/utilities/bin/ninja_update_node'
 	, otherTimeout = 2000 //timeout in ms for non-node updates
 	, fs = require('fs')
 ;
