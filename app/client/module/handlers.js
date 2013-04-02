@@ -312,12 +312,13 @@ function moduleHandlers(client) {
 		var ninja = this;
 		return function(device) {
 
+			device.guid = ninja.getGuid(device);
+
 			if (ninja.devices.hasOwnProperty(device.guid)) {
 				ninja.log.info('Duplicate device handler ignored (%s)',device.guid);
 				return;
 			}
 
-			device.guid = ninja.getGuid(device);
 			device.module = name || undefined;
 			device.on('data', ninja.dataHandler.call(ninja, device));
 			device.on('error', ninja.errorHandler.call(ninja, device))
