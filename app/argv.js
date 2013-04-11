@@ -24,13 +24,15 @@ if (process.env.NODE_ENV === "development") {
 		, streamHost : "127.0.0.1"
 		, apiHost : "127.0.0.1"
 		, logFile : path.resolve(process.env.PWD, 'ninjablock.log')
+		, updateLock : path.resolve(process.env.PWD, '.has_updated')
 		, serialFile : path.resolve(process.env.PWD, 'serial-development.conf')
 		, tokenFile : path.resolve(process.env.PWD, 'token-development.conf')
 		, env : 'development'
 		, streamPort : 3003
 		, cloudPort : 3001
-		, apiPort		: 3000
+		, apiPort : 3000
 		, secure : false
+		, client : process.env.NINJA_CLIENT_NAME
 	}
 }
 else if (process.env.NODE_ENV === "hacking") {
@@ -40,13 +42,15 @@ else if (process.env.NODE_ENV === "hacking") {
 		, apiHost : "api.ninja.is"
 		, streamHost : "stream.ninja.is"
 		, logFile : path.resolve(process.env.PWD, 'ninjablock.log')
+		, updateLock : path.resolve(process.env.PWD, '.has_updated')	
 		, serialFile : path.resolve(process.env.PWD, 'serial-hacking.conf')
 		, tokenFile : path.resolve(process.env.PWD, 'token-hacking.conf')
 		, env : 'hacking'
 		, streamPort : 443
 		, cloudPort : 443
-		, apiPort 	: 443
+		, apiPort : 443
 		, secure : true
+		, client : process.env.NINJA_CLIENT_NAME
 	}
 }
 else {
@@ -57,13 +61,15 @@ else {
 		, streamHost : "stream.ninja.is"
 		, apiHost : "api.ninja.is"
 		, logFile : '/var/log/ninjablock.log'
+		, updateLock : '/etc/opt/ninja/.has_updated'
 		, serialFile : '/etc/opt/ninja/serial.conf'
 		, tokenFile : '/etc/opt/ninja/token.conf'
 		, env : 'production'
 		, streamPort : 443
 		, cloudPort : 443
-		, apiPort		: 443
+		, apiPort : 443
 		, secure : true
+		, client : process.env.NINJA_CLIENT_NAME
 	}
 	if(!process.env.NODE_ENV) { process.env.NODE_ENV = "production"; }
 }

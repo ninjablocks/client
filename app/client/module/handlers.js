@@ -80,7 +80,7 @@ function moduleHandlers(client) {
 
 		d.run(function() {
 
-			var 
+			var
 				version = this.versionMethod(name, mod)
 				, newModule = new mod(params, app, version)
 			;
@@ -225,8 +225,11 @@ function moduleHandlers(client) {
 				}]
 			};
 
-			ninja.cloud.config(announcementRequest);
-			ninja.log.debug("requestAnnouncement: sending request (%s)", name);
+			process.nextTick(function() {
+
+				ninja.cloud.config(announcementRequest);
+				ninja.log.debug("requestAnnouncement: sending request (%s)", name);
+			});
 		};
 	};
 
@@ -309,12 +312,13 @@ function moduleHandlers(client) {
 		var ninja = this;
 		return function(device) {
 
+			device.guid = ninja.getGuid(device);
+
 			if (ninja.devices.hasOwnProperty(device.guid)) {
 				ninja.log.info('Duplicate device handler ignored (%s)',device.guid);
 				return;
 			}
 
-			device.guid = ninja.getGuid(device);
 			device.module = name || undefined;
 			device.on('data', ninja.dataHandler.call(ninja, device));
 			device.on('error', ninja.errorHandler.call(ninja, device))
