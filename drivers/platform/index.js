@@ -13,6 +13,7 @@ var
 	, deviceStream = require('./lib/device-stream.js')
 	, platformDevice = require('./lib/platform-device.js')
 	, deviceHandlers = require('./lib/handlers.js')
+	, configHandlers = require('./lib/config')
 ;
 
 /**
@@ -151,6 +152,22 @@ util.inherits(platform, stream);
 deviceHandlers(platform);
 deviceStream(platform);
 metaEvents(platform);
+
+platform.prototype.config = function(rpc,cb) {
+
+  var self = this;
+
+  if (!rpc) {
+    return configHandlers.probe.call(this,cb);
+  }
+
+  switch (rpc.method) {
+    case 'manual_board_version':   return configHandlers.manual_board_version.call(this,rpc.params,cb); break;
+    case 'confirm_flash_arduino':  return configHandlers.confirm_flash_arduino.call(this,rpc.params,cb); break;
+    case 'flashduino_begin':  return configHandlers.flashduino_begin.call(this,rpc.params,cb); break;
+    default:               return cb(true);                                              break;
+  }
+};
 
 platform.prototype.sendData = function(dat) {
 
