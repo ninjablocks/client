@@ -133,8 +133,14 @@ function config(dat, cb) {
 	};
 
 	function sendResponse() {
-
 		ninja.log.debug("cloudConfig: sending config collection");
-		ninja.cloud.config(cloudBuffer.configResponse);
+
+		// If the cloud wants a syncronous response, call its callback
+		// Otherwise send it as a broadcase config
+		if (dat.sync) {
+			cb(null,cloudBuffer.configResponse)
+		} else {
+			ninja.cloud.config(cloudBuffer.configResponse);
+		}
 	}
 };
