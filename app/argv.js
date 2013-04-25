@@ -32,6 +32,7 @@ if (process.env.NODE_ENV === "development") {
 		, cloudPort : 3001
 		, apiPort : 3000
 		, secure : false
+		, debug : true
 		, client : process.env.NINJA_CLIENT_NAME
 	}
 }
@@ -50,6 +51,7 @@ else if (process.env.NODE_ENV === "hacking") {
 		, cloudPort : 443
 		, apiPort : 443
 		, secure : true
+		, debug : true
 		, client : process.env.NINJA_CLIENT_NAME
 	}
 }
@@ -69,6 +71,7 @@ else {
 		, cloudPort : 443
 		, apiPort : 443
 		, secure : true
+		, debug : false
 		, client : process.env.NINJA_CLIENT_NAME
 	}
 	if(!process.env.NODE_ENV) { process.env.NODE_ENV = "production"; }
@@ -87,6 +90,7 @@ argv = require('optimist')
 	)
 	.default(defaults)
 	.boolean('secure')
+	.boolean('debug')
 	.argv
 ;
 
