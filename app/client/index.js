@@ -71,9 +71,15 @@ client.prototype.getHandlers = function() {
 
 		revokeCredentials : function revokeCredentials() {
 
-			this.log.info('Invalid token');
+			var cli = this;
+			this.log.info('Invalid token; exiting in 3 seconds...');
 			this.app.emit('client::invalidToken', true);
+			setTimeout(function invalidTokenExit() {
 
+				cli.log.info("Exiting now.");
+				process.exit(1);
+
+			}, 3000);
 		}.bind(this)
 		, execute : function execute(cmd, cb) {
 
