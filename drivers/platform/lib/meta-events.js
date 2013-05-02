@@ -1,7 +1,5 @@
 module.exports = metaEvents;
 
-var RFInterpreter = require('./rf-interpreter');
-
 function metaEvents(platform) {
 
 	platform.prototype.transformAccelerometer = function(dat, meta) {
@@ -102,7 +100,7 @@ function metaEvents(platform) {
 		}
 	};
 
-	platform.prototype.debounceCommand = function debounceCommand(device, timeout, postDebounceMethod) {
+	platform.prototype.debounceCommand = function debounceCommand(device, timeout) {
 
 		var
 			mod = this
@@ -125,20 +123,8 @@ function metaEvents(platform) {
 		this.debounce[guid] = device;
 
 		if(!sendData) { return; }
-		if (postDebounceMethod) {
-			this[postDebounceMethod](device);
-		}
-		else {
-			this.sendData(device);
-		}
+		this.sendData(device);
 	};
-
-	platform.prototype.interpretRF = function interpretRF(device) {
-		devices = RFInterpreter.devicesForDevice(device, this.version, this.log);
-		for (var i=0; i<devices.length; i++) {
-			this.sendData(devices[i]);
-		}
-	}
 
 	platform.prototype.arduinoVersion = function arduinoVersion(stdout) {
 
@@ -155,6 +141,5 @@ function metaEvents(platform) {
 
 		this.log.debug("platform: arduino version: %s", v);
 		this.emit('version', v);
-		this.version = v;
 	};
 };

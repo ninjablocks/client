@@ -77,8 +77,7 @@ function deviceHandlers(platform) {
 							, device.DA
 							, device.D
 						);
-						var postDebounceMethod = meta.postDebounceMethod;
-						return mod.debounceCommand(device, meta.debounceTimeout, postDebounceMethod);
+						return mod.debounceCommand(device, meta.debounceTimeout);
 					}
 				}
 			}

@@ -21,8 +21,8 @@ module.exports = {
             , throttleTimeout : 30000
         }
         , '11' : {
-            postDebounceMethod : 'interpretRF'
-            , debounceCommands : true
+
+            debounceCommands : true
             , debounceTimeout : 300
             , queueCommands : true
         }
