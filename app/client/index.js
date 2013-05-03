@@ -139,8 +139,9 @@ client.prototype.initialize = function initialize() {
 
 			mod.cloud = cloud;
 
-			if(mod.pulse) { clearInterval(mod.pulse); }
-			mod.pulse = setInterval(beat.bind(mod), 5000);
+			// no more heartbeat x_x
+			// if(mod.pulse) { clearInterval(mod.pulse); }
+			// mod.pulse = setInterval(beat.bind(mod), 5000);
 			flushBuffer.call(mod);
 		}
 		, beat = function beat() {
