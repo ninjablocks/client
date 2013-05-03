@@ -32,6 +32,7 @@ if (process.env.NODE_ENV === "development") {
 		, cloudPort : 3001
 		, apiPort : 3000
 		, secure : false
+		, debug : true
 		, client : process.env.NINJA_CLIENT_NAME
 	}
 }
@@ -50,6 +51,26 @@ else if (process.env.NODE_ENV === "hacking") {
 		, cloudPort : 443
 		, apiPort : 443
 		, secure : true
+		, debug : true
+		, client : process.env.NINJA_CLIENT_NAME
+	}
+}
+else if (process.env.NODE_ENV === "beta") {
+
+	defaults = {
+		cloudHost : "wakai-zendo.ninja.is"
+		, apiHost : "wakai.ninja.is"
+		, streamHost : "wakai-stream.ninja.is"
+		, logFile : path.resolve(process.env.PWD, 'ninjablock.log')
+		, updateLock : path.resolve(process.env.PWD, '.has_updated')	
+		, serialFile : path.resolve(process.env.PWD, 'serial-beta.conf')
+		, tokenFile : path.resolve(process.env.PWD, 'token-beta.conf')
+		, env : 'beta'
+		, streamPort : 443
+		, cloudPort : 443
+		, apiPort : 443
+		, secure : true
+		, debug : true
 		, client : process.env.NINJA_CLIENT_NAME
 	}
 }
@@ -69,6 +90,7 @@ else {
 		, cloudPort : 443
 		, apiPort : 443
 		, secure : true
+		, debug : false
 		, client : process.env.NINJA_CLIENT_NAME
 	}
 	if(!process.env.NODE_ENV) { process.env.NODE_ENV = "production"; }
@@ -87,6 +109,7 @@ argv = require('optimist')
 	)
 	.default(defaults)
 	.boolean('secure')
+	.boolean('debug')
 	.argv
 ;
 
