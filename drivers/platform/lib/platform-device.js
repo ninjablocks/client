@@ -12,13 +12,13 @@ function device(G, V, D) {
 	
 	stream.call(this);
 
-	this.V = V || 0;
-	this.G = G || "0";
-	this.D = D || undefined;
+	this.V = parseInt(V) || 0;
+	this.G = G.toString() || "0";
+	this.D = parseInt(D) || undefined;
 
 	this.write = function(dat) {
 
-		this.state = dat;
+		this.state = dat.toString();
 		var res = {
 			
 			DEVICE : [{
@@ -26,7 +26,7 @@ function device(G, V, D) {
 				V : this.V
 				, G : this.G
 				, D : this.D
-				, DA : dat
+				, DA : this.state 
 			}]
 		};
 		this.emit('data', JSON.stringify(res));

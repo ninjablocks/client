@@ -47,7 +47,6 @@ function metaEvents(platform) {
 	};
 
 	platform.prototype.queueCommand = function queueCommand(device) {
-
 		var
 			mod = this
 			, timeout = undefined
@@ -70,18 +69,13 @@ function metaEvents(platform) {
 
 		function write(dat) {
 
-			var guid = dat.GUID || undefined;
-
 			delete dat.GUID;
-			if(!guid) { return; }
 
 			timeout = setTimeout(function queueTimeout() {
 
 				mod.log.info(
-
-					"platform: Queued write timeout (%s:%s)"
-					, guid
-					, dat.DA || "???"
+					"platform: Queued write timeout "
+					, dat
 				);
 
 				listener([ dat ]);
@@ -133,6 +127,16 @@ function metaEvents(platform) {
 		}
 	};
 
+	platform.prototype.savePersistantDevice = function savePersistantDevice(device) {
+		var persistantDevices = this.opts.persistantDevices || [ ];
+		var guid = [ device.G, device.V, device.D ].join("_")
+		if (persistantDevices.indexOf(guid) < 0) {
+			persistantDevices.push(guid);
+			this.opts.persistantDevices = persistantDevices;
+			this.save();
+		}
+	}
+
 	platform.prototype.interpretRF = function interpretRF(device) {
 		devices = RFInterpreter.devicesForDevice(device, this.version, this.log);
 		for (var i=0; i<devices.length; i++) {
@@ -152,9 +156,25 @@ function metaEvents(platform) {
 			v.arduinoModel = 'V11';
 			v.arduinoVersion = 0.36
 		}
+		this.setArduinoVersion(v);
+	};
 
+	platform.prototype.setArduinoVersion = function setArduinoVersion(v) {
+		this.version = v;
 		this.log.debug("platform: arduino version: %s", v);
 		this.emit('version', v);
-		this.version = v;
-	};
+		if (v.arduinoModel == 'V12') {
+			var rfDevice = { G : "0"	
+					, V : 0
+					, D : 11
+					};
+              		this.savePersistantDevice(rfDevice);
+			var ninaEyes = { G : "0"	
+					, V : 0
+					, D : 1007
+					};
+                	this.savePersistantDevice(ninaEyes);
+		}
+	}
+
 };

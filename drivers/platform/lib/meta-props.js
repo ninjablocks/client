@@ -21,11 +21,20 @@ module.exports = {
             , throttleTimeout : 30000
         }
         , '11' : {
-            postDebounceMethod : 'interpretRF'
+	    savePersistantDevice : true
+            , postDebounceMethod : 'interpretRF'
             , debounceCommands : true
             , debounceTimeout : 300
             , queueCommands : true
         }
+	, '30' : {
+	    debounceCommand : true
+	    , debounceTimeout : 300
+	}
+	, '31' : {
+	    debounceCommand : true
+	    , debounceTimeout : 300
+	}
         , '999' : {
 
             queueCommands : true

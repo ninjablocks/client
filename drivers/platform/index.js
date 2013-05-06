@@ -53,6 +53,8 @@ function platform(opts, app, version) {
 	this.channel = undefined;
 	this.debounce = [ ];
 
+	this.registeredDevices = [ ];
+
 	this.statusLights = [
 
 		{
@@ -153,7 +155,9 @@ function platform(opts, app, version) {
 		}, 2000);
 	});
 
-	app.on('device::command', mod.onCommand.bind(mod));
+	//app.on('device::command', mod.onCommand.bind(mod));
+	app.on('client::up', mod.restorePersistantDevices.bind(mod));
+
 };
 
 util.inherits(platform, stream);
@@ -178,6 +182,27 @@ platform.prototype.config = function(rpc,cb) {
   }
 };
 
+
+platform.prototype.restorePersistantDevices = function() {
+	var persistantDevices = this.opts.persistantDevices;
+	if (!persistantDevices) {
+		return;
+	}
+	var persistantGuid;
+	for (var i=0; i<persistantDevices.length; i++) {
+		persistantGuid = persistantDevices[i];
+		deviceAttributes = persistantGuid.split('_');
+		if (deviceAttributes.length < 3) {
+			continue;
+		}
+		this.registerDevice(deviceAttributes[0]
+			, deviceAttributes[1]
+			, deviceAttributes[2]
+		);	
+	}
+	
+}
+
 platform.prototype.setArduinoVersionToDownload = function(version) {
 	this.arduinoVersionToDownload = version;
 }
@@ -201,10 +226,33 @@ platform.prototype.flashArduino = function() {
 	});
 }
 
-platform.prototype.sendData = function(dat) {
 
+function guid(device) {
+	return [device.G,device.V,device.D].join('_');
+}
+
+platform.prototype.registerDevice = function(deviceG, deviceV, deviceD) {
+	var device = new platformDevice(deviceG, deviceV, deviceD);
+	device.write = function(DA) {
+		this.onCommand.call(this,{
+			G:device.G,
+			V:device.V,
+			D:device.D,
+			DA:DA
+		});
+	}.bind(this);
+	this.emit('register', device);
+	this.registeredDevices[guid(device)] = device;
+	return device;
+}
+
+platform.prototype.sendData = function(dat) {
 	if(!dat) { return; }
-	this.emit('data', dat);
+	var device = this.registeredDevices[guid(dat)];
+	if (!device) {
+		device = this.registerDevice(dat.G, dat.V, dat.D);
+	}
+	device.emit('data', dat.DA);
 };
 
 platform.prototype.sendConfig = function(type, dat) {

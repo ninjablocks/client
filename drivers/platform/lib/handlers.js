@@ -5,7 +5,6 @@ module.exports = deviceHandlers;
 function deviceHandlers(platform) {
 
 	platform.prototype.dataEvent = function dataEvent(type, dat) {
-
 		var mod = this;
 		var trigger = {
 
@@ -53,6 +52,9 @@ function deviceHandlers(platform) {
 			if(deviceMeta[device.V][device.D]) {
 
 				var meta = deviceMeta[device.V][device.D];
+				if (mod[meta.savePersistantDevice]) {
+					mod.savePersistantDevice(device);
+				}
 				if(mod[meta.method]) {
 
 					// a little too verbose
@@ -183,13 +185,12 @@ function deviceHandlers(platform) {
 	};
 
 	platform.prototype.onCommand = function onCommand(dat) {
-
+		
 		var mod = this;
 		if(!dat) { return; }
 
 		mod.log.debug("platform: Command sent to %s", dat.GUID);
 		if(deviceMeta[dat.V][dat.D]) {
-
 			var meta = deviceMeta[dat.V][dat.D];
 			if(meta.debounce === true && meta.debounceTimeout) {
 
