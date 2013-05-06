@@ -13,7 +13,14 @@ var
 	, deviceStream = require('./lib/device-stream.js')
 	, platformDevice = require('./lib/platform-device.js')
 	, deviceHandlers = require('./lib/handlers.js')
+	, configHandlers = require('./lib/config')
 ;
+
+const kUtilBinPath = "/opt/utilities/bin/";
+const kArduinoFlashScript = "ninja_upate_arduino";
+
+const kArduinoParamsFile = "/etc/opt/ninja/.arduino_update_params";
+const kArduinoUpdatedFile = "/etc/opt/ninja/.has_updated_arduino";
 
 /**
  * platform.device = serial / net stream to device data (JSON stream)
@@ -25,6 +32,9 @@ function platform(opts, app, version) {
 		str = undefined
 		, mod = this
 	;
+
+	//version to flash. Set by config.
+	this.arduinoVersionToDownload = "V12"; //default to most common hardware
 
 	this.retry = {
 
@@ -151,6 +161,45 @@ util.inherits(platform, stream);
 deviceHandlers(platform);
 deviceStream(platform);
 metaEvents(platform);
+
+platform.prototype.config = function(rpc,cb) {
+
+  var self = this;
+
+  if (!rpc) {
+    return configHandlers.probe.call(this,cb);
+  }
+
+  switch (rpc.method) {
+    case 'manual_board_version':   return configHandlers.manual_board_version.call(this,rpc.params,cb); break;
+    case 'confirm_flash_arduino':  return configHandlers.confirm_flash_arduino.call(this,rpc.params,cb); break;
+    case 'flashduino_begin':  return configHandlers.flashduino_begin.call(this,rpc.params,cb); break;
+    default:               return cb(true);                                              break;
+  }
+};
+
+platform.prototype.setArduinoVersionToDownload = function(version) {
+	this.arduinoVersionToDownload = version;
+}
+
+platform.prototype.flashArduino = function() {
+	var params = '-f ' + this.arduinoVersionToDownload;
+	this.log.info('platform: setting params, \'' + params + '\'');
+	self = this;
+    fs.writeFile(kArduinoParamsFile, params, function(err) { //write params to file
+   		if(err) {
+        	console.log(err);
+    	} else {
+			fs.unlink(kArduinoUpdatedFile, function (err) { //delete file to trigger update on next run
+  			if (err) {
+			} else {
+				self.log.info('platform: flashing arduino...' + this.arduinoVersionToDownload);
+				process.exit(); //restart so /etc/init/ninjablock.conf can run
+			}
+			});
+		}
+	});
+}
 
 platform.prototype.sendData = function(dat) {
 

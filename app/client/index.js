@@ -71,9 +71,15 @@ client.prototype.getHandlers = function() {
 
 		revokeCredentials : function revokeCredentials() {
 
-			this.log.info('Invalid token');
+			var cli = this;
+			this.log.info('Invalid token; exiting in 3 seconds...');
 			this.app.emit('client::invalidToken', true);
+			setTimeout(function invalidTokenExit() {
 
+				cli.log.info("Exiting now.");
+				process.exit(1);
+
+			}, 3000);
 		}.bind(this)
 		, execute : function execute(cmd, cb) {
 
@@ -133,8 +139,9 @@ client.prototype.initialize = function initialize() {
 
 			mod.cloud = cloud;
 
-			if(mod.pulse) { clearInterval(mod.pulse); }
-			mod.pulse = setInterval(beat.bind(mod), 5000);
+			// no more heartbeat x_x
+			// if(mod.pulse) { clearInterval(mod.pulse); }
+			// mod.pulse = setInterval(beat.bind(mod), 5000);
 			flushBuffer.call(mod);
 		}
 		, beat = function beat() {

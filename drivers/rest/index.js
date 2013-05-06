@@ -50,7 +50,7 @@ function rest(ninja) {
 
         devices[guid] = data;
       });
-    },2000);
+    },5000);
   });
 
   http.createServer(app).listen(app.get('port'), function(){
