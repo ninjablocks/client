@@ -265,7 +265,6 @@ client.prototype.sendData = function sendData(dat) {
 
 	if(!dat) { return false; }
 
-	dat.GUID = this.getGuid(dat);
 	dat.TIMESTAMP = (new Date().getTime());
 	var msg = { 'DEVICE' : [ dat ] };
 
@@ -281,7 +280,6 @@ client.prototype.sendConfig = function sendConfig(dat) {
 
 	if(!dat) { return false; }
 
-	dat.GUID = this.getGuid(dat);
 	dat.TIMESTAMP = (new Date().getTime());
 	if((this.cloud) && this.cloud.config) {
 
