@@ -156,7 +156,7 @@ client.prototype.initialize = function initialize() {
 		}
 	;
 
-	this.app.on('client::up', initSession);
+	this.app.on('client::preup', initSession);
 };
 
 /**
@@ -165,7 +165,7 @@ client.prototype.initialize = function initialize() {
 client.prototype.up = function up(cloud) {
 
 	try {
-
+		this.app.emit('client::preup', cloud)
 		this.app.emit('client::up', cloud);
 	} catch(err) {
 
