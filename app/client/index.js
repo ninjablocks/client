@@ -239,6 +239,28 @@ client.prototype.dataHandler = function dataHandler(device) {
 	}
 };
 
+client.prototype.heartbeatHandler = function dataHandler(device) {
+
+	var self = this;
+	return function() {
+
+		try {
+
+			self.sendHeartbeat({
+
+				G : device.G.toString()
+				, V : device.V
+				, D : device.D
+			});
+		}
+		catch(e) {
+
+			self.log.debug("Error sending heartbeat (%s)", self.getGuid(device));
+			self.log.error(e);
+		}
+	}
+};
+
 client.prototype.sendData = function sendData(dat) {
 
 	if(!dat) { return false; }
@@ -264,6 +286,18 @@ client.prototype.sendConfig = function sendConfig(dat) {
 	if((this.cloud) && this.cloud.config) {
 
 		return this.cloud.config(JSON.stringify(dat));
+	}
+};
+
+client.prototype.sendHeartbeat = function sendHeartbeat(dat) {
+	if(!dat) { return false; }
+
+	dat.TIMESTAMP = (new Date().getTime());
+	var msg = { 'DEVICE' : [ dat ] };
+
+	if((this.cloud) && this.cloud.heartbeat) {
+
+		return this.cloud.heartbeat(msg);
 	}
 };
 
