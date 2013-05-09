@@ -156,7 +156,7 @@ client.prototype.initialize = function initialize() {
 		}
 	;
 
-	this.app.on('client::up', initSession);
+	this.app.on('client::preup', initSession);
 };
 
 /**
@@ -165,7 +165,7 @@ client.prototype.initialize = function initialize() {
 client.prototype.up = function up(cloud) {
 
 	try {
-
+		this.app.emit('client::preup', cloud)
 		this.app.emit('client::up', cloud);
 	} catch(err) {
 
@@ -239,11 +239,32 @@ client.prototype.dataHandler = function dataHandler(device) {
 	}
 };
 
+client.prototype.heartbeatHandler = function dataHandler(device) {
+
+	var self = this;
+	return function() {
+
+		try {
+
+			self.sendHeartbeat({
+
+				G : device.G.toString()
+				, V : device.V
+				, D : device.D
+			});
+		}
+		catch(e) {
+
+			self.log.debug("Error sending heartbeat (%s)", self.getGuid(device));
+			self.log.error(e);
+		}
+	}
+};
+
 client.prototype.sendData = function sendData(dat) {
 
 	if(!dat) { return false; }
 
-	dat.GUID = this.getGuid(dat);
 	dat.TIMESTAMP = (new Date().getTime());
 	var msg = { 'DEVICE' : [ dat ] };
 
@@ -259,11 +280,22 @@ client.prototype.sendConfig = function sendConfig(dat) {
 
 	if(!dat) { return false; }
 
-	dat.GUID = this.getGuid(dat);
 	dat.TIMESTAMP = (new Date().getTime());
 	if((this.cloud) && this.cloud.config) {
 
 		return this.cloud.config(JSON.stringify(dat));
+	}
+};
+
+client.prototype.sendHeartbeat = function sendHeartbeat(dat) {
+	if(!dat) { return false; }
+
+	dat.TIMESTAMP = (new Date().getTime());
+	var msg = { 'DEVICE' : [ dat ] };
+
+	if((this.cloud) && this.cloud.heartbeat) {
+
+		return this.cloud.heartbeat(msg);
 	}
 };
 
