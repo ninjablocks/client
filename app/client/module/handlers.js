@@ -321,10 +321,14 @@ function moduleHandlers(client) {
 
 			device.module = name || undefined;
 			device.on('data', ninja.dataHandler.call(ninja, device));
+			device.on('heartbeat', ninja.heartbeatHandler.call(ninja, device));
 			device.on('error', ninja.errorHandler.call(ninja, device))
-			ninja.log.debug("Registering device %s", device.guid);
+
+			ninja.log.info("Registering device %s", device.guid);
 			ninja.devices[device.guid] = device;
 			ninja.app.emit("device::up", device.guid);
+			// Emit a heartbeat for this device
+			ninja.heartbeatHandler.call(ninja, device)();
 		};
 	};
 
