@@ -130,10 +130,10 @@ function platform(opts, app, version) {
 	/**
 	 * Get version from arduino
 	 */
-	function getVersion() { 
+	function getVersion() {
 
-		if(!mod.device) { return; } 
-		mod.device.write('{"DEVICE":[{"G":"0","V":0,"D":1003,"DA":"VNO"}]}'); 
+		if(!mod.device) { return; }
+		mod.device.write('{"DEVICE":[{"G":"0","V":0,"D":1003,"DA":"VNO"}]}');
 	};
 
 	this.once('open', function() {
@@ -148,7 +148,7 @@ function platform(opts, app, version) {
 			version(ver);
 			clearTimeout(versionSpam);
 		});
-		
+
 		setTimeout(function() {
 
 			clearTimeout(versionSpam);
@@ -185,22 +185,27 @@ platform.prototype.config = function(rpc,cb) {
 
 platform.prototype.restorePersistantDevices = function() {
 	var persistantDevices = this.opts.persistantDevices;
+
+
 	if (!persistantDevices) {
 		return;
 	}
+
 	var persistantGuid;
-	for (var i=0; i<persistantDevices.length; i++) {
-		persistantGuid = persistantDevices[i];
+	persistantDevices.forEach(function(persistantGuid){
+
 		deviceAttributes = persistantGuid.split('_');
 		if (deviceAttributes.length < 3) {
-			continue;
+			return;
 		}
+
 		this.registerDevice(deviceAttributes[0]
 			, deviceAttributes[1]
 			, deviceAttributes[2]
-		);	
-	}
-	
+		);
+
+	}.bind(this));
+
 }
 
 platform.prototype.setArduinoVersionToDownload = function(version) {
@@ -252,7 +257,6 @@ platform.prototype.sendData = function(dat) {
 	if (!device) {
 		device = this.registerDevice(dat.G, dat.V, dat.D);
 	}
-	device.emit('data', dat.DA);
 };
 
 platform.prototype.sendConfig = function(type, dat) {
