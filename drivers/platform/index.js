@@ -251,11 +251,11 @@ platform.prototype.registerDevice = function(deviceG, deviceV, deviceD) {
 	return device;
 }
 
-platform.prototype.sendData = function(dat) {
-	if(!dat) { return; }
-	var device = this.registeredDevices[guid(dat)];
+platform.prototype.sendData = function(deviceObj) {
+	if(!deviceObj) { return; }
+	var device = this.registeredDevices[guid(deviceObj)];
 	if (!device) {
-		device = this.registerDevice(dat.G, dat.V, dat.D);
+		device = this.registerDevice(deviceObj.G, deviceObj.V, deviceObj.D);
 	}
 	device.emit('data',deviceObj.DA);
 };
