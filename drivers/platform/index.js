@@ -257,6 +257,7 @@ platform.prototype.sendData = function(dat) {
 	if (!device) {
 		device = this.registerDevice(dat.G, dat.V, dat.D);
 	}
+	device.emit('data',deviceObj.DA);
 };
 
 platform.prototype.sendConfig = function(type, dat) {
