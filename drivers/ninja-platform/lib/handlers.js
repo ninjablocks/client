@@ -60,7 +60,7 @@ function deviceHandlers(platform) {
 					// a little too verbose
 					// mod.log.debug(
 
-					// 	"platform: Device write \"%s\" (%s)"
+					// 	"ninja-platform: Device write \"%s\" (%s)"
 					// 	, device.DA
 					// 	, device.D
 					// );
@@ -75,7 +75,7 @@ function deviceHandlers(platform) {
 
 						mod.log.debug(
 
-							"platform: Device debounceable data \"%s\" (%s)"
+							"ninja-platform: Device debounceable data \"%s\" (%s)"
 							, device.DA
 							, device.D
 						);
@@ -86,7 +86,7 @@ function deviceHandlers(platform) {
 			}
 			mod.log.debug(
 
-				"platform: Device data \"%s\" (%s)"
+				"ninja-platform: Device data \"%s\" (%s)"
 				, device.DA
 				, device.D
 			);
@@ -100,7 +100,7 @@ function deviceHandlers(platform) {
 		if(!(dataset instanceof Array)) { return; }
 		dataset.map(function(device) {
 
-			mod.log.debug("platform: Device plugged in (%s)", device.GUID);
+			mod.log.debug("ninja-platform: Device plugged in (%s)", device.GUID);
 			mod.sendConfig("PLUGIN", device);
 		});
 	};
@@ -128,7 +128,7 @@ function deviceHandlers(platform) {
 		this.retry.count = 0;
 		this.log.info(
 
-			"platform: Device connection established (%s)"
+			"ninja-platform: Device connection established (%s)"
 			, this.opts.devicePath || this.opts.deviceHost
 		)
 		this.emit('open'); // emit for platform once listener
@@ -140,7 +140,7 @@ function deviceHandlers(platform) {
 			
 			this.log.info(
 
-				"platform: Device connection lost (%s)"
+				"ninja-platform: Device connection lost (%s)"
 				, this.opts.devicePath || this.opts.deviceHost
 			)
 		}
@@ -157,7 +157,7 @@ function deviceHandlers(platform) {
 
 			this.log.error(
 
-				"platform: Connection refused (%s)"
+				"ninja-platform: Connection refused (%s)"
 				, this.opts.deviceHost
 			);
 		}
@@ -165,7 +165,7 @@ function deviceHandlers(platform) {
 
 			this.log.error(
 
-				"platform: %s (%s)"
+				"ninja-platform: %s (%s)"
 				, err
 				, this.opts.devicePath || this.opts.deviceHost
 			);
@@ -189,7 +189,7 @@ function deviceHandlers(platform) {
 		var mod = this;
 		if(!dat) { return; }
 
-		mod.log.debug("platform: Command sent to %s", dat.GUID);
+		mod.log.debug("ninja-platform: Command sent to %s", dat.GUID);
 		if(deviceMeta[dat.V][dat.D]) {
 			var meta = deviceMeta[dat.V][dat.D];
 			if(meta.debounce === true && meta.debounceTimeout) {

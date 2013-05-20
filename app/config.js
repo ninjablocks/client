@@ -43,7 +43,7 @@ function loadPlatform(ninja, app) {
 	// arduino controller
 	ninja.loadModule(
 
-		'platform'
+		'ninja-platform'
 		, ninja.opts
 		, app
 	);
