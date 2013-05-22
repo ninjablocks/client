@@ -21,7 +21,7 @@ function deviceStream(platform) {
 
 			this.log.debug(
 
-				"ninja-platform: Unable to connect to device (%s)"
+				"ninja-arduino: Unable to connect to device (%s)"
 				, this.opts.devicePath || this.opts.deviceHost
 			);
 			return;
@@ -55,7 +55,7 @@ function deviceStream(platform) {
 
 		mod.log.debug(
 
-			"ninja-platform: Opening net connection (%s:%s)"
+			"ninja-arduino: Opening net connection (%s:%s)"
 			, mod.opts.deviceHost
 			, mod.opts.devicePort
 		);
@@ -70,7 +70,7 @@ function deviceStream(platform) {
 
 			mod.log.error(
 
-				"ninja-platform: Serial device path unavailable (%s)"
+				"ninja-arduino: Serial device path unavailable (%s)"
 				, path
 			);
 			return;
@@ -87,7 +87,7 @@ function deviceStream(platform) {
 		
 		mod.log.debug(
 
-			"ninja-platform: Opening serial connection (%s)"
+			"ninja-arduino: Opening serial connection (%s)"
 			, mod.opts.devicePath
 		);
 		return mod.device;

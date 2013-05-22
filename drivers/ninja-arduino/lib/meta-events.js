@@ -74,7 +74,7 @@ function metaEvents(platform) {
 			timeout = setTimeout(function queueTimeout() {
 
 				mod.log.info(
-					"ninja-platform: Queued write timeout "
+					"ninja-arduino: Queued write timeout "
 					, dat
 				);
 
@@ -161,7 +161,7 @@ function metaEvents(platform) {
 
 	platform.prototype.setArduinoVersion = function setArduinoVersion(v) {
 		this.version = v;
-		this.log.debug("ninja-platform: arduino version: %s", v);
+		this.log.debug("ninja-arduino: arduino version: %s", v);
 		this.emit('version', v);
 		if (v.arduinoModel == 'V12') {
 			var rfDevice = { G : "0"	

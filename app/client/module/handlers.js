@@ -17,8 +17,8 @@ function moduleHandlers(client) {
 			this.log.error("loadModule: invalid module name");
 			return cb("Invalid module name", null);
 		}
-		if ((name === "ninja-platform") && (cb !== undefined)) {
-			return cb("ninja-platform not loaded here", null);
+		if ((name === "ninja-arduino") && (cb !== undefined)) {
+			return cb("ninja-arduino not loaded here", null);
 		}
 		cb = cb || function() {};
 		try {
