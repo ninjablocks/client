@@ -33,11 +33,6 @@ module.exports = function config(ninja, app) {
 	return ninja;
 };
 
-/**
- * Load ninja cape & arduino modules if present
- * at the moment these modules rely on a proper load order
- * TODO: fix this so they can load asynchronously.
- */
 function loadPlatform(ninja, app) {
 
 	// rest interface
