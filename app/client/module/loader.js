@@ -168,7 +168,7 @@ function moduleLoader(ninja, app) {
 		var exclude = [
 
 			'serial'
-			, 'platform'
+			, 'ninja-arduino'
 			, 'rest'
 			, 'common'
 		]
