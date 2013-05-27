@@ -14,6 +14,7 @@ var
 	)
 	, defaults
 	, argv
+  , join = path.join
 ;
 
 if (process.env.NODE_ENV === "development") {
@@ -23,10 +24,10 @@ if (process.env.NODE_ENV === "development") {
 		cloudHost : "127.0.0.1"
 		, streamHost : "127.0.0.1"
 		, apiHost : "127.0.0.1"
-		, logFile : path.resolve(process.env.PWD, 'ninjablock.log')
-		, updateLock : path.resolve(process.env.PWD, '.has_updated')
-		, serialFile : path.resolve(process.env.PWD, 'serial-development.conf')
-		, tokenFile : path.resolve(process.env.PWD, 'token-development.conf')
+		, logFile : join(__dirname, '..', 'ninjablock.log')
+		, updateLock : join(__dirname, '..', '.has_updated')
+		, serialFile : join(__dirname, '..', 'serial-development.conf')
+		, tokenFile : join(__dirname, '..', 'token-development.conf')
 		, env : 'development'
 		, streamPort : 3003
 		, cloudPort : 3001
@@ -42,10 +43,10 @@ else if (process.env.NODE_ENV === "hacking") {
 		cloudHost : "zendo.ninja.is"
 		, apiHost : "api.ninja.is"
 		, streamHost : "stream.ninja.is"
-		, logFile : path.resolve(process.env.PWD, 'ninjablock.log')
-		, updateLock : path.resolve(process.env.PWD, '.has_updated')	
-		, serialFile : path.resolve(process.env.PWD, 'serial-hacking.conf')
-		, tokenFile : path.resolve(process.env.PWD, 'token-hacking.conf')
+		, logFile : join(__dirname, '..', 'ninjablock.log')
+		, updateLock : join(__dirname, '..', '.has_updated')	
+		, serialFile : join(__dirname, '..', 'serial-hacking.conf')
+		, tokenFile : join(__dirname, '..', 'token-hacking.conf')
 		, env : 'hacking'
 		, streamPort : 443
 		, cloudPort : 443
@@ -61,10 +62,10 @@ else if (process.env.NODE_ENV === "beta") {
 		cloudHost : "wakai-zendo.ninja.is"
 		, apiHost : "wakai.ninja.is"
 		, streamHost : "wakai-stream.ninja.is"
-		, logFile : path.resolve(process.env.PWD, 'ninjablock.log')
-		, updateLock : path.resolve(process.env.PWD, '.has_updated')	
-		, serialFile : path.resolve(process.env.PWD, 'serial-beta.conf')
-		, tokenFile : path.resolve(process.env.PWD, 'token-beta.conf')
+		, logFile : join(__dirname, '..', 'ninjablock.log')
+		, updateLock : join(__dirname, '..', '.has_updated')	
+		, serialFile : join(__dirname, '..', 'serial-beta.conf')
+		, tokenFile : join(__dirname, '..', 'token-beta.conf')
 		, env : 'beta'
 		, streamPort : 443
 		, cloudPort : 443
