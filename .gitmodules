@@ -16,3 +16,6 @@
 [submodule "drivers/ninja-usbcam"]
 	path = drivers/ninja-usbcam
 	url = https://github.com/nexxy/ninja-usbcam.git
+[submodule "drivers/ninja-arduino"]
+	path = drivers/ninja-arduino
+	url = https://github.com/ninjablocks/ninja-arduino.git

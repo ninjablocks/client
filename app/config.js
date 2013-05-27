@@ -40,14 +40,6 @@ module.exports = function config(ninja, app) {
  */
 function loadPlatform(ninja, app) {
 
-	// arduino controller
-	ninja.loadModule(
-
-		'platform'
-		, ninja.opts
-		, app
-	);
-
 	// rest interface
 	ninja.loadModule(
 
