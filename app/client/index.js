@@ -246,12 +246,17 @@ client.prototype.heartbeatHandler = function dataHandler(device) {
 
 		try {
 
-			self.sendHeartbeat({
+			var heartbeat = {
 
 				G : device.G.toString()
 				, V : device.V
 				, D : device.D
-			});
+			}
+
+			if (typeof device.name === 'string')
+				heartbeat.name = device.name
+
+			self.sendHeartbeat(heartbeat);
 		}
 		catch(e) {
 
