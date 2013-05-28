@@ -168,7 +168,6 @@ function moduleLoader(ninja, app) {
 		var exclude = [
 
 			'serial'
-			, 'platform'
 			, 'rest'
 			, 'common'
 		]
