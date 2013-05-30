@@ -28,6 +28,7 @@ if (process.env.NODE_ENV === "development") {
 		, updateLock : join(__dirname, '..', '.has_updated')
 		, serialFile : join(__dirname, '..', 'serial-development.conf')
 		, tokenFile : join(__dirname, '..', 'token-development.conf')
+		, versionsFile : join(__dirname, '..', 'versions-development.json')
 		, env : 'development'
 		, streamPort : 3003
 		, cloudPort : 3001
@@ -47,6 +48,27 @@ else if (process.env.NODE_ENV === "hacking") {
 		, updateLock : join(__dirname, '..', '.has_updated')	
 		, serialFile : join(__dirname, '..', 'serial-hacking.conf')
 		, tokenFile : join(__dirname, '..', 'token-hacking.conf')
+		, versionsFile : join(__dirname, '..', 'versions-hacking.json')
+		, env : 'hacking'
+		, streamPort : 443
+		, cloudPort : 443
+		, apiPort : 443
+		, secure : true
+		, debug : true
+		, client : process.env.NINJA_CLIENT_NAME
+	}
+}
+else if (process.env.NODE_ENV === "desktop") {
+
+	defaults = {
+		cloudHost : "zendo.ninja.is"
+		, apiHost : "api.ninja.is"
+		, streamHost : "stream.ninja.is"
+		, logFile : path.resolve(process.env.PWD, 'ninjablock.log')
+		, updateLock : path.resolve(process.env.PWD, '.has_updated')
+		, serialFile : path.resolve(process.env.PWD, 'serial.conf')
+		, tokenFile : path.resolve(process.env.PWD, 'token.conf')
+		, versionsFile : path.resolve(process.env.PWD, 'versions.json')
 		, env : 'hacking'
 		, streamPort : 443
 		, cloudPort : 443
@@ -66,6 +88,7 @@ else if (process.env.NODE_ENV === "beta") {
 		, updateLock : join(__dirname, '..', '.has_updated')	
 		, serialFile : join(__dirname, '..', 'serial-beta.conf')
 		, tokenFile : join(__dirname, '..', 'token-beta.conf')
+		, versionsFile : join(__dirname, '..', 'versions.json')
 		, env : 'beta'
 		, streamPort : 443
 		, cloudPort : 443
@@ -86,6 +109,7 @@ else {
 		, updateLock : '/etc/opt/ninja/.has_updated'
 		, serialFile : '/etc/opt/ninja/serial.conf'
 		, tokenFile : '/etc/opt/ninja/token.conf'
+		, versionsFile : '/etc/opt/ninja/versions.json'
 		, env : 'production'
 		, streamPort : 443
 		, cloudPort : 443
