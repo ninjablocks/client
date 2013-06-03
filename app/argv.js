@@ -45,7 +45,7 @@ else if (process.env.NODE_ENV === "hacking") {
 		, apiHost : "api.ninja.is"
 		, streamHost : "stream.ninja.is"
 		, logFile : join(__dirname, '..', 'ninjablock.log')
-		, updateLock : join(__dirname, '..', '.has_updated')	
+		, updateLock : join(__dirname, '..', '.has_updated')
 		, serialFile : join(__dirname, '..', 'serial-hacking.conf')
 		, tokenFile : join(__dirname, '..', 'token-hacking.conf')
 		, versionsFile : join(__dirname, '..', 'versions-hacking.json')
@@ -60,15 +60,19 @@ else if (process.env.NODE_ENV === "hacking") {
 }
 else if (process.env.NODE_ENV === "desktop") {
 
+	var home = process.env.HOME + '/.ninjablocks/';
+
+	console.log('Starting in desktop mode. Home directory : ' + home);
+
 	defaults = {
 		cloudHost : "zendo.ninja.is"
 		, apiHost : "api.ninja.is"
 		, streamHost : "stream.ninja.is"
-		, logFile : path.resolve(process.env.PWD, 'ninjablock.log')
-		, updateLock : path.resolve(process.env.PWD, '.has_updated')
-		, serialFile : path.resolve(process.env.PWD, 'serial.conf')
-		, tokenFile : path.resolve(process.env.PWD, 'token.conf')
-		, versionsFile : path.resolve(process.env.PWD, 'versions.json')
+		, logFile : home + 'ninjablock.log'
+		, updateLock : home + '.has_updated'
+		, serialFile : home + 'serial.conf'
+		, tokenFile : home + 'token.conf'
+		, versionsFile : home + 'versions.json'
 		, env : 'hacking'
 		, streamPort : 443
 		, cloudPort : 443
@@ -85,7 +89,7 @@ else if (process.env.NODE_ENV === "beta") {
 		, apiHost : "wakai.ninja.is"
 		, streamHost : "wakai-stream.ninja.is"
 		, logFile : join(__dirname, '..', 'ninjablock.log')
-		, updateLock : join(__dirname, '..', '.has_updated')	
+		, updateLock : join(__dirname, '..', '.has_updated')
 		, serialFile : join(__dirname, '..', 'serial-beta.conf')
 		, tokenFile : join(__dirname, '..', 'token-beta.conf')
 		, versionsFile : join(__dirname, '..', 'versions.json')
