@@ -242,16 +242,14 @@ client.prototype.dataHandler = function dataHandler(device) {
 client.prototype.heartbeatHandler = function dataHandler(device) {
 
 	var self = this;
-	return function() {
+	return function(hb) {
 
 		try {
 
-			var heartbeat = {
-
-				G : device.G.toString()
-				, V : device.V
-				, D : device.D
-			}
+			var heartbeat = hb || {};
+			heartbeat.G = device.G.toString()
+			heartbeat.V = device.V
+			heartbeat.D = device.D
 
 			if (typeof device.name === 'string')
 				heartbeat.name = device.name
