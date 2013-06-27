@@ -4,6 +4,7 @@ var
 	, util = require('util')
 	, fs = require('fs')
 	, domain = require('domain')
+	, util = require('util')
 ;
 
 module.exports = moduleHandlers;
@@ -310,6 +311,23 @@ function moduleHandlers(client) {
 	client.prototype.registerHandler = function registerHandler(name) {
 
 		var ninja = this;
+		var packageDetails = {};
+
+		var packagePath = path.resolve(
+			process.cwd()
+			, 'drivers'
+			, name
+			, 'package.json'
+		);
+
+		try {
+			packageDetails = require(packagePath);
+		} catch (err) { }
+
+		// Fetch any widget data
+		var widgets = packageDetails.widgets;
+		widgets = (util.isArray(widgets)) ? widgets : [];
+
 		return function(device) {
 
 			device.guid = ninja.getGuid(device);
@@ -328,7 +346,11 @@ function moduleHandlers(client) {
 			ninja.devices[device.guid] = device;
 			ninja.app.emit("device::up", device.guid);
 			// Emit a heartbeat for this device
-			ninja.heartbeatHandler.call(ninja, device)();
+
+			ninja.heartbeatHandler.call(ninja, device)({
+				driver: name,
+				widgets: widgets
+			});
 		};
 	};
 
