@@ -10,8 +10,21 @@ module.exports = moduleLoader;
 function moduleLoader(ninja, app) {
 
 	var
-		moduleDir = ninja.opts.moduleDir || "drivers"
+		moduleDirs = ninja.opts.moduleDir || 'drivers'
 	;
+
+	if (typeof moduleDirs === 'string') {
+		moduleDirs = [moduleDirs];
+	}
+
+	moduleDirs.forEach(function(moduleDir) {
+		loadModuleDir(ninja, app, moduleDir);
+	});
+}
+
+function loadModuleDir(ninja, app, moduleDir) {
+
+	ninja.log.info('moduleLoader: loading modules from "%s"', moduleDir);
 
 	getAllModuleFiles(function(err, files) {
 
@@ -67,6 +80,7 @@ function moduleLoader(ninja, app) {
 			ninja.loadModule(
 
 				mod
+				, moduleDir
 				, conf
 				, app
 				, cb
