@@ -118,10 +118,10 @@ function loadModuleDir(ninja, app, moduleDir) {
 	 */
 	function getModuleConfig(mod, cb) {
 
-		var configPath = path.resolve(
+		var configDir = ninja.opts.configDir || path.resolve(process.cwd(), 'config');
 
-			process.cwd()
-			, 'config'
+		var configPath = path.resolve(
+			configDir
 			, mod
 			, 'config.json'
 		);

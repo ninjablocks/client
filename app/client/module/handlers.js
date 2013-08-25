@@ -243,12 +243,13 @@ function moduleHandlers(client) {
 		var mod = this;
 		return function saveConfig(conf) {
 
+
+			var configDir = ninja.opts.configDir || path.resolve(process.cwd(), 'config');
+
 			var
 				conf = conf || { }
 				, file = path.resolve(
-
-					process.cwd()
-					, 'config'
+					configDir
 					, name
 					, 'config.json'
 				)
