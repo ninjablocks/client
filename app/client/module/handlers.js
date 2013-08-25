@@ -11,21 +11,25 @@ module.exports = moduleHandlers;
 
 function moduleHandlers(client) {
 
-	client.prototype.loadModule = function loadModule(name, opts, app, cb) {
+	client.prototype.loadModule = function loadModule(name, moduleDir, opts, app, cb) {
+		cb = cb || function() {};
 
 		if(!name) {
 
 			this.log.error("loadModule: invalid module name");
 			return cb("Invalid module name", null);
 		}
-		cb = cb || function() {};
+
+		if (this.modules[name]) {
+			this.log.warn("loadModule: module '%s' has already been loaded from another directory", name);
+			return cb("Module already loaded", null);
+		}
+
 		try {
 
 			var
 				file = path.resolve(
-
-					process.cwd()
-					, 'drivers'
+					moduleDir
 					, name
 				)
 			;
@@ -52,11 +56,11 @@ function moduleHandlers(client) {
 			return cb(e, null);
 		}
 
-		this.addModule(name, opts, mod, app, cb);
+		this.addModule(name, moduleDir, opts, mod, app, cb);
 	};
 
 
-	client.prototype.addModule = function addModule(name, params, mod, app, cb) {
+	client.prototype.addModule = function addModule(name, moduleDir, params, mod, app, cb) {
 
 		if(!mod) {
 			var err = new Error('Invalid module provided');
@@ -82,10 +86,10 @@ function moduleHandlers(client) {
 		d.run(function() {
 
 			var
-				version = this.versionMethod(name, mod)
+				version = this.versionMethod(name, moduleDir, mod)
 				, newModule = new mod(params, app, version)
 			;
-			this.bindModule(newModule, name);
+			this.bindModule(newModule, name, moduleDir);
 			this.modules[name] = newModule;
 
 			cb(null, newModule);
@@ -93,7 +97,7 @@ function moduleHandlers(client) {
 		}.bind(this));
 	};
 
-	client.prototype.bindModule = function bindModule(mod, name) {
+	client.prototype.bindModule = function bindModule(mod, name, moduleDir) {
 
 		var ninja = this;
 
@@ -104,7 +108,7 @@ function moduleHandlers(client) {
 
 		}.bind(mod);
 		mod.on('announcement', this.announcementHandler.call(ninja, mod, name));
-		mod.on('register', this.registerHandler.call(ninja, name));
+		mod.on('register', this.registerHandler.call(ninja, name, moduleDir));
 		mod.on('config', this.configHandler.call(ninja, mod, name));
 		mod.on('error', this.moduleError.bind(mod));
 		mod.on('save', this.saveHandler.call(mod, name));
@@ -308,14 +312,13 @@ function moduleHandlers(client) {
 		};
 	};
 
-	client.prototype.registerHandler = function registerHandler(name) {
+	client.prototype.registerHandler = function registerHandler(name, moduleDir) {
 
 		var ninja = this;
 		var packageDetails = {};
 
 		var packagePath = path.resolve(
-			process.cwd()
-			, 'drivers'
+			moduleDir
 			, name
 			, 'package.json'
 		);
