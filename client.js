@@ -35,7 +35,8 @@ d.on('error', function(err) {
 
 d.add(app);
 
-
+// Prevents errors when we have a lot of drivers running
+app.setMaxListeners(99);
 
 app.on('error', function(err) {
 
