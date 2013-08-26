@@ -73,6 +73,8 @@ else if (process.env.NODE_ENV === "desktop") {
 		, serialFile : home + 'serial.conf'
 		, tokenFile : home + 'token.conf'
 		, versionsFile : home + 'versions.json'
+		, moduleDir : home + 'drivers'
+		, configDir : home + 'config'
 		, env : 'hacking'
 		, streamPort : 443
 		, cloudPort : 443

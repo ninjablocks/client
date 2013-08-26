@@ -35,10 +35,13 @@ module.exports = function config(ninja, app) {
 
 function loadPlatform(ninja, app) {
 
+	// TODO: Rest should be taken out of drivers
+	var modulePath = path.resolve(process.cwd(), 'drivers');
+
 	// rest interface
 	ninja.loadModule(
-
 		'rest'
+		, modulePath
 		, ninja
 		, app
 	);
