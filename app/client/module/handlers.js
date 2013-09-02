@@ -348,7 +348,7 @@ function moduleHandlers(client) {
 
 			ninja.log.info("Registering device %s", device.guid);
 			ninja.devices[device.guid] = device;
-			ninja.app.emit("device::up", device.guid);
+			ninja.app.emit("device::up", device.guid, device);
 			// Emit a heartbeat for this device
 
 			ninja.heartbeatHandler.call(ninja, device)({
