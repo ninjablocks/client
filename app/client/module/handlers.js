@@ -36,8 +36,9 @@ function moduleHandlers(client) {
 				mod.prototype.opts = opts;
 				// stub save function for handling save reqs on instantiation
 				mod.prototype.save = function(cfg) {
-
-					this.queuedSave = cfg || this.opts ? this.opts : { };
+          
+					this.queuedSave = cfg || this.opts || {};
+					
 				};
 			}
 			else {
@@ -99,8 +100,10 @@ function moduleHandlers(client) {
 
 		mod.log = this.log;
 		mod.save = function emitSave(conf) {
-
-			this.emit('save', conf || mod.opts ? mod.opts : { });
+		  
+      var newConf = conf || mod.opts || {};
+      mod.opts = newConf;
+			this.emit('save', mod.opts);
 
 		}.bind(mod);
 		mod.on('announcement', this.announcementHandler.call(ninja, mod, name));
