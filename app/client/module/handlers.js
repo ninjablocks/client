@@ -111,7 +111,7 @@ function moduleHandlers(client) {
 		mod.on('register', this.registerHandler.call(ninja, name, moduleDir));
 		mod.on('config', this.configHandler.call(ninja, mod, name));
 		mod.on('error', this.moduleError.bind(mod));
-		mod.on('save', this.saveHandler.call(mod, name));
+		mod.on('save', this.saveHandler.call(mod, name, ninja));
 		mod.on('ack', this.ackHandler.call(ninja, name));
 		mod.on('data', function(dat) {
 
@@ -238,7 +238,7 @@ function moduleHandlers(client) {
 		};
 	};
 
-	client.prototype.saveHandler = function saveHandler(name) {
+	client.prototype.saveHandler = function saveHandler(name, ninja) {
 
 		var mod = this;
 		return function saveConfig(conf) {
