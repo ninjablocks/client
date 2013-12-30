@@ -19,7 +19,7 @@ logger.default = app.log = log;
 // Prevent warnings when we have lots of drivers.
 app.setMaxListeners(99);
 
-d = domain.create();
+var d = domain.create();
 
 d.on('error', function (err) {
 
