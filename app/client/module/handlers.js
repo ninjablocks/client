@@ -250,16 +250,16 @@ function moduleHandlers(client) {
 
         if (err) {
 
-          return mod.log.error(
-
+          mod.log.error(
             "saveConfig: directory error: %s (%s)"
             , err
             , path.dirname(file)
           );
+          return;
         }
         fs.writeFile(file, data, done);
 
-      };
+      }
 
       function done(err) {
 

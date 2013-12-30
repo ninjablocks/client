@@ -83,7 +83,10 @@ client.prototype.getHandlers = function () {
     }.bind(this), update: function update(to) {
 
       this.updateHandler(to);
-    }.bind(this), config: this.moduleHandlers.config.bind(this), install: this.moduleHandlers.install.bind(this), uninstall: this.moduleHandlers.uninstall.bind(this)
+    }.bind(this),
+    config: this.moduleHandlers.config.bind(this),
+    install: this.moduleHandlers.install.bind(this),
+    uninstall: this.moduleHandlers.uninstall.bind(this)
   }
 };
 
@@ -232,12 +235,13 @@ client.prototype.heartbeatHandler = function dataHandler(device) {
     try {
 
       var heartbeat = hb || {};
-      heartbeat.G = device.G.toString()
-      heartbeat.V = device.V
-      heartbeat.D = device.D
+      heartbeat.G = device.G.toString();
+      heartbeat.V = device.V;
+      heartbeat.D = device.D;
 
-      if (typeof device.name === 'string')
-        heartbeat.name = device.name
+      if (typeof device.name === 'string') {
+        heartbeat.name = device.name;
+      }
 
       self.sendHeartbeat(heartbeat);
     }
@@ -259,8 +263,10 @@ client.prototype.sendData = function sendData(dat) {
   var msg = { 'DEVICE': [ dat ] };
 
   if ((this.cloud) && this.cloud.data) {
-
-    return this.cloud.data(msg);
+    // DEBUGGING
+    var result = this.cloud.data(msg);
+    console.log('sendConfig', dat, result);
+    return result;
   }
 
   this.bufferData(msg);
@@ -275,7 +281,10 @@ client.prototype.sendConfig = function sendConfig(dat) {
   dat.TIMESTAMP = (new Date().getTime());
   if ((this.cloud) && this.cloud.config) {
 
-    return this.cloud.config(JSON.stringify(dat));
+    // DEBUGGING
+    var result = this.cloud.config(JSON.stringify(dat));
+    console.log('sendConfig', dat, result);
+    return result;
   }
 };
 
