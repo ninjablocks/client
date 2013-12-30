@@ -1,196 +1,208 @@
-var
-	path = require('path')
-	, async = require('async')
-	, util = require('util')
-	, fs = require('fs')
-;
+'use strict';
+
+var path = require('path');
+var async = require('async');
+var util = require('util');
+var fs = require('fs');
 
 module.exports = moduleLoader;
 
 function moduleLoader(ninja, app) {
 
-	var
-		moduleDirs = ninja.opts.moduleDir || 'drivers'
-	;
+  var moduleDirs = ninja.opts.moduleDir || 'drivers';
 
-	if (typeof moduleDirs === 'string') {
-		moduleDirs = [moduleDirs];
-	}
+  if (typeof moduleDirs === 'string') {
+    moduleDirs = [moduleDirs];
+  }
 
-	moduleDirs.forEach(function(moduleDir) {
-		loadModuleDir(ninja, app, moduleDir);
-	});
+  moduleDirs.forEach(function (moduleDir) {
+    loadModuleDir(ninja, app, moduleDir);
+  });
 }
 
 function loadModuleDir(ninja, app, moduleDir) {
 
-	ninja.log.info('moduleLoader: loading modules from "%s"', moduleDir);
+  ninja.log.info('moduleLoader: loading modules from "%s"', moduleDir);
 
-	getAllModuleFiles(function(err, files) {
+  getAllModuleFiles(function (err, files) {
 
-		if(err) {
+    if (err) {
 
-			return ninja.log.error("moduleLoader: %s", err);
-		}
+      return ninja.log.error("moduleLoader: %s", err);
+    }
 
-		var mods = files.filter(systemModules).filter(dotFiles);
-		if(!mods.length) {
+    var mods = files.filter(systemModules).filter(dotFiles);
+    if (!mods.length) {
 
-			return ninja.log.debug(
+      return ninja.log.debug(
 
-				"moduleLoader: no modules found! (%s)"
-				, moduleDir
-			);
-		}
+        "moduleLoader: no modules found! (%s)"
+        , moduleDir
+      );
+    }
 
-		ninja.log.debug(
+    ninja.log.debug(
+      "moduleLoader: loading %s modules (%s)"
+      , mods.length
+      , mods.join(", ")
+    );
 
-			"moduleLoader: loading %s modules (%s)"
-			, mods.length
-			, mods.join(", ")
-		);
+    function loadableResults(err, mods) {
 
-		async.map(mods, makeLoadable, loadableResults);
-		function loadableResults(err, mods) {
+      if (err) {
+        return ninja.log.error("moduleLoader: %s", err);
+      }
 
-			if(err) { return ninja.log.error("moduleLoader: %s", err); }
+      async.parallel(mods, loadModuleResults);
+    }
 
-			async.parallel(mods, loadModuleResults);
-		};
-	});
+    async.map(mods, makeLoadable, loadableResults);
+  });
 
-	function loadModuleResults(err, dat) {
+  function loadModuleResults(err, dat) {
 
-		// console.log(err, dat);
-	};
+    // console.log(err, dat);
+  }
 
-	function makeLoadable(mod, cb) {
+  function makeLoadable(mod, cb) {
 
-		moduleConfigData(mod, configResults);
-		function configResults(err, dat) {
+    moduleConfigData(mod, configResults);
+    function configResults(err, dat) {
 
-			if(err) { return cb(err, null); }
-			cb(null, function(cb) {
+      if (err) {
+        return cb(err, null);
+      }
+      cb(null, function (cb) {
 
-				loadModule(dat, cb);
-			});
-		};
-		function loadModule(conf, cb) {
+        loadModule(dat, cb);
+      });
+    };
+    function loadModule(conf, cb) {
 
-			ninja.loadModule(
+      ninja.loadModule(
 
-				mod
-				, moduleDir
-				, conf
-				, app
-				, cb
-			);
-		};
-	};
-	/**
-	 * Return array of directory contents
-	 */
-	function getAllModuleFiles(cb) {
+        mod
+        , moduleDir
+        , conf
+        , app
+        , cb
+      );
+    };
+  };
+  /**
+   * Return array of directory contents
+   */
+  function getAllModuleFiles(cb) {
 
-		fs.readdir(moduleDir, function(err, files) {
+    fs.readdir(moduleDir, function (err, files) {
 
-			if(err) { return cb(err, null); }
-			cb(null, files);
-		});
-	};
+      if (err) {
+        return cb(err, null);
+      }
+      cb(null, files);
+    });
+  };
 
-	/**
-	 * Return contents of package.json
-	 */
-	function getModulePackage(mod, cb) {
+  /**
+   * Return contents of package.json
+   */
+  function getModulePackage(mod, cb) {
 
-		var packagePath = path.resolve(
+    var packagePath = path.resolve(
 
-			moduleDir
-			, mod
-			, 'package.json'
-		);
-		getModuleFile(packagePath, mod, cb);
-	};
+      moduleDir
+      , mod
+      , 'package.json'
+    );
+    getModuleFile(packagePath, mod, cb);
+  };
 
-	/**
-	 * Return contents of config.json
-	 */
-	function getModuleConfig(mod, cb) {
+  /**
+   * Return contents of config.json
+   */
+  function getModuleConfig(mod, cb) {
 
-		var configDir = ninja.opts.configDir || path.resolve(process.cwd(), 'config');
+    var configDir = ninja.opts.configDir || path.resolve(process.cwd(), 'config');
 
-		var configPath = path.resolve(
-			configDir
-			, mod
-			, 'config.json'
-		);
+    var configPath = path.resolve(
+      configDir
+      , mod
+      , 'config.json'
+    );
 
-		getModuleFile(configPath, mod, cb);
-	};
+    getModuleFile(configPath, mod, cb);
+  };
 
-	/**
-	 * return contents of path
-	 */
-	function getModuleFile(path, mod, cb) {
+  /**
+   * return contents of path
+   */
+  function getModuleFile(path, mod, cb) {
 
-		fs.stat(path, statResults);
-		function statResults(err, stat) {
+    fs.stat(path, statResults);
+    function statResults(err, stat) {
 
-			if(err) { return cb(err, null); }
-			fs.readFile(path, readResults);
-		};
+      if (err) {
+        return cb(err, null);
+      }
+      fs.readFile(path, readResults);
+    };
 
-		function readResults(err, dat) {
+    function readResults(err, dat) {
 
-			if(err) { return cb(err, null); }
-			cb(null, dat);
-		}
-	};
+      if (err) {
+        return cb(err, null);
+      }
+      cb(null, dat);
+    }
+  };
 
-	/**
-	 * return config object of module
-	 */
-	function moduleConfigData(mod, cb) {
+  /**
+   * return config object of module
+   */
+  function moduleConfigData(mod, cb) {
 
-		getModuleConfig(mod, configResults);
+    getModuleConfig(mod, configResults);
 
-		function configResults(err, cfg) {
+    function configResults(err, cfg) {
 
-			if(err) { return tryModulePackage(); }
+      if (err) {
+        return tryModulePackage();
+      }
 
-			var dat = ninja.getJSON(cfg) || { };
-			if(dat.config) {
+      var dat = ninja.getJSON(cfg) || { };
+      if (dat.config) {
 
-				return cb(null, dat.config);
-			}
-			cb(null, { });
-		};
-		function tryModulePackage() {
+        return cb(null, dat.config);
+      }
+      cb(null, { });
+    };
+    function tryModulePackage() {
 
-			getModulePackage(mod, packageResults);
-		};
-		function packageResults(err, pkg) {
+      getModulePackage(mod, packageResults);
+    };
+    function packageResults(err, pkg) {
 
-			if(err) { return cb(null, { }); }
-			cb(null, ninja.getJSON(pkg).config || { });
-		};
-	};
+      if (err) {
+        return cb(null, { });
+      }
+      cb(null, ninja.getJSON(pkg).config || { });
+    };
+  };
 
-	function systemModules(mod) {
+  function systemModules(mod) {
 
-		var exclude = [
+    var exclude = [
 
-			'serial'
-			, 'platform'
-			, 'rest'
-			, 'common'
-		]
-		return (exclude.indexOf(mod) === -1)
-	};
+      'serial'
+      , 'platform'
+      , 'rest'
+      , 'common'
+    ]
+    return (exclude.indexOf(mod) === -1)
+  };
 
-	function dotFiles(mod) {
+  function dotFiles(mod) {
 
-		return (!mod.match(/^\..*$/))
-	};
+    return (!mod.match(/^\..*$/))
+  };
 };

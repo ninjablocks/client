@@ -1,146 +1,141 @@
-module.exports = config;
+'use strict';
 
 /**
  * Remote config request (from cloud)
  */
 function config(dat, cb) {
 
-	if(!dat.CONFIG || !dat.id) { return; }
+  if (!dat.CONFIG || !dat.id) {
+    return;
+  }
 
-	var
-		cloudBuffer = {
+  var cloudBuffer = {
+    configResponse: {
+      CONFIG: [ ], id: dat.id
+    }, requested: 0, responded: 0, timeout: undefined
+  } , ninja = this;
 
-			configResponse : {
+  dat.CONFIG.map(processRequest.bind(this));
 
-				CONFIG : [ ]
-				, id : dat.id
-			}
-			, requested : 0
-			, responded : 0
-			, timeout : undefined
-		}
-		, ninja = this
+  /**
+   * Called for each config element in the request
+   */
+  function processRequest(req) {
 
-	;
+    var ninja = this;
 
-	dat.CONFIG.map(processRequest.bind(this));
+    if (req.type !== "MODULE") { // We only implement MODULE
+      return;
+    }
 
-	/**
-	 * Called for each config element in the request
-	 */
-	function processRequest(req) {
+    if (!req.module) { // probe the bloke~!
 
-		var ninja = this;
+      // we may want to add filtering of "system" modules from the probes?
+      blockProbe(req, dat.id);
+      return;
+    }
 
-		if(req.type !== "MODULE") { // We only implement MODULE
+    moduleProbe(req, dat.id);
+  }
 
-			return;
-		}
+  function blockProbe(req, id) {
 
-		if(!req.module) { // probe the bloke~!
+    if (!ninja.modules) {
+      return;
+    }
 
-			// we may want to add filtering of "system" modules from the probes?
-			return blockProbe(req, dat.id);
-		}
+    var mods = Object.keys(ninja.modules);
+    cloudBuffer.timeout = setTimeout(sendResponse, 3000);
+    cloudBuffer.requested = mods.length;
 
-		moduleProbe(req, dat.id);
-	};
+    ninja.log.debug("cloudConfig: Initiating requests for %s modules", mods.length);
+    mods.map(sendRequest);
 
-	function blockProbe(req, id) {
+    function sendRequest(mod) {
 
-		if(!ninja.modules) { return; }
-		var mods = Object.keys(ninja.modules);
-		cloudBuffer.timeout = setTimeout(sendResponse, 3000);
-		cloudBuffer.requested = mods.length;
+      if ((ninja.modules[mod] && ninja.modules[mod].config)) {
 
-		ninja.log.debug("cloudConfig: Initiating requests for %s modules", mods.length);
-		mods.map(sendRequest);
-		function sendRequest(mod) {
+        ninja.log.debug("cloudConfig: Requesting config from %s", mod);
 
-			if((ninja.modules[mod] && ninja.modules[mod].config)) {
+        try {
 
-				ninja.log.debug("cloudConfig: Requesting config from %s", mod);
+          ninja.modules[mod].config(req.data || null, function (err, res) {
 
-				try {
+            ninja.log.debug("cloudConfig: Received response from %s", mod);
+            configResponse(err, res, mod);
 
-					ninja.modules[mod].config(req.data || null, function(err, res) {
+          });
 
-						ninja.log.debug("cloudConfig: Received response from %s", mod);
-						configResponse(err, res, mod);
-					});
+        } catch (err) {
+          ninja.log.error('(%s) config error: %s', mod, err.stack);
+        }
+      }
+    }
 
-				} catch (err) {
-					return ninja.log.error('(%s) config error: %s',mod,err.stack);
-				}
-			}
-		};
+    ninja.log.debug("cloudConfig: Cloud requesting block config");
+  }
 
-		return ninja.log.debug("cloudConfig: Cloud requesting block config");
-	};
+  function moduleProbe(req, id) {
 
-	function moduleProbe(req, id) {
+    cloudBuffer.timeout = setTimeout(sendResponse, 3000);
+    cloudBuffer.requested = 1;
+    ninja.log.info(
+      "cloudConfig: Attempting request (%s:%s)"
+      , req.module
+      , id
+    );
+    try {
 
-		cloudBuffer.timeout = setTimeout(sendResponse, 3000);
-		cloudBuffer.requested = 1;
-		ninja.log.info(
+      ninja.modules[req.module].config(req.data || { }, function (err, dat) {
 
-			"cloudConfig: Attempting request (%s:%s)"
-			, req.module
-			, id
-		);
-		try {
+        configResponse(err, dat, req.module);
+      });
 
-			ninja.modules[req.module].config(req.data || { }, function(err, dat) {
+    } catch (err) {
+      ninja.log.error('(%s) config error: %s', req.module, err.stack);
+    }
+  }
 
-				configResponse(err, dat, req.module);
-			});
+  function configResponse(err, res, mod) {
 
-		} catch (err) {
-			return ninja.log.error('(%s) config error: %s',req.module,err.stack);
-		}
-	};
+    if (!cloudBuffer.configResponse.CONFIG) {
 
-	function configResponse(err, res, mod) {
+      cloudBuffer.configResponse.CONFIG = [ ];
+    }
+    // error in module configResponse
+    if (err) {
 
-		if(!cloudBuffer.configResponse.CONFIG) {
+      // what to do here?
+      ninja.log.error(
+        "cloudConfig: %s (%s:%s)"
+        , err
+        , mod
+        , dat.id
+      );
+      return;
+    }
+    ninja.log.debug("cloudConfig: Pushing module response (%s) onto stack", mod);
+    cloudBuffer.configResponse.CONFIG.push({
+      type: "MODULE", module: mod, data: res
+    });
 
-			cloudBuffer.configResponse.CONFIG = [ ];
-		}
-		// error in module configResponse
-		if(err) {
+    if (++cloudBuffer.responded >= cloudBuffer.requested) {
+      clearTimeout(cloudBuffer.timeout);
+      sendResponse();
+    }
+  }
 
-			// what to do here?
-			return ninja.log.error(
+  function sendResponse() {
+    ninja.log.debug("cloudConfig: sending config collection");
 
-				"cloudConfig: %s (%s:%s)"
-				, err
-				, mod
-				, dat.id
-			);
-		}
-		ninja.log.debug("cloudConfig: Pushing module response (%s) onto stack", mod);
-		cloudBuffer.configResponse.CONFIG.push({
+    // If the cloud wants a synchronous response, call its callback
+    // Otherwise send it as a broad case config
+    if (dat.sync) {
+      cb(null, cloudBuffer.configResponse)
+    } else {
+      ninja.cloud.config(cloudBuffer.configResponse);
+    }
+  }
+}
 
-			type : "MODULE"
-			, module : mod
-			, data : res
-		})
-		if(++cloudBuffer.responded >= cloudBuffer.requested) {
-
-			clearTimeout(cloudBuffer.timeout);
-			sendResponse();
-		}
-	};
-
-	function sendResponse() {
-		ninja.log.debug("cloudConfig: sending config collection");
-
-		// If the cloud wants a syncronous response, call its callback
-		// Otherwise send it as a broadcase config
-		if (dat.sync) {
-			cb(null,cloudBuffer.configResponse)
-		} else {
-			ninja.cloud.config(cloudBuffer.configResponse);
-		}
-	}
-};
+module.exports = config;

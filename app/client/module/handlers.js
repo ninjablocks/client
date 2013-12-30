@@ -1,395 +1,366 @@
-var
-	path = require('path')
-	, mkdirp = require('mkdirp')
-	, util = require('util')
-	, fs = require('fs')
-	, domain = require('domain')
-	, util = require('util')
-;
+'use strict';
 
-module.exports = moduleHandlers;
+var path = require('path');
+var mkdirp = require('mkdirp');
+var util = require('util');
+var fs = require('fs');
+var domain = require('domain');
 
 function moduleHandlers(client) {
 
-	client.prototype.loadModule = function loadModule(name, moduleDir, opts, app, cb) {
-		cb = cb || function() {};
+  client.prototype.loadModule = function loadModule(name, moduleDir, opts, app, cb) {
+    cb = cb || function () {
+    };
 
-		if(!name) {
+    if (!name) {
 
-			this.log.error("loadModule: invalid module name");
-			return cb("Invalid module name", null);
-		}
+      this.log.error("loadModule: invalid module name");
+      return cb("Invalid module name", null);
+    }
 
-		if (this.modules[name]) {
-			this.log.warn("loadModule: module '%s' has already been loaded from another directory", name);
-			return cb("Module already loaded", null);
-		}
+    if (this.modules[name]) {
+      this.log.warn("loadModule: module '%s' has already been loaded from another directory", name);
+      return cb("Module already loaded", null);
+    }
 
-		try {
+    try {
 
-			var
-				file = path.resolve(
-					moduleDir
-					, name
-				)
-			;
+      var file = path.resolve(moduleDir, name);
 
-			if(existsSync(file)) {
+      if (existsSync(file)) {
 
-				var mod = require(file);
-				mod.prototype.opts = opts;
-				// stub save function for handling save reqs on instantiation
-				mod.prototype.save = function(cfg) {
+        var mod = require(file);
+        mod.prototype.opts = opts;
 
-					this.queuedSave = cfg || this.opts ? this.opts : { };
-				};
-			}
-			else {
+        // stub save function for handling save reqs on instantiation
+        mod.prototype.save = function (cfg) {
+          this.queuedSave = cfg || this.opts ? this.opts : { };
+        };
+      }
+      else {
 
-				this.log.error("loadModule: No such module '%s'", name);
-				cb(Error(util.format("No such module (%s)", name)), null);
-				return;
-			}
-		}
-		catch(e) {
-			this.log.error("loadModule: %s (%s)", e, name);
-			return cb(e, null);
-		}
+        this.log.error("loadModule: No such module '%s'", name);
+        cb(Error(util.format("No such module (%s)", name)), null);
+        return;
+      }
+    }
+    catch (e) {
+      this.log.error("loadModule: %s (%s)", e, name);
+      return cb(e, null);
+    }
 
-		this.addModule(name, moduleDir, opts, mod, app, cb);
-	};
+    this.addModule(name, moduleDir, opts, mod, app, cb);
+  };
 
 
-	client.prototype.addModule = function addModule(name, moduleDir, params, mod, app, cb) {
+  client.prototype.addModule = function addModule(name, moduleDir, params, mod, app, cb) {
 
-		if(!mod) {
-			var err = new Error('Invalid module provided');
-			this.log.error(err);
-			return cb(err, null);
-		}
+    if (!mod) {
+      var err = new Error('Invalid module provided');
+      this.log.error(err);
+      return cb(err, null);
+    }
 
-		this.log.info("loadModule: %s", name);
+    this.log.info("loadModule: %s", name);
 
 
-		var d = domain.create();
+    var d = domain.create();
 
-		d.on('error', function(err) {
+    d.on('error', function (err) {
 
-			this.log.error(
+      this.log.error(
+        '(%s) had the following error:\n\n%s\n'
+        , name
+        , err.stack
+      );
+    }.bind(this));
 
-				'(%s) had the following error:\n\n%s\n'
-				, name
-				, err.stack
-			);
-		}.bind(this));
+    d.run(function () {
 
-		d.run(function() {
+      var version = this.versionMethod(name, moduleDir, mod)
+        , newModule = new mod(params, app, version);
 
-			var
-				version = this.versionMethod(name, moduleDir, mod)
-				, newModule = new mod(params, app, version)
-			;
-			this.bindModule(newModule, name, moduleDir);
-			this.modules[name] = newModule;
+      this.bindModule(newModule, name, moduleDir);
+      this.modules[name] = newModule;
 
-			cb(null, newModule);
+      cb(null, newModule);
 
-		}.bind(this));
-	};
+    }.bind(this));
+  };
 
-	client.prototype.bindModule = function bindModule(mod, name, moduleDir) {
+  client.prototype.bindModule = function bindModule(mod, name, moduleDir) {
 
-		var ninja = this;
+    var ninja = this;
 
-		mod.log = this.log;
-		mod.save = function emitSave(conf) {
+    mod.log = this.log;
+    mod.save = function emitSave(conf) {
 
-			this.emit('save', conf || mod.opts ? mod.opts : { });
-
-		}.bind(mod);
-		mod.on('announcement', this.announcementHandler.call(ninja, mod, name));
-		mod.on('register', this.registerHandler.call(ninja, name, moduleDir));
-		mod.on('config', this.configHandler.call(ninja, mod, name));
-		mod.on('error', this.moduleError.bind(mod));
-		mod.on('save', this.saveHandler.call(mod, name, ninja));
-		mod.on('ack', this.ackHandler.call(ninja, name));
-		mod.on('data', function(dat) {
-
-			//this.dataHandler.call(this, mod)
-			ninja.sendData(dat);
-		});
-		if(mod.queuedSave) {
-
-			process.nextTick(function() {
-
-				var dat = mod.queuedSave;
-				mod.queuedSave = undefined;
-				mod.emit('save', dat);
-			});
-		}
-		// set data handlers after registration
-	};
-
-	/**
-	 * Called when a module emits a config event
-	 */
-	client.prototype.configHandler = function configHandler(mod, name) {
-
-		var
-			ninja = this
-			, name = name || undefined
-		;
-
-		return function requestConfig(params) {
-
-			if(!name) {
+      this.emit('save', conf || mod.opts ? mod.opts : { });
 
-				return ninja.log.error("configHandler: Unknown module");
-			}
-			var req;
-			if(params.type == "MODULE") {
+    }.bind(mod);
+    mod.on('announcement', this.announcementHandler.call(ninja, mod, name));
+    mod.on('register', this.registerHandler.call(ninja, name, moduleDir));
+    mod.on('config', this.configHandler.call(ninja, mod, name));
+    mod.on('error', this.moduleError.bind(mod));
+    mod.on('save', this.saveHandler.call(mod, name, ninja));
+    mod.on('ack', this.ackHandler.call(ninja, name));
+    mod.on('data', function (dat) {
 
-				req = moduleConfigRequest(params);
-				if(ninja.cloud) {
+      //this.dataHandler.call(this, mod)
+      ninja.sendData(dat);
+    });
+    if (mod.queuedSave) {
+
+      process.nextTick(function () {
+        var dat = mod.queuedSave;
+        mod.queuedSave = undefined;
+        mod.emit('save', dat);
+      });
+    }
+    // set data handlers after registration
+  };
+
+  /**
+   * Called when a module emits a config event
+   */
+  client.prototype.configHandler = function configHandler(mod, name) {
 
-					var req = moduleConfigRequest(params);
-					ninja.cloud.config(req);
-				}
-			}
-			else if(params.type == "PLUGIN") {
-
-				ninja.sendConfig(params);
-			}
-
-			function moduleConfigRequest(params) {
+    var ninja = this, name = name || undefined;
 
-				return {
-
-					type : params.type || "MODULE"
-					, module : name
-					, data : params || { }
-				}
-			};
+    return function requestConfig(params) {
 
-			/**
-			 * Not currently used
-			 */
-			function optionsResults(err, dat) {
+      if (!name) {
 
-				if(err) {
+        return ninja.log.error("configHandler: Unknown module");
+      }
+      var req;
+      if (params.type == "MODULE") {
 
-					if(err.code == "ENOENT") {
+        req = moduleConfigRequest(params);
+        if (ninja.cloud) {
+          req = moduleConfigRequest(params);
+          ninja.cloud.config(req);
+        }
+      }
+      else if (params.type == "PLUGIN") {
 
-						ninja.log.error(
+        ninja.sendConfig(params);
+      }
 
-							"requestConfig: module has no options! (%s)"
-							, name
-						);
-						return;
-					}
-					ninja.log.error("requestConfig: %s (%s)", err, name);
-					return;
-				}
-				options = JSON.stringify({ options : dat }) || undefined;
-				if(!options) {
+      function moduleConfigRequest(params) {
 
-					ninja.log.error("requestConfig: invalid JSON (%s)", name);
-					return;
-				}
-				ninja.log.debug("requestConfig: sending request (%s)", name);
-				/**
-				 * Send the cloud a config request with
-				 * the available options and current settings (if any)
-				 */
-				ninja.cloud.config(configRequest);
-			};
-		};
-	};
+        return {
 
-	client.prototype.announcementHandler = function(mod, name) {
+          type: params.type || "MODULE", module: name, data: params || { }
+        }
+      }
 
-		var
-			ninja = this
-			, name = name || undefined
-		;
+      /**
+       * Not currently used
+       */
+      function optionsResults(err, dat) {
 
-		return function requestAnnouncement(dat) {
+        if (err) {
 
-			if(!name) {
+          if (err.code == "ENOENT") {
 
-				return ninja.log.error("configHandler: Unknown module");
-			}
+            ninja.log.error(
+              "requestConfig: module has no options! (%s)"
+              , name
+            );
+            return;
+          }
+          ninja.log.error("requestConfig: %s (%s)", err, name);
+          return;
+        }
+        var options = JSON.stringify({ options: dat }) || undefined;
+        if (!options) {
 
-			var announcementRequest = {
+          ninja.log.error("requestConfig: invalid JSON (%s)", name);
+          return;
+        }
+        ninja.log.debug("requestConfig: sending request (%s)", name);
+        /**
+         * Send the cloud a config request with
+         * the available options and current settings (if any)
+         */
+        ninja.cloud.config(configRequest);
+      };
+    };
+  };
 
-				CONFIG : [{
+  client.prototype.announcementHandler = function (mod, name) {
 
-					type : 'MODULE_ANNOUNCEMENT'
-					, module : name
-				  	, data : dat
-				}]
-			};
+    var ninja = this, name = name || undefined;
 
-			process.nextTick(function() {
+    return function requestAnnouncement(dat) {
 
-				ninja.cloud.config(announcementRequest);
-				ninja.log.debug("requestAnnouncement: sending request (%s)", name);
-			});
-		};
-	};
+      if (!name) {
 
-	client.prototype.saveHandler = function saveHandler(name, ninja) {
+        return ninja.log.error("configHandler: Unknown module");
+      }
 
-		var mod = this;
-		return function saveConfig(conf) {
+      var announcementRequest = {
 
+        CONFIG: [
+          {
 
-			var configDir = ninja.opts.configDir || path.resolve(process.cwd(), 'config');
+            type: 'MODULE_ANNOUNCEMENT', module: name, data: dat
+          }
+        ]
+      };
 
-			var
-				conf = conf || { }
-				, file = path.resolve(
-					configDir
-					, name
-					, 'config.json'
-				)
-				, data = null
-			;
+      process.nextTick(function () {
 
-			if(!conf) {
+        ninja.cloud.config(announcementRequest);
+        ninja.log.debug("requestAnnouncement: sending request (%s)", name);
+      });
+    };
+  };
 
-				mod.log.debug("saveConfig: No config to save (%s)", name);
-				return false;
-			}
+  client.prototype.saveHandler = function saveHandler(name, ninja) {
 
-			data = JSON.stringify({ config : conf }, null, '\t');
-			if(!data) {
+    var mod = this;
+    return function saveConfig(conf) {
 
-				mod.log.debug("saveConfig: No JSON parsed (%s)", name);
-				return false;
-			}
 
-			this.log.debug("saveConfig: writing config (%s)", file);
+      var configDir = ninja.opts.configDir || path.resolve(process.cwd(), 'config');
 
-			mkdirp(path.dirname(file), ready);
+      var conf = conf || { };
+      var file = path.resolve(configDir, name, 'config.json');
+      var data = null;
 
-			function ready(err) {
+      if (!conf) {
+        mod.log.debug("saveConfig: No config to save (%s)", name);
+        return false;
+      }
 
-				if(err) {
+      data = JSON.stringify({ config: conf }, null, '\t');
+      if (!data) {
 
-					return mod.log.error(
+        mod.log.debug("saveConfig: No JSON parsed (%s)", name);
+        return false;
+      }
 
-						"saveConfig: directory error: %s (%s)"
-						, err
-						, path.dirname(file)
-					);
-				}
-				fs.writeFile(file, data, done);
+      this.log.debug("saveConfig: writing config (%s)", file);
 
-			};
+      mkdirp(path.dirname(file), ready);
 
-			function done(err) {
+      function ready(err) {
 
-				if(err) {
+        if (err) {
 
-					return mod.log.error("saveConfig: write failure (%s)", name);
-				}
-				mod.log.debug("saveConfig: great success! (%s)", name);
-			};
+          return mod.log.error(
 
-			return true;
+            "saveConfig: directory error: %s (%s)"
+            , err
+            , path.dirname(file)
+          );
+        }
+        fs.writeFile(file, data, done);
 
-		}.bind(this);
-	};
+      };
 
-	client.prototype.ackHandler = function(name) {
+      function done(err) {
 
-		var ninja = this;
-		return function(dat) {
+        if (err) {
+          return mod.log.error("saveConfig: write failure (%s)", name);
+        }
+        return mod.log.debug("saveConfig: great success! (%s)", name);
+      }
 
-			//ninja.log.debug("ackHandler: (%s)", name);
-			if(!dat) { return; }
-			ninja.sendData(dat);
-		};
-	};
+      return true;
 
-	client.prototype.registerHandler = function registerHandler(name, moduleDir) {
+    }.bind(this);
+  };
 
-		var ninja = this;
-		var packageDetails = {};
+  client.prototype.ackHandler = function (name) {
 
-		var packagePath = path.resolve(
-			moduleDir
-			, name
-			, 'package.json'
-		);
+    var ninja = this;
+    return function (dat) {
 
-		try {
-			packageDetails = require(packagePath);
-		} catch (err) { }
+      //ninja.log.debug("ackHandler: (%s)", name);
+      if (!dat) {
+        return;
+      }
+      ninja.sendData(dat);
+    };
+  };
 
-		// Fetch any widget data
-		var widgets = packageDetails.widgets;
-		widgets = (util.isArray(widgets)) ? widgets : [];
+  client.prototype.registerHandler = function registerHandler(name, moduleDir) {
 
-		return function(device) {
+    var ninja = this;
+    var packageDetails = {};
 
-			device.guid = ninja.getGuid(device);
+    var packagePath = path.resolve(moduleDir, name, 'package.json');
 
-			if (ninja.devices.hasOwnProperty(device.guid)) {
-				ninja.log.info('Duplicate device handler ignored (%s)',device.guid);
-				return;
-			}
+    try {
+      packageDetails = require(packagePath);
+    } catch (err) {
+    }
 
-			device.module = name || undefined;
-			device.on('data', ninja.dataHandler.call(ninja, device));
-			device.on('heartbeat', ninja.heartbeatHandler.call(ninja, device));
-			device.on('error', ninja.errorHandler.call(ninja, device))
+    // Fetch any widget data
+    var widgets = packageDetails.widgets;
+    widgets = (util.isArray(widgets)) ? widgets : [];
 
-			ninja.log.info("Registering device %s", device.guid);
-			ninja.devices[device.guid] = device;
-			ninja.app.emit("device::up", device.guid, device);
-			// Emit a heartbeat for this device
+    return function (device) {
 
-			ninja.heartbeatHandler.call(ninja, device)({
-				driver: name,
-				widgets: widgets
-			});
-		};
-	};
+      device.guid = ninja.getGuid(device);
 
-	client.prototype.errorHandler = function(device) {
+      if (ninja.devices.hasOwnProperty(device.guid)) {
+        ninja.log.info('Duplicate device handler ignored (%s)', device.guid);
+        return;
+      }
 
-		var self = this;
-		return function(err) {
+      device.module = name || undefined;
+      device.on('data', ninja.dataHandler.call(ninja, device));
+      device.on('heartbeat', ninja.heartbeatHandler.call(ninja, device));
+      device.on('error', ninja.errorHandler.call(ninja, device))
 
-			self.log.error("device: %s", err);
-			if(device.unregister) {
+      ninja.log.info("Registering device %s", device.guid);
+      ninja.devices[device.guid] = device;
+      ninja.app.emit("device::up", device.guid, device);
+      // Emit a heartbeat for this device
 
-				process.nextTick(device.unregister);
-			}
-			self.emit("device::down", device);
-		}
-	};
+      ninja.heartbeatHandler.call(ninja, device)({
+        driver: name,
+        widgets: widgets
+      });
+    };
+  };
 
-	client.prototype.moduleError = function moduleError(err) {
+  client.prototype.errorHandler = function (device) {
 
-		this.log.error("Module error: %s", err);
-	};
+    var self = this;
+    return function (err) {
 
-	client.prototype.moduleHandlers = {
+      self.log.error("device: %s", err);
+      if (device.unregister) {
 
-		config : require('./config')
-		, install : require('./install')
-		, uninstall : require('./uninstall')
+        process.nextTick(device.unregister);
+      }
+      self.emit("device::down", device);
+    }
+  };
 
-	};
+  client.prototype.moduleError = function moduleError(err) {
 
+    this.log.error("Module error: %s", err);
+  };
 
-};
+  client.prototype.moduleHandlers = {
+
+    config: require('./config'), install: require('./install'), uninstall: require('./uninstall')
+
+  };
+
+}
 
 function existsSync(file) {
+  if (fs.existsSync) {
+    return fs.existsSync(file);
+  }
+  return path.existsSync(file);
+}
 
-	if(fs.existsSync) { return fs.existsSync(file); }
-	return path.existsSync(file);
-};
+module.exports = moduleHandlers;
