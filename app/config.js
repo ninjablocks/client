@@ -1,9 +1,9 @@
-var
-	mkdirp = require('mkdirp')
-	, loader = require('./client/module/loader')
-	, path = require('path')
-	, fs = require('fs')
-;
+'use strict';
+
+var mkdirp = require('mkdirp');
+var loader = require('./client/module/loader');
+var path = require('path');
+var fs = require('fs');
 
 /**
  * TODO: configuration profiles
@@ -11,38 +11,38 @@ var
 
 module.exports = function config(ninja, app) {
 
-	if((!ninja) || !ninja.opts) {
+  if ((!ninja) || !ninja.opts) {
 
-		return false;
-	}
+    return false;
+  }
 
-	// Give our app opts
-	app.opts = ninja.opts;
-	app.id = ninja.serial;
-	app.token = ninja.token
+  // Give our app opts
+  app.opts = ninja.opts;
+  app.id = ninja.serial;
+  app.token = ninja.token
 
-	loadPlatform(ninja, app); // embedded arduino
+  loadPlatform(ninja, app); // embedded arduino
 
-	loader(ninja, app);
+  loader(ninja, app);
 
-	setTimeout(function waitThreeSeconds() {
+  setTimeout(function waitThreeSeconds() {
 
-		ninja.connect();
-	}, 3000);
+    ninja.connect();
+  }, 3000);
 
-	return ninja;
+  return ninja;
 };
 
 function loadPlatform(ninja, app) {
 
-	// TODO: Rest should be taken out of drivers
-	var modulePath = path.resolve(process.cwd(), 'drivers');
+  // TODO: Rest should be taken out of drivers
+  var modulePath = path.resolve(process.cwd(), 'drivers');
 
-	// rest interface
-	ninja.loadModule(
-		'rest'
-		, modulePath
-		, ninja
-		, app
-	);
+  // rest interface
+  ninja.loadModule(
+    'rest'
+    , modulePath
+    , ninja
+    , app
+  );
 };

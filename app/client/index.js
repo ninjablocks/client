@@ -19,6 +19,8 @@ var creds = require(path.resolve(
 var logger = require(path.resolve(
   __dirname, '..', '..', 'lib', 'logger'
 ));
+var mqtt = require('mqtt')
+
 
 function client(opts, app) {
 
@@ -50,9 +52,10 @@ function client(opts, app) {
   this.node = undefined; // upnode
   this.transport = opts.secure ? tls : net;
   this.parameters = this.getParameters.call(this, opts);
+  this.mqttclient = this.createMQTTClient();
 
   this.versionClient();
-};
+}
 
 util.inherits(client, stream);
 handlers(client);
@@ -188,15 +191,20 @@ client.prototype.reconnect = function reconnect() {
 };
 
 /**
+ * Build an MQTT client
+ */
+client.prototype.createMQTTClient = function createMQTTClient(){
+  return mqtt.createClient(1883, this.opts.cloudHost, {username: 'guest', password: 'guest'});
+};
+
+/**
  * Generate scoped parameters for dnode connection
  */
 client.prototype.getParameters = function getParameters(opts) {
 
-  var
-    cloudPort = this.opts.cloudPort
-    , cloudHost = this.opts.cloudHost
-    , transport = this.transport
-    ;
+  var cloudPort = this.opts.cloudPort;
+  var cloudHost = this.opts.cloudHost;
+  var transport = this.transport;
 
   return {
 
