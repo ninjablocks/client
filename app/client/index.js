@@ -263,10 +263,10 @@ client.prototype.sendData = function sendData(dat) {
   var msg = { 'DEVICE': [ dat ] };
 
   if ((this.cloud) && this.cloud.data) {
+
     // DEBUGGING
-    var result = this.cloud.data(msg);
-    console.log('sendConfig', dat, result);
-    return result;
+    console.log('sendData', dat);
+    return this.cloud.data(msg);
   }
 
   this.bufferData(msg);
@@ -282,9 +282,8 @@ client.prototype.sendConfig = function sendConfig(dat) {
   if ((this.cloud) && this.cloud.config) {
 
     // DEBUGGING
-    var result = this.cloud.config(JSON.stringify(dat));
-    console.log('sendConfig', dat, result);
-    return result;
+    console.log('sendConfig', dat);
+    return this.cloud.config(JSON.stringify(dat));
   }
 };
 
@@ -297,7 +296,7 @@ client.prototype.sendHeartbeat = function sendHeartbeat(dat) {
   var msg = { 'DEVICE': [ dat ] };
 
   if ((this.cloud) && this.cloud.heartbeat) {
-
+    console.log('sendConfig', dat);
     return this.cloud.heartbeat(msg);
   }
 };
