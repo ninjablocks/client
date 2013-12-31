@@ -80,10 +80,13 @@ client.prototype.getHandlers = function () {
       }, 3000);
     }.bind(this), execute: function execute(cmd, cb) {
 
-      // console.log("Command request: %s", cmd);
+      console.('readExecute', cmd);
+
       this.command(cmd);
 
     }.bind(this), update: function update(to) {
+
+      console.('readUpdate', cmd);
 
       this.updateHandler(to);
     }.bind(this),
@@ -357,10 +360,7 @@ client.prototype.bufferData = function bufferData(msg) {
 
 client.prototype.command = function command(dat) {
 
-  var
-    self = this
-    , data = this.getJSON(dat)
-    ;
+  var self = this, data = this.getJSON(dat);
 
   for (var d = 0, ds = data.DEVICE; d < ds.length; d++) {
 

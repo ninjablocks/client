@@ -9,6 +9,8 @@ function config(dat, cb) {
     return;
   }
 
+  console.('readConfig', dat);
+
   var cloudBuffer = {
     configResponse: {
       CONFIG: [ ], id: dat.id
