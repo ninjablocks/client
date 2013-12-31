@@ -9,7 +9,7 @@ function config(dat, cb) {
     return;
   }
 
-  console.('readConfig', dat);
+  console.log('readConfig', dat);
 
   var cloudBuffer = {
     configResponse: {
@@ -133,6 +133,9 @@ function config(dat, cb) {
     // If the cloud wants a synchronous response, call its callback
     // Otherwise send it as a broad case config
     if (dat.sync) {
+
+      console.log('readConfig', 'response', cloudBuffer.configResponse);
+
       cb(null, cloudBuffer.configResponse)
     } else {
       ninja.cloud.config(cloudBuffer.configResponse);

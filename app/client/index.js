@@ -80,13 +80,13 @@ client.prototype.getHandlers = function () {
       }, 3000);
     }.bind(this), execute: function execute(cmd, cb) {
 
-      console.('readExecute', cmd);
+      console.log('readExecute', cmd);
 
       this.command(cmd);
 
     }.bind(this), update: function update(to) {
 
-      console.('readUpdate', cmd);
+      console.log('readUpdate', cmd);
 
       this.updateHandler(to);
     }.bind(this),
