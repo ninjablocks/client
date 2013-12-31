@@ -274,7 +274,19 @@ client.prototype.sendData = function sendData(dat) {
 
     // DEBUGGING
     console.log('sendData', dat);
-    console.log('sendData', this.serial, this.token);
+
+    try {
+      var userId = 1; // need to store this
+      var blockId = this.serial;
+      var deviceId = [dat.G, dat.V, dat.D].join('_');
+      var topic = ['$user', userId, blockId, 'devices', deviceId, 'data'].join('/');
+
+      console.log('sendData', 'mqtt', topic);
+      this.mqttclient.publish(topic, JSON.stringify(msg));
+    } catch (e) {
+      console.error(e.stack);
+    }
+
     return this.cloud.data(msg);
   }
 
@@ -292,6 +304,19 @@ client.prototype.sendConfig = function sendConfig(dat) {
 
     // DEBUGGING
     console.log('sendConfig', dat);
+
+    try {
+      var userId = 1; // need to store this
+      var blockId = this.serial;
+      var deviceId = [dat.G, dat.V, dat.D].join('_');
+      var topic = ['$user', userId, blockId, 'devices', deviceId, 'config'].join('/');
+      console.log('sendConfig', 'mqtt', topic);
+
+      this.mqttclient.publish(['$user', userId, blockId, 'devices', deviceId, 'config'], JSON.stringify(dat));
+    } catch (e) {
+      console.error(e.stack);
+    }
+
     return this.cloud.config(JSON.stringify(dat));
   }
 };
