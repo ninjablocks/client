@@ -46,6 +46,7 @@ function client(opts, app) {
   this.modules = { };
   this.devices = { };
   this.log = app.log;
+  this.user = 1;
   creds.call(this, opts);
   versioning.call(this, opts);
 
@@ -312,7 +313,7 @@ client.prototype.sendConfig = function sendConfig(dat) {
       var topic = ['$user', userId, blockId, 'devices', deviceId, 'config'].join('/');
       console.log('sendConfig', 'mqtt', topic);
 
-      this.mqttclient.publish(['$user', userId, blockId, 'devices', deviceId, 'config'], JSON.stringify(dat));
+      this.mqttclient.publish(topic, JSON.stringify(dat));
     } catch (e) {
       console.error(e.stack);
     }
@@ -330,7 +331,20 @@ client.prototype.sendHeartbeat = function sendHeartbeat(dat) {
   var msg = { 'DEVICE': [ dat ] };
 
   if ((this.cloud) && this.cloud.heartbeat) {
-    console.log('sendConfig', dat);
+    console.log('sendHeartbeat', dat);
+
+    try {
+      var userId = this.user; // need to store this
+      var blockId = this.serial;
+      var deviceId = [dat.G, dat.V, dat.D].join('_');
+      var topic = ['$user', userId, blockId, 'devices', deviceId, 'heartbeat'].join('/');
+      console.log('sendHeartbeat', 'mqtt', topic);
+
+      this.mqttclient.publish(topic, JSON.stringify(dat));
+    } catch (e) {
+      console.error(e.stack);
+    }
+
     return this.cloud.heartbeat(msg);
   }
 };
