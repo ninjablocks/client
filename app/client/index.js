@@ -194,7 +194,7 @@ client.prototype.reconnect = function reconnect() {
  * Build an MQTT client
  */
 client.prototype.createMQTTClient = function createMQTTClient(){
-  return mqtt.createClient(1883, this.opts.cloudHost, {username: 'guest', password: 'guest'});
+  return mqtt.createClient(1883, this.opts.cloudHost, {username: this.serial, password: this.token});
 };
 
 /**
@@ -274,6 +274,7 @@ client.prototype.sendData = function sendData(dat) {
 
     // DEBUGGING
     console.log('sendData', dat);
+    console.log('sendData', this.serial, this.token);
     return this.cloud.data(msg);
   }
 
