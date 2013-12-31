@@ -46,7 +46,6 @@ function client(opts, app) {
   this.modules = { };
   this.devices = { };
   this.log = app.log;
-  this.user = 1;
   creds.call(this, opts);
   versioning.call(this, opts);
 
@@ -277,10 +276,9 @@ client.prototype.sendData = function sendData(dat) {
     console.log('sendData', dat);
 
     try {
-      var userId = 1; // need to store this
       var blockId = this.serial;
       var deviceId = [dat.G, dat.V, dat.D].join('_');
-      var topic = ['$user', userId, blockId, 'devices', deviceId, 'data'].join('/');
+      var topic = ['$block', blockId, 'devices', deviceId, 'data'].join('/');
 
       console.log('sendData', 'mqtt', topic);
       this.mqttclient.publish(topic, JSON.stringify(msg));
@@ -307,10 +305,9 @@ client.prototype.sendConfig = function sendConfig(dat) {
     console.log('sendConfig', dat);
 
     try {
-      var userId = 1; // need to store this
       var blockId = this.serial;
       var deviceId = [dat.G, dat.V, dat.D].join('_');
-      var topic = ['$user', userId, blockId, 'devices', deviceId, 'config'].join('/');
+      var topic = ['$block', blockId, 'devices', deviceId, 'config'].join('/');
       console.log('sendConfig', 'mqtt', topic);
 
       this.mqttclient.publish(topic, JSON.stringify(dat));
@@ -334,10 +331,9 @@ client.prototype.sendHeartbeat = function sendHeartbeat(dat) {
     console.log('sendHeartbeat', dat);
 
     try {
-      var userId = this.user; // need to store this
       var blockId = this.serial;
       var deviceId = [dat.G, dat.V, dat.D].join('_');
-      var topic = ['$user', userId, blockId, 'devices', deviceId, 'heartbeat'].join('/');
+      var topic = ['$block', blockId, 'devices', deviceId, 'heartbeat'].join('/');
       console.log('sendHeartbeat', 'mqtt', topic);
 
       this.mqttclient.publish(topic, JSON.stringify(dat));
