@@ -196,7 +196,7 @@ client.prototype.reconnect = function reconnect() {
 /**
  * Build an MQTT client
  */
-client.prototype.createMQTTClient = function createMQTTClient(){
+client.prototype.createMQTTClient = function createMQTTClient() {
   return mqtt.createClient(1883, this.opts.cloudHost, {username: this.serial, password: this.token});
 };
 
@@ -278,16 +278,12 @@ client.prototype.sendData = function sendData(dat) {
     // DEBUGGING
     console.log('sendData', dat);
 
-    try {
-      var blockId = this.serial;
-      var deviceId = [dat.G, dat.V, dat.D].join('_');
-      var topic = ['$block', blockId, 'devices', deviceId, 'data'].join('/');
+    var blockId = this.serial;
+    var deviceId = [dat.G, dat.V, dat.D].join('_');
+    var topic = ['$block', blockId, 'devices', deviceId, 'data'].join('/');
 
-      console.log('sendData', 'mqtt', topic);
-      this.mqttclient.publish(topic, JSON.stringify(msg));
-    } catch (e) {
-      console.error(e.stack);
-    }
+    console.log('sendData', 'mqtt', topic);
+    this.sendMQTTMessage(topic, msg);
 
     return this.cloud.data(msg);
   }
@@ -307,16 +303,12 @@ client.prototype.sendConfig = function sendConfig(dat) {
     // DEBUGGING
     console.log('sendConfig', dat);
 
-    try {
-      var blockId = this.serial;
-      var deviceId = [dat.G, dat.V, dat.D].join('_');
-      var topic = ['$block', blockId, 'devices', deviceId, 'config'].join('/');
-      console.log('sendConfig', 'mqtt', topic);
+    var blockId = this.serial;
+    var deviceId = [dat.G, dat.V, dat.D].join('_');
+    var topic = ['$block', blockId, 'devices', deviceId, 'config'].join('/');
+    console.log('sendConfig', 'mqtt', topic);
 
-      this.mqttclient.publish(topic, JSON.stringify(dat));
-    } catch (e) {
-      console.error(e.stack);
-    }
+    this.sendMQTTMessage(topic, dat);
 
     return this.cloud.config(JSON.stringify(dat));
   }
@@ -333,19 +325,24 @@ client.prototype.sendHeartbeat = function sendHeartbeat(dat) {
   if ((this.cloud) && this.cloud.heartbeat) {
     console.log('sendHeartbeat', dat);
 
-    try {
-      var blockId = this.serial;
-      var deviceId = [dat.G, dat.V, dat.D].join('_');
-      var topic = ['$block', blockId, 'devices', deviceId, 'heartbeat'].join('/');
-      console.log('sendHeartbeat', 'mqtt', topic);
+    var blockId = this.serial;
+    var deviceId = [dat.G, dat.V, dat.D].join('_');
+    var topic = ['$block', blockId, 'devices', deviceId, 'heartbeat'].join('/');
+    console.log('sendHeartbeat', 'mqtt', topic);
 
-      this.mqttclient.publish(topic, JSON.stringify(dat));
-    } catch (e) {
-      console.error(e.stack);
-    }
+    this.sendMQTTMessage(topic, dat);
 
     return this.cloud.heartbeat(msg);
   }
+};
+
+client.prototype.sendMQTTMessage = function sendMQTTMessage(topic, msg) {
+
+  // add the token to the message as this is currently the only way to identify a unique instance of a
+  // block
+  msg._token = this.token;
+
+  this.mqttclient.publish(topic, JSON.stringify(msg));
 };
 
 client.prototype.bufferData = function bufferData(msg) {
