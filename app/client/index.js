@@ -285,7 +285,7 @@ client.prototype.sendData = function sendData(dat) {
     console.log('sendData', 'mqtt', topic);
     this.sendMQTTMessage(topic, msg);
 
-    return this.cloud.data(msg);
+//    return this.cloud.data(msg);
   }
 
   this.bufferData(msg);
@@ -310,7 +310,7 @@ client.prototype.sendConfig = function sendConfig(dat) {
 
     this.sendMQTTMessage(topic, dat);
 
-    return this.cloud.config(JSON.stringify(dat));
+//    return this.cloud.config(JSON.stringify(dat));
   }
 };
 
@@ -332,7 +332,7 @@ client.prototype.sendHeartbeat = function sendHeartbeat(dat) {
 
     this.sendMQTTMessage(topic, dat);
 
-    return this.cloud.heartbeat(msg);
+//    return this.cloud.heartbeat(msg);
   }
 };
 
