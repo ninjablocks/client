@@ -279,7 +279,7 @@ function moduleHandlers(client) {
     var ninja = this;
     return function (dat) {
 
-      //ninja.log.debug("ackHandler: (%s)", name);
+      ninja.log.debug("ackHandler: (%s)", name);
       if (!dat) {
         return;
       }
@@ -322,6 +322,7 @@ function moduleHandlers(client) {
       ninja.app.emit("device::up", device.guid, device);
       // Emit a heartbeat for this device
 
+      ninja.log.debug("heartbeatHandler: (%s)", name);
       ninja.heartbeatHandler.call(ninja, device)({
         driver: name,
         widgets: widgets

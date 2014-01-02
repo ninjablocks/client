@@ -138,7 +138,15 @@ function config(dat, cb) {
 
       cb(null, cloudBuffer.configResponse)
     } else {
-      ninja.cloud.config(cloudBuffer.configResponse);
+
+      var blockId = this.serial;
+      var topic = ['$block', blockId, 'config'].join('/');
+
+      ninja.log.debug('cloudConfig topic %s', topic);
+
+      ninja.sendMQTTMessage(topic, cloudBuffer.configResponse);
+
+//      ninja.cloud.config(cloudBuffer.configResponse);
     }
   }
 }
