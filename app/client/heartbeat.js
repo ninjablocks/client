@@ -4,29 +4,28 @@
 
 function heartbeat() {
 
-	var beat = getBeat.call(this);
-	this.cloud.heartbeat(beat);
-	this.log.debug("Sending heartbeat...");
+  var beat = getBeat.call(this);
+  this.cloud.heartbeat(beat);
+  this.log.debug("Sending heartbeat...");
 };
 
 function getBeat() {
 
-	var beat = {
+  var beat = {
 
-		'TIMESTAMP' : (new Date().getTime())
-		, 'DEVICE' : [ ]
-	};
+    'TIMESTAMP': (new Date().getTime()), 'DEVICE': [ ]
+  };
 
-	for (r in this.readings) {
+  for (r in this.readings) {
 
-		if(this.readings.hasOwnProperty(r)) {
+    if (this.readings.hasOwnProperty(r)) {
 
-			hb.DEVICE.unshift(this.readings[r]);
-		}
-	}
-	this.readings = { };
+      hb.DEVICE.unshift(this.readings[r]);
+    }
+  }
+  this.readings = { };
 
-	return JSON.stringify(beat);
+  return JSON.stringify(beat);
 }
 
 module.exports = heartbeat;

@@ -89,6 +89,7 @@ client.prototype.getHandlers = function () {
       console.log('readUpdate', cmd);
 
       this.updateHandler(to);
+
     }.bind(this),
     config: this.moduleHandlers.config.bind(this),
     install: this.moduleHandlers.install.bind(this),
