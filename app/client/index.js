@@ -172,6 +172,7 @@ client.prototype.initialize = function initialize() {
         var topic = ['$cloud', blockId, 'data'].join('/');
 
         console.log('sendData', 'flushBuffer', 'mqtt', topic);
+
         this.sendMQTTMessage(topic, {
           'DEVICE': this.sendBuffer
         });
@@ -324,7 +325,7 @@ client.prototype.sendData = function sendData(dat) {
   dat.TIMESTAMP = (new Date().getTime());
   var msg = { 'DEVICE': [ dat ] };
 
-  if ((this.cloud) && this.cloud.data) {
+  if ((this.mqttclient)) {//  && this.cloud.data) {
 
     // DEBUGGING
     console.log('sendData', dat);
@@ -373,7 +374,7 @@ client.prototype.sendHeartbeat = function sendHeartbeat(dat) {
   dat.TIMESTAMP = (new Date().getTime());
   var msg = { 'DEVICE': [ dat ] };
 
-  if ((this.cloud) && this.cloud.heartbeat) {
+  if ((this.mqttclient)) {//  && this.cloud.data) {
     console.log('sendHeartbeat', dat);
 
     var blockId = this.serial;
