@@ -58,6 +58,7 @@ function client(opts, app) {
   // enable the subscription router
   this.router = mqttrouter.wrap(this.mqttclient);
 
+  this.subscribe();
   this.versionClient();
 }
 
@@ -115,22 +116,24 @@ client.prototype.subscribe = function subscribe(){
     }, 3000);
   });
 
-  this.router.subscribe('$block/' + this.serial + '/commands', function execute(cmd) {
+  this.router.subscribe('$block/' + this.serial + '/commands', function execute(topic, cmd) {
 
     this.log.info('MQTT readExecute', cmd);
     this.command(cmd);
 
   }.bind(this));
 
-  this.router.subscribe('$block/' + this.serial + '/update',  function update(to) {
+  this.router.subscribe('$block/' + this.serial + '/update',  function update(topic, cmd) {
 
     this.log.info('MQTT readUpdate', cmd);
 
-    this.updateHandler(to);
+    this.updateHandler(cmd);
 
   }.bind(this));
 
-  this.router.subscribe('$block/' + this.serial + '/config', this.moduleHandlers.config.bind(this));
+  this.router.subscribe('$block/' + this.serial + '/config',function update(topic, cmd) {
+    this.moduleHandlers.config.call(this, cmd);
+  }.bind(this));
 
 };
 
