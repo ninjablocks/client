@@ -140,7 +140,7 @@ function config(dat, cb) {
     } else {
 
       var blockId = this.serial;
-      var topic = ['$block', blockId, 'config'].join('/');
+      var topic = ['$cloud', blockId, 'config'].join('/');
 
       ninja.log.debug('cloudConfig topic %s', topic);
 

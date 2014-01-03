@@ -19,7 +19,8 @@ var creds = require(path.resolve(
 var logger = require(path.resolve(
   __dirname, '..', '..', 'lib', 'logger'
 ));
-var mqtt = require('mqtt')
+var mqtt = require('mqtt');
+var mqttrouter = require('mqtt-router');
 
 
 function client(opts, app) {
@@ -54,6 +55,9 @@ function client(opts, app) {
   this.parameters = this.getParameters.call(this, opts);
   this.mqttclient = this.createMQTTClient();
 
+  // enable the subscription router
+  this.router = mqttrouter.wrap(this.mqttclient);
+
   this.versionClient();
 }
 
@@ -80,13 +84,13 @@ client.prototype.getHandlers = function () {
       }, 3000);
     }.bind(this), execute: function execute(cmd, cb) {
 
-      console.log('readExecute', cmd);
+      this.log.info('readExecute', cmd);
 
       this.command(cmd);
 
     }.bind(this), update: function update(to) {
 
-      console.log('readUpdate', cmd);
+      this.log.info('readUpdate', cmd);
 
       this.updateHandler(to);
 
@@ -95,6 +99,39 @@ client.prototype.getHandlers = function () {
     install: this.moduleHandlers.install.bind(this),
     uninstall: this.moduleHandlers.uninstall.bind(this)
   }
+};
+
+client.prototype.subscribe = function subscribe(){
+
+  this.router.subscribe('$block/' + this.serial + '/revoke', function revokeCredentials(){
+    var cli = this;
+    this.log.info('MQTT Invalid token; exiting in 3 seconds...');
+    this.app.emit('client::invalidToken', true);
+    setTimeout(function invalidTokenExit() {
+
+      cli.log.info("Exiting now.");
+      process.exit(1);
+
+    }, 3000);
+  });
+
+  this.router.subscribe('$block/' + this.serial + '/commands', function execute(cmd) {
+
+    this.log.info('MQTT readExecute', cmd);
+    this.command(cmd);
+
+  }.bind(this));
+
+  this.router.subscribe('$block/' + this.serial + '/update',  function update(to) {
+
+    this.log.info('MQTT readUpdate', cmd);
+
+    this.updateHandler(to);
+
+  }.bind(this));
+
+  this.router.subscribe('$block/' + this.serial + '/config', this.moduleHandlers.config.bind(this));
+
 };
 
 /**
@@ -281,7 +318,7 @@ client.prototype.sendData = function sendData(dat) {
 
     var blockId = this.serial;
     var deviceId = [dat.G, dat.V, dat.D].join('_');
-    var topic = ['$block', blockId, 'devices', deviceId, 'data'].join('/');
+    var topic = ['$cloud', blockId, 'devices', deviceId, 'data'].join('/');
 
     console.log('sendData', 'mqtt', topic);
     this.sendMQTTMessage(topic, msg);
@@ -306,7 +343,7 @@ client.prototype.sendConfig = function sendConfig(dat) {
 
     var blockId = this.serial;
     var deviceId = [dat.G, dat.V, dat.D].join('_');
-    var topic = ['$block', blockId, 'devices', deviceId, 'config'].join('/');
+    var topic = ['$cloud', blockId, 'devices', deviceId, 'config'].join('/');
     console.log('sendConfig', 'mqtt', topic);
 
     this.sendMQTTMessage(topic, dat);
@@ -328,7 +365,7 @@ client.prototype.sendHeartbeat = function sendHeartbeat(dat) {
 
     var blockId = this.serial;
     var deviceId = [dat.G, dat.V, dat.D].join('_');
-    var topic = ['$block', blockId, 'devices', deviceId, 'heartbeat'].join('/');
+    var topic = ['$cloud', blockId, 'devices', deviceId, 'heartbeat'].join('/');
     console.log('sendHeartbeat', 'mqtt', topic);
 
     this.sendMQTTMessage(topic, dat);
