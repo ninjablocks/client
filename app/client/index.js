@@ -167,10 +167,20 @@ client.prototype.initialize = function initialize() {
       if (this.sendBuffer.length > 0) {
 
         this.log.debug("Sending buffered commands...");
-        this.cloud.data({
 
+        var blockId = this.serial;
+        var topic = ['$cloud', blockId, 'data'].join('/');
+
+        console.log('sendData', 'flushBuffer', 'mqtt', topic);
+        this.sendMQTTMessage(topic, {
           'DEVICE': this.sendBuffer
         });
+
+/*
+        this.cloud.data({
+          'DEVICE': this.sendBuffer
+        });
+*/
         this.sendBuffer = [ ];
       }
       else {
