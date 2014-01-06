@@ -1,0 +1,21 @@
+{
+  "name": "ninja-lifx",
+  "version": "0.0.1",
+  "description": "Ninja Blocks Lifx Driver (Mac, Linux)",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elliots/ninja-lifx"
+  },
+  "dependencies": {
+    "lifx": "git://github.com/magicmonkey/lifxjs.git"
+  },
+  "author": "Elliot Shepherd",
+  "license": "MIT",
+  "config": {
+    "autoRegister": true
+  }
+}
