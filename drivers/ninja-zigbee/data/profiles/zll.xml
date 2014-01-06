@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<profiles xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="ha.xsd">
+    <profile id="0xc05e" name="ZigBee Light Link Profile">
+
+        <device id="0x0000" name="On/Off Light">
+            <server>
+                <clusterRef name="Basic" />
+                <clusterRef name="On/Off Switch Configuration" />
+            </server>
+        </device>
+
+        <device id="0x0100" name="Dimmable Light">
+            <server>
+                <clusterRef name="Basic" />
+                <clusterRef name="On/Off Switch Configuration" />
+                <clusterRef name="Level Control" />
+            </server>
+        </device>
+
+        <device id="0x0200" name="Color Light">
+            <server>
+                <clusterRef name="Basic" />
+                <clusterRef name="On/Off Switch Configuration" />
+                <clusterRef name="Level Control" />
+                <clusterRef name="Color Control" />
+            </server>
+        </device>
+
+        <device id="0x0210" name="Ext Color Light">
+            <server>
+                <clusterRef name="Basic" />
+                <clusterRef name="On/Off Switch Configuration" />
+                <clusterRef name="Level Control" />
+                <clusterRef name="Color Control" />
+            </server>
+        </device>
+
+    </profile>
+</profiles>

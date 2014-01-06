@@ -1,0 +1,5 @@
+{
+    "NinjaLight" : {
+        "zigbeeDevices": ["0x0100","0x0103"]
+    }
+}

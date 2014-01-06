@@ -1,0 +1,41 @@
+{
+  "name": "ninja-zigbee",
+  "version": "0.0.4",
+  "description": "Ninja ZigBee driver for the TI CC2531 programmed as a Zigbee Network Processor",
+  "contributors": [
+    "Elliot Shepherd <elliot@ninjablocks.com>"
+  ],
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elliots/ninja-zigbee"
+  },
+  "keywords": [
+    "Zigbee",
+    "Light Link"
+  ],
+  "os": [
+    "linux",
+    "darwin"
+  ],
+  "cpu": [
+    "arm",
+    "x64"
+  ],
+  "dependencies": {
+    "xml2js": "~0.2.8",
+    "async": "~0.2.9",
+    "underscore": "~1.5.1",
+    "prettyjson": "~0.8.1",
+    "log4js": "0.6.9",
+    "buffermaker": "git://github.com/ninjablocks/BufferMaker",
+    "binary": "~0.3.0",
+    "ninja-presence-base": "git://github.com/elliots/ninja-presence-base",
+    "cli-table": "~0.2.0"
+  },
+  "license": "MIT",
+  "config": {}
+}
