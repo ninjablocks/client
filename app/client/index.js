@@ -49,21 +49,15 @@ function Client(opts, app) {
   versioning.call(this, opts);
 
   this.node = undefined; // upnode
-  this.transport = opts.secure ? tls : net;
-  this.parameters = this.getParameters.call(this, opts);
-  this.mqttclient = this.createMQTTClient();
+  this.transport = opts.secure ? tls : net; // TODO TLS needs to be configured for MQTT.
 
-  // enable the subscription router
-  this.router = mqttrouter.wrap(this.mqttclient);
-
-  this.subscribe();
   this.versionClient();
 }
 
-util.inherits(client, stream);
-handlers(client);
+util.inherits(Client, stream);
+handlers(Client);
 
-Client.prototype.block = require('./block');
+//Client.prototype.block = require('./block');
 
 Client.prototype.getHandlers = function () {
 
@@ -101,7 +95,7 @@ Client.prototype.getHandlers = function () {
 
 Client.prototype.subscribe = function subscribe() {
 
-  if(!this.token){
+  if (!this.token) {
 
     // TODO: need to add a subscription for the credentials handler.
     return;
@@ -145,13 +139,28 @@ Client.prototype.subscribe = function subscribe() {
  * Connect the block to the cloud
  */
 Client.prototype.connect = function connect() {
-
+  console.trace('connect called!!');
   var client = this;
-//  this.node = upnode(this.getHandlers()).connect(this.parameters);
   this.node = {};
-//  this.node.on('reconnect', client.reconnect.bind(client));
-//  this.node.on('down', client.down.bind(client));
-//  this.node.on('up', client.up.bind(client));
+
+  // if the system doesn't have a token yet we need to park
+  // and wait for registration
+  if (!this.token) {
+    this.mqttclient = mqtt.createClient(1883, this.opts.cloudHost, {username: 'guest', password: 'guest', keepalive: 30});
+  } else {
+    this.mqttclient = mqtt.createClient(1883, this.opts.cloudHost, {username: this.serial, password: this.token, keepalive: 30});
+  }
+
+//  this.mqttclient.on('reconnect', client.reconnect.bind(client)); //TODO test this new event
+  this.mqttclient.on('disconnect', client.down.bind(client));
+  this.mqttclient.on('connect', client.up.bind(client));
+
+  // enable the subscription router
+  this.router = mqttrouter.wrap(this.mqttclient);
+
+  // subscribe to all the cloud topics
+  this.subscribe();
+
   this.initialize();
 };
 
@@ -254,18 +263,6 @@ Client.prototype.reconnect = function reconnect() {
  */
 Client.prototype.createMQTTClient = function createMQTTClient() {
 
-  // if the system doesn't have a token yet we need to park
-  // and wait for registration
-  if(!this.token){
-    var client = mqtt.createClient(1883, this.opts.cloudHost, {username: 'guest', password: 'guest'});
-  }
-
-  var client = mqtt.createClient(1883, this.opts.cloudHost, {username: this.serial, password: this.token});
-
-  client.on('reconnect', client.reconnect.bind(client)); //TODO test this new event
-
-  client.on('disconnect', client.down.bind(client));
-  client.on('connect', client.up.bind(client));
 
   return client;
 };
@@ -371,12 +368,12 @@ Client.prototype.sendConfig = function sendConfig(dat) {
   if ((this.cloud) && this.cloud.config) {
 
     // DEBUGGING
-    console.log('sendConfig', dat);
+    this.log.debug('sendConfig', dat);
 
     var blockId = this.serial;
     var deviceId = [dat.G, dat.V, dat.D].join('_');
     var topic = ['$cloud', blockId, 'devices', deviceId, 'config'].join('/');
-    console.log('sendConfig', 'mqtt', topic);
+    this.log.debug('sendConfig', 'mqtt', topic);
 
     this.sendMQTTMessage(topic, dat);
 
@@ -393,12 +390,12 @@ Client.prototype.sendHeartbeat = function sendHeartbeat(dat) {
   var msg = { 'DEVICE': [ dat ] };
 
   if ((this.mqttclient)) {//  && this.cloud.data) {
-    console.log('sendHeartbeat', dat);
+    this.log.debug('sendHeartbeat', dat);
 
     var blockId = this.serial;
     var deviceId = [dat.G, dat.V, dat.D].join('_');
     var topic = ['$cloud', blockId, 'devices', deviceId, 'heartbeat'].join('/');
-    console.log('sendHeartbeat', 'mqtt', topic);
+    this.log.debug('sendHeartbeat', 'mqtt', topic);
 
     this.sendMQTTMessage(topic, dat);
 
