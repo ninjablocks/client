@@ -5,11 +5,11 @@
  */
 function config(dat, cb) {
 
+  console.log('readConfig', dat);
+
   if (!dat.CONFIG || !dat.id) {
     return;
   }
-
-  console.log('readConfig', dat);
 
   var cloudBuffer = {
     configResponse: {
@@ -139,7 +139,7 @@ function config(dat, cb) {
       cb(null, cloudBuffer.configResponse)
     } else {
 
-      var blockId = this.serial;
+      var blockId = ninja.serial;
       var topic = ['$cloud', blockId, 'config'].join('/');
 
       ninja.log.debug('cloudConfig topic %s', topic);

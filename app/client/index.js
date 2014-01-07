@@ -116,21 +116,22 @@ Client.prototype.subscribe = function subscribe() {
 
   this.router.subscribe('$block/' + this.serial + '/commands', function execute(topic, cmd) {
 
-    this.log.info('MQTT readExecute', cmd);
+    this.log.info('MQTT readExecute', JSON.parse(cmd));
     this.command(cmd);
 
   }.bind(this));
 
   this.router.subscribe('$block/' + this.serial + '/update', function update(topic, cmd) {
 
-    this.log.info('MQTT readUpdate', cmd);
+    this.log.info('MQTT readUpdate', JSON.parse(cmd));
 
     this.updateHandler(cmd);
 
   }.bind(this));
 
   this.router.subscribe('$block/' + this.serial + '/config', function update(topic, cmd) {
-    this.moduleHandlers.config.call(this, cmd);
+    this.log.info('MQTT readConfig', cmd);
+    this.moduleHandlers.config.call(this, JSON.parse(cmd));
   }.bind(this));
 
 };
