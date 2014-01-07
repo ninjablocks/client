@@ -3,7 +3,6 @@
 var path = require('path');
 var util = require('util');
 var mkdirp = require('mkdirp');
-var upnode = require('upnode');
 var handlers = require('./module/handlers');
 var stream = require('stream');
 var tls = require('tls');
@@ -22,7 +21,7 @@ var mqtt = require('mqtt');
 var mqttrouter = require('mqtt-router');
 
 
-function client(opts, app) {
+function Client(opts, app) {
 
   var modules = {}, mod = this;
 
@@ -64,9 +63,9 @@ function client(opts, app) {
 util.inherits(client, stream);
 handlers(client);
 
-client.prototype.block = require('./block');
+Client.prototype.block = require('./block');
 
-client.prototype.getHandlers = function () {
+Client.prototype.getHandlers = function () {
 
   return {
 
@@ -100,9 +99,16 @@ client.prototype.getHandlers = function () {
   }
 };
 
-client.prototype.subscribe = function subscribe(){
+Client.prototype.subscribe = function subscribe() {
 
-  this.router.subscribe('$block/' + this.serial + '/revoke', function revokeCredentials(){
+  if(!this.token){
+
+    // TODO: need to add a subscription for the credentials handler.
+    return;
+
+  }
+
+  this.router.subscribe('$block/' + this.serial + '/revoke', function revokeCredentials() {
     var cli = this;
     this.log.info('MQTT Invalid token; exiting in 3 seconds...');
     this.app.emit('client::invalidToken', true);
@@ -121,7 +127,7 @@ client.prototype.subscribe = function subscribe(){
 
   }.bind(this));
 
-  this.router.subscribe('$block/' + this.serial + '/update',  function update(topic, cmd) {
+  this.router.subscribe('$block/' + this.serial + '/update', function update(topic, cmd) {
 
     this.log.info('MQTT readUpdate', cmd);
 
@@ -129,7 +135,7 @@ client.prototype.subscribe = function subscribe(){
 
   }.bind(this));
 
-  this.router.subscribe('$block/' + this.serial + '/config',function update(topic, cmd) {
+  this.router.subscribe('$block/' + this.serial + '/config', function update(topic, cmd) {
     this.moduleHandlers.config.call(this, cmd);
   }.bind(this));
 
@@ -138,10 +144,11 @@ client.prototype.subscribe = function subscribe(){
 /**
  * Connect the block to the cloud
  */
-client.prototype.connect = function connect() {
+Client.prototype.connect = function connect() {
 
   var client = this;
-  this.node = upnode(this.getHandlers()).connect(this.parameters);
+//  this.node = upnode(this.getHandlers()).connect(this.parameters);
+  this.node = {};
 //  this.node.on('reconnect', client.reconnect.bind(client));
 //  this.node.on('down', client.down.bind(client));
 //  this.node.on('up', client.up.bind(client));
@@ -152,10 +159,9 @@ client.prototype.connect = function connect() {
  * Initialize the session with the cloud after a connection
  * has been established.
  */
-client.prototype.initialize = function initialize() {
+Client.prototype.initialize = function initialize() {
 
-  var
-    mod = this
+  var mod = this
     , flushBuffer = function flushBuffer() {
 
       if (!this.sendBuffer) {
@@ -175,11 +181,11 @@ client.prototype.initialize = function initialize() {
           'DEVICE': this.sendBuffer
         });
 
-/*
-        this.cloud.data({
-          'DEVICE': this.sendBuffer
-        });
-*/
+        /*
+         this.cloud.data({
+         'DEVICE': this.sendBuffer
+         });
+         */
         this.sendBuffer = [ ];
       }
       else {
@@ -213,7 +219,7 @@ client.prototype.initialize = function initialize() {
 /**
  * cloud event handlers
  */
-client.prototype.up = function up(cloud) {
+Client.prototype.up = function up(cloud) {
 
   try {
     this.app.emit('client::preup', cloud)
@@ -226,7 +232,7 @@ client.prototype.up = function up(cloud) {
   this.log.info("Client connected to the Ninja Platform");
 };
 
-client.prototype.down = function down() {
+Client.prototype.down = function down() {
 
   this.app.emit('client::down', true);
   this.log.info("Client disconnected from the Ninja Platform");
@@ -236,7 +242,7 @@ client.prototype.down = function down() {
   }
 };
 
-client.prototype.reconnect = function reconnect() {
+Client.prototype.reconnect = function reconnect() {
 
   this.app.emit('client::reconnecting', true);
 
@@ -246,7 +252,14 @@ client.prototype.reconnect = function reconnect() {
 /**
  * Build an MQTT client
  */
-client.prototype.createMQTTClient = function createMQTTClient() {
+Client.prototype.createMQTTClient = function createMQTTClient() {
+
+  // if the system doesn't have a token yet we need to park
+  // and wait for registration
+  if(!this.token){
+    var client = mqtt.createClient(1883, this.opts.cloudHost, {username: 'guest', password: 'guest'});
+  }
+
   var client = mqtt.createClient(1883, this.opts.cloudHost, {username: this.serial, password: this.token});
 
   client.on('reconnect', client.reconnect.bind(client)); //TODO test this new event
@@ -260,7 +273,7 @@ client.prototype.createMQTTClient = function createMQTTClient() {
 /**
  * Generate scoped parameters for dnode connection
  */
-client.prototype.getParameters = function getParameters(opts) {
+Client.prototype.getParameters = function getParameters(opts) {
 
   var cloudPort = this.opts.cloudPort;
   var cloudHost = this.opts.cloudHost;
@@ -275,7 +288,7 @@ client.prototype.getParameters = function getParameters(opts) {
   };
 };
 
-client.prototype.dataHandler = function dataHandler(device) {
+Client.prototype.dataHandler = function dataHandler(device) {
 
   var self = this;
   return function (data) {
@@ -295,7 +308,7 @@ client.prototype.dataHandler = function dataHandler(device) {
   }
 };
 
-client.prototype.heartbeatHandler = function dataHandler(device) {
+Client.prototype.heartbeatHandler = function dataHandler(device) {
 
   var self = this;
   return function (hb) {
@@ -321,7 +334,7 @@ client.prototype.heartbeatHandler = function dataHandler(device) {
   }
 };
 
-client.prototype.sendData = function sendData(dat) {
+Client.prototype.sendData = function sendData(dat) {
 
   if (!dat) {
     return false;
@@ -348,7 +361,7 @@ client.prototype.sendData = function sendData(dat) {
   this.bufferData(msg);
 };
 
-client.prototype.sendConfig = function sendConfig(dat) {
+Client.prototype.sendConfig = function sendConfig(dat) {
 
   if (!dat) {
     return false;
@@ -371,7 +384,7 @@ client.prototype.sendConfig = function sendConfig(dat) {
   }
 };
 
-client.prototype.sendHeartbeat = function sendHeartbeat(dat) {
+Client.prototype.sendHeartbeat = function sendHeartbeat(dat) {
   if (!dat) {
     return false;
   }
@@ -393,7 +406,7 @@ client.prototype.sendHeartbeat = function sendHeartbeat(dat) {
   }
 };
 
-client.prototype.sendMQTTMessage = function sendMQTTMessage(topic, msg) {
+Client.prototype.sendMQTTMessage = function sendMQTTMessage(topic, msg) {
 
   // add the token to the message as this is currently the only way to identify a unique instance of a
   // block
@@ -402,7 +415,7 @@ client.prototype.sendMQTTMessage = function sendMQTTMessage(topic, msg) {
   this.mqttclient.publish(topic, JSON.stringify(msg));
 };
 
-client.prototype.bufferData = function bufferData(msg) {
+Client.prototype.bufferData = function bufferData(msg) {
 
   this.sendBuffer.push(msg);
 
@@ -412,7 +425,7 @@ client.prototype.bufferData = function bufferData(msg) {
   }
 };
 
-client.prototype.command = function command(dat) {
+Client.prototype.command = function command(dat) {
 
   var self = this, data = this.getJSON(dat);
 
@@ -450,7 +463,7 @@ client.prototype.command = function command(dat) {
   }
 };
 
-client.prototype.getGuid = function getGuid(device) {
+Client.prototype.getGuid = function getGuid(device) {
 
   return [
 
@@ -462,7 +475,7 @@ client.prototype.getGuid = function getGuid(device) {
   ].join('_');
 };
 
-client.prototype.getJSON = function getJSON(dat) {
+Client.prototype.getJSON = function getJSON(dat) {
 
   try {
     if (dat instanceof Buffer) {
@@ -477,4 +490,4 @@ client.prototype.getJSON = function getJSON(dat) {
   }
 };
 
-module.exports = client;
+module.exports = Client;
