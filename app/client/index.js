@@ -191,11 +191,6 @@ Client.prototype.initialize = function initialize() {
           'DEVICE': this.sendBuffer
         });
 
-        /*
-         this.cloud.data({
-         'DEVICE': this.sendBuffer
-         });
-         */
         this.sendBuffer = [ ];
       }
       else {
