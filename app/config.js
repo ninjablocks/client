@@ -19,7 +19,7 @@ module.exports = function config(ninja, app) {
   // Give our app opts
   app.opts = ninja.opts;
   app.id = ninja.serial;
-  app.token = ninja.token
+  app.token = ninja.token;
 
   loadPlatform(ninja, app); // embedded arduino
 
@@ -45,4 +45,4 @@ function loadPlatform(ninja, app) {
     , ninja
     , app
   );
-};
+}

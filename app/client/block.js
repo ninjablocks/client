@@ -8,62 +8,64 @@
 
 function block(remote, conn) {
 
-  var
-    token = this.token || undefined
-    , params = {
+  var token = this.token || undefined;
 
-      // assume we're on a random system (e.g. not official ninja block)
-      client: this.opts.client || 'ninja-client', id: this.serial || undefined, version: this.version || {
+  var params = {
 
-        node: undefined, utilities: undefined, system: undefined
-      }
+    // assume we're on a random system (e.g. not official ninja block)
+    client: this.opts.client || 'ninja-client', id: this.serial || undefined, version: this.version || {
+      node: undefined, utilities: undefined, system: undefined
     }
-    , handshake = function handshake(err, res) {
+  };
 
-      if (err) {
+  var handshake = function handshake(err, res) {
 
-        this.log.error("Error in remote handshake: %s", err);
-        return;
-      }
+    if (err) {
 
-      this.log.debug("Successfully completed handshake");
-      conn.emit('up', res); // emit handlers to upnode
+      this.log.error("Error in remote handshake: %s", err);
+      return;
+    }
 
-    }.bind(this)
-    , activate = function activate(err, auth) {
+    this.log.debug("Successfully completed handshake");
+    conn.emit('up', res); // emit handlers to upnode
 
-      if (err || !auth) {
+  }.bind(this);
 
-        err = err || 'No credentials received';
-        this.log.error("Error activating (%s)", err);
-        this.app.emit('client::error', err);
-      }
+  var activate = function activate(err, auth) {
 
-      params.token = auth.token || '';
-      this.token = auth.token || undefined;
-      this.saveToken();
+    if (err || !auth) {
 
-      this.log.info('Received authorization, confirming...');
-      remote.confirmActivation(params, confirm);
+      err = err || 'No credentials received';
+      this.log.error("Error activating (%s)", err);
+      this.app.emit('client::error', err);
+    }
 
-    }.bind(this)
-    , confirm = function confirm(err) {
+    params.token = auth.token || '';
+    this.token = auth.token || undefined;
+    this.saveToken();
 
-      if (err) {
+    this.log.info('Received authorization, confirming...');
+    remote.confirmActivation(params, confirm);
 
-        this.log.error("Error pairing block (%s)", err.error);
-        this.app.emit('client::error', err);
-        return;
-      }
-      this.log.info("Confirmed authorization");
-      this.app.emit('client::authed', true);
-      if (this.opts.env !== "production") {
+  }.bind(this);
 
-        this.log.info("Please restart this process to connect!");
-      }
-      process.nextTick(process.exit);
+  var confirm = function confirm(err) {
 
-    }.bind(this);
+    if (err) {
+
+      this.log.error("Error pairing block (%s)", err.error);
+      this.app.emit('client::error', err);
+      return;
+    }
+    this.log.info("Confirmed authorization");
+    this.app.emit('client::authed', true);
+    if (this.opts.env !== "production") {
+
+      this.log.info("Please restart this process to connect!");
+    }
+    process.nextTick(process.exit);
+
+  }.bind(this);
 
   if (!this.version) {
 

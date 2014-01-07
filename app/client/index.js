@@ -139,7 +139,7 @@ Client.prototype.subscribe = function subscribe() {
  * Connect the block to the cloud
  */
 Client.prototype.connect = function connect() {
-  console.trace('connect called!!');
+  this.log.debug('connect called.');
   var client = this;
   this.node = {};
 
