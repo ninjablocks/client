@@ -5,7 +5,6 @@ var util = require('util');
 var mkdirp = require('mkdirp');
 var upnode = require('upnode');
 var handlers = require('./module/handlers');
-var updater = require('./updater');
 var stream = require('stream');
 var tls = require('tls');
 var net = require('net');
@@ -64,7 +63,6 @@ function client(opts, app) {
 
 util.inherits(client, stream);
 handlers(client);
-updater(client);
 
 client.prototype.block = require('./block');
 
@@ -144,9 +142,9 @@ client.prototype.connect = function connect() {
 
   var client = this;
   this.node = upnode(this.getHandlers()).connect(this.parameters);
-  this.node.on('reconnect', client.reconnect.bind(client));
-  this.node.on('down', client.down.bind(client));
-  this.node.on('up', client.up.bind(client));
+//  this.node.on('reconnect', client.reconnect.bind(client));
+//  this.node.on('down', client.down.bind(client));
+//  this.node.on('up', client.up.bind(client));
   this.initialize();
 };
 
