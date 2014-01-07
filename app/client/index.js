@@ -20,6 +20,8 @@ var logger = require(path.resolve(
 var mqtt = require('mqtt');
 var mqttrouter = require('mqtt-router');
 
+var subscriptions = require('./subscriptions');
+
 
 function Client(opts, app) {
 
@@ -55,6 +57,8 @@ function Client(opts, app) {
 }
 
 util.inherits(Client, stream);
+util.inherits(Client, subscriptions);
+
 handlers(Client);
 
 //Client.prototype.block = require('./block');
@@ -93,48 +97,6 @@ Client.prototype.getHandlers = function () {
   }
 };
 
-Client.prototype.subscribe = function subscribe() {
-
-  if (!this.token) {
-
-    // TODO: need to add a subscription for the credentials handler.
-    return;
-
-  }
-
-  this.router.subscribe('$block/' + this.serial + '/revoke', function revokeCredentials() {
-    var cli = this;
-    this.log.info('MQTT Invalid token; exiting in 3 seconds...');
-    this.app.emit('client::invalidToken', true);
-    setTimeout(function invalidTokenExit() {
-
-      cli.log.info("Exiting now.");
-      process.exit(1);
-
-    }, 3000);
-  });
-
-  this.router.subscribe('$block/' + this.serial + '/commands', function execute(topic, cmd) {
-
-    this.log.info('MQTT readExecute', JSON.parse(cmd));
-    this.command(cmd);
-
-  }.bind(this));
-
-  this.router.subscribe('$block/' + this.serial + '/update', function update(topic, cmd) {
-
-    this.log.info('MQTT readUpdate', JSON.parse(cmd));
-
-    this.updateHandler(cmd);
-
-  }.bind(this));
-
-  this.router.subscribe('$block/' + this.serial + '/config', function update(topic, cmd) {
-    this.log.info('MQTT readConfig', cmd);
-    this.moduleHandlers.config.call(this, JSON.parse(cmd));
-  }.bind(this));
-
-};
 
 /**
  * Connect the block to the cloud
@@ -210,7 +172,7 @@ Client.prototype.initialize = function initialize() {
     , beat = function beat() {
 
       // this.log.debug("Sending heartbeat");
-      this.cloud.heartbeat(JSON.stringify({
+      mod.cloud.heartbeat(JSON.stringify({
 
         "TIMESTAMP": (new Date().getTime()), "DEVICE": [ ]
 
@@ -252,15 +214,6 @@ Client.prototype.reconnect = function reconnect() {
   this.app.emit('client::reconnecting', true);
 
   this.log.info("Connecting to cloud...");
-};
-
-/**
- * Build an MQTT client
- */
-Client.prototype.createMQTTClient = function createMQTTClient() {
-
-
-  return client;
 };
 
 /**
