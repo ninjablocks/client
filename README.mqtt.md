@@ -4,7 +4,6 @@ Ninja blocks has been working on a version of client which replaces dnode with M
 
 # Known Issues
 
-* Graph data is getting munged in the dashboard when the device is online.
 * Revoking tokens doesn't work yet.
 * Needs to be tested with a range of devices.
 * No authentication of the MQTT connections at the moment.
