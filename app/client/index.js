@@ -111,20 +111,23 @@ Client.prototype.connect = function connect() {
   if (!this.token) {
     this.mqttclient = mqtt.createClient(1883, this.opts.cloudHost, {username: 'guest', password: 'guest', keepalive: 30});
   } else {
-    this.mqttclient = mqtt.createClient(1883, this.opts.cloudHost, {username: this.serial, password: this.token, keepalive: 30});
-  }
 
+    // otherwise authenticate and operate normally
+    this.mqttclient = mqtt.createClient(1883, this.opts.cloudHost, {username: 'guest', password: 'guest', keepalive: 30});
+
+    // only bind these events if we are activated otherwise we send data which can't be authenticated.
 //  this.mqttclient.on('reconnect', client.reconnect.bind(client)); //TODO test this new event
-  this.mqttclient.on('disconnect', client.down.bind(client));
-  this.mqttclient.on('connect', client.up.bind(client));
+    this.mqttclient.on('disconnect', client.down.bind(client));
+    this.mqttclient.on('connect', client.up.bind(client));
 
+    this.initialize();
+  }
   // enable the subscription router
   this.router = mqttrouter.wrap(this.mqttclient);
 
   // subscribe to all the cloud topics
   this.subscribe();
 
-  this.initialize();
 };
 
 /**
@@ -292,13 +295,13 @@ Client.prototype.sendData = function sendData(dat) {
   if ((this.mqttclient)) {//  && this.cloud.data) {
 
     // DEBUGGING
-    console.log('sendData', dat);
+//    this.log.debug('sendData', dat);
 
     var blockId = this.serial;
     var deviceId = [dat.G, dat.V, dat.D].join('_');
     var topic = ['$cloud', blockId, 'devices', deviceId, 'data'].join('/');
 
-    console.log('sendData', 'mqtt', topic);
+    this.log.debug('sendData', 'mqtt', topic);
     this.sendMQTTMessage(topic, msg);
 
 //    return this.cloud.data(msg);
@@ -334,6 +337,8 @@ Client.prototype.sendHeartbeat = function sendHeartbeat(dat) {
   if (!dat) {
     return false;
   }
+
+  console.trace('sendHeartbeat', 'WTF');
 
   dat.TIMESTAMP = (new Date().getTime());
   var msg = { 'DEVICE': [ dat ] };

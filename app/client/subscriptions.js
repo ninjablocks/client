@@ -12,7 +12,25 @@ Subscriptions.prototype.subscribe = function() {
 
   if (!this.token) {
 
-    // TODO: need to add a subscription for the credentials handler.
+    this.router.subscribe('$unregistered/' + this.serial , function execute(topic, cmd) {
+      self.log.info('MQTT register', JSON.parse(cmd));
+
+    });
+
+    this.app.emit('client::activation', true);
+    this.log.info("Attempting to activate...");
+
+    var params = {
+
+      // assume we're on a random system (e.g. not official ninja block)
+      client: this.opts.client || 'ninja-client', id: this.serial || undefined, version: this.version || {
+        node: undefined, utilities: undefined, system: undefined
+      }
+    };
+
+    // this msg is used to indicate we are waiting for activation
+    this.mqttclient.publish('$cloud/activate', JSON.stringify(params));
+
     return;
 
   }
@@ -29,18 +47,13 @@ Subscriptions.prototype.subscribe = function() {
   });
 
   this.router.subscribe('$block/' + this.serial + '/commands', function execute(topic, cmd) {
-
     self.log.info('MQTT readExecute', JSON.parse(cmd));
     self.command(cmd);
-
   });
 
   this.router.subscribe('$block/' + this.serial + '/update', function update(topic, cmd) {
-
     self.log.info('MQTT readUpdate', JSON.parse(cmd));
-
     self.updateHandler(cmd);
-
   });
 
   this.router.subscribe('$block/' + this.serial + '/config', function update(topic, cmd) {
