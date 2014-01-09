@@ -142,11 +142,10 @@ function config(dat, cb) {
       var blockId = ninja.serial;
       var topic = ['$cloud', blockId, 'config'].join('/');
 
-      ninja.log.debug('cloudConfig topic %s', topic);
+      ninja.log.debug('cloudConfig topic', topic);
 
       ninja.sendMQTTMessage(topic, cloudBuffer.configResponse);
 
-//      ninja.cloud.config(cloudBuffer.configResponse);
     }
   }
 }

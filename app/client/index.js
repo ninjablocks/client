@@ -3,6 +3,7 @@
 var path = require('path');
 var util = require('util');
 var mkdirp = require('mkdirp');
+var request = require('request');
 var handlers = require('./module/handlers');
 var stream = require('stream');
 var tls = require('tls');
@@ -19,8 +20,6 @@ var logger = require(path.resolve(
 ));
 var mqtt = require('mqtt');
 var mqttrouter = require('mqtt-router');
-
-var subscriptions = require('./subscriptions');
 
 
 function Client(opts, app) {
@@ -47,7 +46,10 @@ function Client(opts, app) {
   this.modules = { };
   this.devices = { };
   this.log = app.log;
+
   creds.call(this, opts);
+  this.log.debug('token', this.token);
+
   versioning.call(this, opts);
 
   this.node = undefined; // upnode
@@ -57,66 +59,46 @@ function Client(opts, app) {
 }
 
 util.inherits(Client, stream);
-util.inherits(Client, subscriptions);
 
 handlers(Client);
-
-//Client.prototype.block = require('./block');
-
-Client.prototype.getHandlers = function () {
-
-  return {
-
-    revokeCredentials: function revokeCredentials() {
-
-      var cli = this;
-      this.log.info('Invalid token; exiting in 3 seconds...');
-      this.app.emit('client::invalidToken', true);
-      setTimeout(function invalidTokenExit() {
-
-        cli.log.info("Exiting now.");
-        process.exit(1);
-
-      }, 3000);
-    }.bind(this), execute: function execute(cmd, cb) {
-
-      this.log.info('readExecute', cmd);
-
-      this.command(cmd);
-
-    }.bind(this), update: function update(to) {
-
-      this.log.info('readUpdate', cmd);
-
-      this.updateHandler(to);
-
-    }.bind(this),
-    config: this.moduleHandlers.config.bind(this),
-    install: this.moduleHandlers.install.bind(this),
-    uninstall: this.moduleHandlers.uninstall.bind(this)
-  }
-};
-
 
 /**
  * Connect the block to the cloud
  */
 Client.prototype.connect = function connect() {
   this.log.debug('connect called.');
+
   var client = this;
   this.node = {};
 
   // if the system doesn't have a token yet we need to park
   // and wait for registration
-  if (!this.token) {
+  if (!client.token) {
     this.mqttclient = mqtt.createClient(1883, this.opts.cloudHost, {username: 'guest', password: 'guest', keepalive: 30});
+
+    this.app.emit('client::activation', true);
+    this.log.info("Attempting to activate...");
+
+    client.activate(function (err, res) {
+      if(err){
+        client.log.error("Failed activation", err);
+        process.nextTick(process.exit);
+      }
+      client.token = res.token;
+      client.saveToken();
+      client.log.info("Exiting now.");
+      process.nextTick(process.exit);
+    })
+
   } else {
 
     // otherwise authenticate and operate normally
     this.mqttclient = mqtt.createClient(1883, this.opts.cloudHost, {username: 'guest', password: 'guest', keepalive: 30});
 
     // only bind these events if we are activated otherwise we send data which can't be authenticated.
-//  this.mqttclient.on('reconnect', client.reconnect.bind(client)); //TODO test this new event
+    // this.mqttclient.on('reconnect', client.reconnect.bind(client)); //TODO implement and test this event
+    // this.app.emit('client::error', err); //TODO implement and test this event
+
     this.mqttclient.on('disconnect', client.down.bind(client));
     this.mqttclient.on('connect', client.up.bind(client));
 
@@ -128,6 +110,62 @@ Client.prototype.connect = function connect() {
   // subscribe to all the cloud topics
   this.subscribe();
 
+};
+
+Client.prototype.activate = function (cb) {
+
+  this.log.info('attempting activation for serial', this.serial);
+
+  var url = this.opts.secure ? 'https://' + this.opts.apiHost + ':' + this.opts.apiPort : 'http://' + this.opts.apiHost + ':' + this.opts.apiPort;
+
+  request.get(url + '/rest/v0/block/' + this.serial + '/activate', function (error, response, body) {
+    if (error) return cb(error);
+
+    if (response.statusCode == 200) {
+      if (body) {
+        cb(null, JSON.parse(body));
+      } else {
+        cb(new Error('Timed out waiting for activation'));
+      }
+    } else {
+      cb(new Error('Unable to activate response code = ' + response.statusCode));
+    }
+  })
+
+};
+
+Client.prototype.subscribe = function() {
+
+  var self = this;
+
+  this.router.subscribe('$block/' + this.serial + '/revoke', function revokeCredentials() {
+    self.log.info('MQTT Invalid token; exiting in 3 seconds...');
+    self.app.emit('client::invalidToken', true);
+    setTimeout(function invalidTokenExit() {
+
+      self.log.info("Exiting now.");
+      process.exit(1);
+
+    }, 3000);
+  });
+
+  this.router.subscribe('$block/' + this.serial + '/commands', function execute(topic, cmd) {
+    self.log.info('MQTT readExecute', JSON.parse(cmd));
+    self.command(cmd);
+  });
+
+  this.router.subscribe('$block/' + this.serial + '/update', function update(topic, cmd) {
+    self.log.info('MQTT readUpdate', JSON.parse(cmd));
+    self.updateHandler(cmd);
+  });
+
+  this.router.subscribe('$block/' + this.serial + '/config', function update(topic, cmd) {
+    self.log.info('MQTT readConfig', cmd);
+    self.moduleHandlers.config.call(self, JSON.parse(cmd));
+  });
+
+
+  // TODO install and update handlers
 };
 
 /**
@@ -294,17 +332,12 @@ Client.prototype.sendData = function sendData(dat) {
 
   if ((this.mqttclient)) {//  && this.cloud.data) {
 
-    // DEBUGGING
-//    this.log.debug('sendData', dat);
-
     var blockId = this.serial;
     var deviceId = [dat.G, dat.V, dat.D].join('_');
     var topic = ['$cloud', blockId, 'devices', deviceId, 'data'].join('/');
 
     this.log.debug('sendData', 'mqtt', topic);
     this.sendMQTTMessage(topic, msg);
-
-//    return this.cloud.data(msg);
   }
 
   this.bufferData(msg);
@@ -319,9 +352,6 @@ Client.prototype.sendConfig = function sendConfig(dat) {
   dat.TIMESTAMP = (new Date().getTime());
   if ((this.cloud) && this.cloud.config) {
 
-    // DEBUGGING
-    this.log.debug('sendConfig', dat);
-
     var blockId = this.serial;
     var deviceId = [dat.G, dat.V, dat.D].join('_');
     var topic = ['$cloud', blockId, 'devices', deviceId, 'config'].join('/');
@@ -334,17 +364,15 @@ Client.prototype.sendConfig = function sendConfig(dat) {
 };
 
 Client.prototype.sendHeartbeat = function sendHeartbeat(dat) {
+
   if (!dat) {
     return false;
   }
 
-  console.trace('sendHeartbeat', 'WTF');
-
   dat.TIMESTAMP = (new Date().getTime());
   var msg = { 'DEVICE': [ dat ] };
 
-  if ((this.mqttclient)) {//  && this.cloud.data) {
-    this.log.debug('sendHeartbeat', dat);
+  if ((this.mqttclient)) {
 
     var blockId = this.serial;
     var deviceId = [dat.G, dat.V, dat.D].join('_');
@@ -352,8 +380,6 @@ Client.prototype.sendHeartbeat = function sendHeartbeat(dat) {
     this.log.debug('sendHeartbeat', 'mqtt', topic);
 
     this.sendMQTTMessage(topic, dat);
-
-//    return this.cloud.heartbeat(msg);
   }
 };
 
