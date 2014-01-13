@@ -80,7 +80,7 @@ Client.prototype.connect = function connect() {
     this.app.emit('client::activation', true);
     this.log.info("Attempting to activate...");
 
-    client.activate(function (err, res) {
+    client.activate(function activate(err, res) {
       if (err) {
         client.log.error("Failed activation", err);
         process.nextTick(process.exit);
@@ -140,17 +140,17 @@ Client.prototype.subscribe = function () {
     }, 3000);
   });
 
-  this.router.subscribe('$block/' + this.serial + '/commands', function execute(topic, cmd) {
+  this.router.subscribe('$block/' + this.serial + '/commands', {qos: 1}, function execute(topic, cmd) {
     self.log.info('MQTT readExecute', JSON.parse(cmd));
     self.command(cmd);
   });
 
-  this.router.subscribe('$block/' + this.serial + '/update', function update(topic, cmd) {
+  this.router.subscribe('$block/' + this.serial + '/update', {qos: 1}, function update(topic, cmd) {
     self.log.info('MQTT readUpdate', JSON.parse(cmd));
     self.updateHandler(cmd);
   });
 
-  this.router.subscribe('$block/' + this.serial + '/config', function update(topic, cmd) {
+  this.router.subscribe('$block/' + this.serial + '/config', {qos: 1}, function update(topic, cmd) {
     self.log.info('MQTT readConfig', cmd);
     self.moduleHandlers.config.call(self, JSON.parse(cmd));
   });
