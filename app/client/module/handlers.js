@@ -279,7 +279,7 @@ function moduleHandlers(client) {
     var ninja = this;
     return function (dat) {
 
-      ninja.log.debug("ackHandler: (%s)", name);
+      ninja.log.debug("ackHandler: (%s) %s", name, dat);
       if (!dat) {
         return;
       }
