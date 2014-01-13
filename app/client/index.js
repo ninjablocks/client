@@ -53,7 +53,7 @@ function Client(opts, app) {
   versioning.call(this, opts);
 
   this.node = undefined; // upnode
-  this.transport = opts.secure ? tls : net; // TODO TLS needs to be configured for MQTT.
+  this.transport = opts.secure ? tls : net;
 
   this.versionClient();
 }
@@ -71,16 +71,17 @@ Client.prototype.connect = function connect() {
   var client = this;
   this.node = {};
 
+  this.mqttclient = mqtt.createClient(1883, this.opts.cloudHost, {username: 'guest', password: 'guest', keepalive: 30, qos: 1, clientId: this.serial, retain: true});
+
   // if the system doesn't have a token yet we need to park
   // and wait for registration
   if (!client.token) {
-    this.mqttclient = mqtt.createClient(1883, this.opts.cloudHost, {username: 'guest', password: 'guest', keepalive: 30});
 
     this.app.emit('client::activation', true);
     this.log.info("Attempting to activate...");
 
     client.activate(function (err, res) {
-      if(err){
+      if (err) {
         client.log.error("Failed activation", err);
         process.nextTick(process.exit);
       }
@@ -92,13 +93,6 @@ Client.prototype.connect = function connect() {
 
   } else {
 
-    // otherwise authenticate and operate normally
-    this.mqttclient = mqtt.createClient(1883, this.opts.cloudHost, {username: 'guest', password: 'guest', keepalive: 30});
-
-    // only bind these events if we are activated otherwise we send data which can't be authenticated.
-    // this.mqttclient.on('reconnect', client.reconnect.bind(client)); //TODO implement and test this event
-    // this.app.emit('client::error', err); //TODO implement and test this event
-
     this.mqttclient.on('disconnect', client.down.bind(client));
     this.mqttclient.on('connect', client.up.bind(client));
 
@@ -106,9 +100,6 @@ Client.prototype.connect = function connect() {
   }
   // enable the subscription router
   this.router = mqttrouter.wrap(this.mqttclient);
-
-  // subscribe to all the cloud topics
-  this.subscribe();
 
 };
 
@@ -134,7 +125,7 @@ Client.prototype.activate = function (cb) {
 
 };
 
-Client.prototype.subscribe = function() {
+Client.prototype.subscribe = function () {
 
   var self = this;
 
@@ -238,6 +229,17 @@ Client.prototype.up = function up(cloud) {
   }
 
   this.log.info("Client connected to the Ninja Platform");
+
+  // if we have credentials
+  if (this.token) {
+
+    // clear out the existing handlers
+    this.router.reset();
+
+    // subscribe to all the cloud topics
+    this.subscribe();
+
+  }
 };
 
 Client.prototype.down = function down() {
