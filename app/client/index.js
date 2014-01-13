@@ -93,7 +93,7 @@ Client.prototype.connect = function connect() {
 
   } else {
 
-    this.mqttclient.on('disconnect', client.down.bind(client));
+    this.mqttclient.on('close', client.down.bind(client));
     this.mqttclient.on('connect', client.up.bind(client));
 
     this.initialize();
@@ -165,7 +165,7 @@ Client.prototype.subscribe = function () {
  */
 Client.prototype.initialize = function initialize() {
 
-  var mod = this
+  var self = this
     , flushBuffer = function flushBuffer() {
 
       if (!this.sendBuffer) {
@@ -174,14 +174,14 @@ Client.prototype.initialize = function initialize() {
       }
       if (this.sendBuffer.length > 0) {
 
-        this.log.debug("Sending buffered commands...");
+        self.log.info("Sending buffered commands...");
 
         var blockId = this.serial;
         var topic = ['$cloud', blockId, 'data'].join('/');
 
         console.log('sendData', 'flushBuffer', 'mqtt', topic);
 
-        this.sendMQTTMessage(topic, {
+        self.sendMQTTMessage(topic, {
           'DEVICE': this.sendBuffer
         });
 
@@ -194,23 +194,17 @@ Client.prototype.initialize = function initialize() {
     }
     , initSession = function initSession(cloud) {
 
-      mod.cloud = cloud;
+      self.cloud = cloud;
 
-      // no more heartbeat x_x
-      // if(mod.pulse) { clearInterval(mod.pulse); }
-      // mod.pulse = setInterval(beat.bind(mod), 5000);
-      flushBuffer.call(mod);
+      flushBuffer.call(self);
     }
     , beat = function beat() {
 
       // this.log.debug("Sending heartbeat");
-      mod.cloud.heartbeat(JSON.stringify({
-
+      self.cloud.heartbeat(JSON.stringify({
         "TIMESTAMP": (new Date().getTime()), "DEVICE": [ ]
-
       }));
-    }
-    ;
+    };
 
   this.app.on('client::preup', initSession);
 };
@@ -245,11 +239,8 @@ Client.prototype.up = function up(cloud) {
 Client.prototype.down = function down() {
 
   this.app.emit('client::down', true);
-  this.log.info("Client disconnected from the Ninja Platform");
-  if (this.pulse) {
+  this.log.warn("Client disconnected from the Ninja Platform");
 
-    clearInterval(this.pulse);
-  }
 };
 
 Client.prototype.reconnect = function reconnect() {
@@ -360,8 +351,6 @@ Client.prototype.sendConfig = function sendConfig(dat) {
     this.log.debug('sendConfig', 'mqtt', topic);
 
     this.sendMQTTMessage(topic, dat);
-
-//    return this.cloud.config(JSON.stringify(dat));
   }
 };
 
