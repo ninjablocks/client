@@ -109,17 +109,17 @@ Client.prototype.activate = function (cb) {
 
   var url = this.opts.secure ? 'https://' + this.opts.apiHost + ':' + this.opts.apiPort : 'http://' + this.opts.apiHost + ':' + this.opts.apiPort;
 
-  request.get(url + '/rest/v0/block/' + this.serial + '/activate', function (error, response, body) {
+  request.get(url + '/rest/v0/block/' + this.serial + '/activate', function getToken(error, response, body) {
     if (error) return cb(error);
 
     if (response.statusCode == 200) {
       if (body) {
-        cb(null, JSON.parse(body));
+        return cb(null, JSON.parse(body));
       } else {
-        cb(new Error('Timed out waiting for activation'));
+        return cb(new Error('Timed out waiting for activation'));
       }
     } else {
-      cb(new Error('Unable to activate response code = ' + response.statusCode));
+      return cb(new Error('Unable to activate response code = ' + response.statusCode));
     }
   })
 
