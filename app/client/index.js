@@ -48,7 +48,6 @@ function Client(opts, app) {
   this.log = app.log;
 
   creds.call(this, opts);
-  this.log.debug('token', this.token);
 
   versioning.call(this, opts);
 
@@ -84,11 +83,14 @@ Client.prototype.connect = function connect() {
       if (err) {
         client.log.error("Failed activation", err);
         process.nextTick(process.exit);
+        return;
       }
+      client.mqttId = res.mqttId;
       client.token = res.token;
-      client.saveToken();
-      client.log.info("Exiting now.");
-      process.nextTick(process.exit);
+      client.saveToken(function(){
+        client.log.info("Exiting now.");
+        process.nextTick(process.exit);
+      });
     })
 
   } else {
