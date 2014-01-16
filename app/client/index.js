@@ -70,8 +70,6 @@ Client.prototype.connect = function connect() {
   var client = this;
   this.node = {};
 
-  this.mqttclient = mqtt.createClient(1883, this.opts.cloudHost, {username: 'guest', password: 'guest', keepalive: 30, qos: 1, clientId: this.serial, retain: true});
-
   // if the system doesn't have a token yet we need to park
   // and wait for registration
   if (!client.token) {
@@ -94,6 +92,8 @@ Client.prototype.connect = function connect() {
     })
 
   } else {
+
+    this.mqttclient = mqtt.createClient(1883, this.opts.cloudHost, {username: this.mqttId, password: this.token, keepalive: 30, qos: 1, clientId: this.serial, retain: true});
 
     this.mqttclient.on('close', client.down.bind(client));
     this.mqttclient.on('connect', client.up.bind(client));
