@@ -93,7 +93,7 @@ Client.prototype.connect = function connect() {
 
   } else {
 
-    var mqttOpts = {username: this.mqttId, password: this.token, keepalive: 30, qos: 1, clientId: this.serial, retain: true};
+    var mqttOpts = {username: this.token, keepalive: 30, qos: 1, clientId: this.serial, retain: true};
 
     // todo we need to cater for encrypted and unencrypted connections based on environment.
     this.mqttclient = mqtt.createSecureClient(8883, this.opts.cloudHost, mqttOpts);
