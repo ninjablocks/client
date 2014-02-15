@@ -16,6 +16,9 @@ process.chdir(__dirname); // avoid relative hacks
 
 logger.default = app.log = log;
 
+// Prevent warnings when we have lots of drivers.
+app.setMaxListeners(99);
+
 d = domain.create();
 
 d.on('error', function(err) {
@@ -32,7 +35,8 @@ d.on('error', function(err) {
 
 d.add(app);
 
-
+// Prevents errors when we have a lot of drivers running
+app.setMaxListeners(99);
 
 app.on('error', function(err) {
 
