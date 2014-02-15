@@ -210,7 +210,9 @@ client.prototype.getParameters = function getParameters(opts) {
 		, reconnect : 2000
 		, createStream : function createStream() {
 
-			return transport.connect(cloudPort, cloudHost);
+			var sock = transport.connect(cloudPort, cloudHost);
+			sock.setKeepAlive(true, 60000);
+			return sock;
 		}
 		, block : this.block.bind(this)
 	};
