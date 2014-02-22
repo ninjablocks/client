@@ -341,7 +341,7 @@ client.prototype.command = function command(dat) {
 			}
 			catch(e) {
 
-				this.log.error("error actuating: %s (%s)", guid, err.message);
+				this.log.error("error actuating: %s (%s):\n%s", guid, e.message, e.stack);
 			}
 		}
 		else {
