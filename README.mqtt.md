@@ -24,3 +24,10 @@ before running client.
 ```
 export NODE_TLS_REJECT_UNAUTHORIZED=0
 ```
+
+#Running 
+Set cloudHost in the args: 
+
+```
+node /opt/ninja/client/client.js --cloudHost mqttbeta.ninjablocks.co
+```
