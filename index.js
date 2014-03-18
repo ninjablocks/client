@@ -22,9 +22,9 @@ process.on('uncaughtException', function(err) {
   app.log.error('UNCAUGHT EXCEPTION', err);
 });
 
+var drivers = new DriverLoader(app, path.resolve(__dirname, 'config'), path.resolve(__dirname, 'drivers'));
+
 var creds = new Credentials(opts, app);
 var cloud = new CloudConnection(opts, creds, app);
-
-var drivers = new DriverLoader(app, path.resolve(__dirname, 'config'), path.resolve(__dirname, 'drivers'));
 
 cloud.connect();

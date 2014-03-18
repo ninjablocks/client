@@ -120,15 +120,16 @@ function Credentials(opts, app) {
     try {
 
       if (existsSync(cFile)) {
-
         contents = fs.readFileSync(cFile, 'utf8');
       }
+
     } catch (e) {
       this.log.error('Unable to load %s from file (%s)', cred, e);
       return false;
     }
+
     this[cred] = contents.replace(/\n/g, '');
-    this.log.info('Successfully loaded %s from file - %s', cred);
+    this.log.info('Successfully loaded %s from file', cred);
     return true;
   };
 

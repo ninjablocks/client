@@ -4,7 +4,6 @@ var path = require('path');
 var util = require('util');
 var mkdirp = require('mkdirp');
 var request = require('request');
-//var handlers = require('./module/handlers');
 var stream = require('stream');
 var tls = require('tls');
 var net = require('net');
@@ -20,14 +19,6 @@ function CloudConnection(opts, creds, app) {
     return false;
   }
 
-  /*
-  if (!creds || typeof creds !== 'function') {
-
-    app.log.error('Invalid credential provider specified');
-    return false;
-  }
-  */
-
   this.app = app;
   this.opts = opts || undefined;
   this.creds = creds;
@@ -35,20 +26,11 @@ function CloudConnection(opts, creds, app) {
   this.modules = {};
   this.devices = {};
   this.log = app.log.extend('CloudConnection');
-
-  //creds.call(this, opts);
-
-  // versioning.call(this, opts);
-
-  //this.node = undefined; // upnode
+  
   this.transport = opts.secure ? tls : net;
-
-  //this.versionClient();
 }
 
 util.inherits(CloudConnection, stream);
-
-//handlers(Client);
 
 /**
  * Connect the block to the cloud
