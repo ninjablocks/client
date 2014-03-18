@@ -128,7 +128,7 @@ function Credentials(opts, app) {
       return false;
     }
     this[cred] = contents.replace(/\n/g, '');
-    this.log.info('Successfully loaded %s from file - %s', cred, this[cred]);
+    this.log.info('Successfully loaded %s from file - %s', cred);
     return true;
   };
 

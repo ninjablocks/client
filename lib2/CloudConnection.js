@@ -146,21 +146,21 @@ CloudConnection.prototype.subscribe = function() {
   this.router.subscribe('$block/' + this.creds.serial + '/commands', {
     qos: 1
   }, function execute(topic, cmd) {
-    self.log.info('MQTT readExecute', JSON.parse(cmd));
+    self.log.debug('MQTT readExecute', JSON.parse(cmd));
     self.command(cmd);
   });
 
   this.router.subscribe('$block/' + this.creds.serial + '/update', {
     qos: 1
   }, function update(topic, cmd) {
-    self.log.info('MQTT readUpdate', JSON.parse(cmd));
+    self.log.debug('MQTT readUpdate', JSON.parse(cmd));
     self.updateHandler(cmd);
   });
 
   this.router.subscribe('$block/' + this.creds.serial + '/config', {
     qos: 1
   }, function update(topic, cmd) {
-    self.log.info('MQTT readConfig', cmd);
+    self.log.debug('MQTT readConfig', cmd);
     self.moduleHandlers.config.call(self, JSON.parse(cmd));
   });
 
@@ -375,6 +375,8 @@ CloudConnection.prototype.sendConfig = function sendConfig(dat) {
 
 CloudConnection.prototype.sendHeartbeat = function sendHeartbeat(dat) {
 
+  this.log.trace('Sending heartbeat');
+
   if (!dat) {
     return false;
   }
@@ -406,10 +408,12 @@ CloudConnection.prototype.sendMQTTMessage = function sendMQTTMessage(topic, msg)
 
 CloudConnection.prototype.bufferData = function bufferData(msg) {
 
+  this.log.trace('Adding data to outgoing buffer');
+
   this.sendBuffer.push(msg);
 
   if (this.sendBuffer.length > 9) {
-
+    this.log.debug('Outgoing buffer is full (' + this.sendBuffer.length + '). Clearing oldest value.');
     this.sendBuffer.shift();
   }
 };
@@ -428,6 +432,8 @@ CloudConnection.prototype.command = function command(dat) {
     // delete ds[d].GUID;
 
     ds[d].G = ds[d].G.toString();
+
+    this.log.debug('Received actuation for device %s : %s', guid, dat.DA);
 
     if ((device = this.devices[guid]) && typeof device.write == 'function') {
 
