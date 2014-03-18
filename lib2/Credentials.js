@@ -11,7 +11,11 @@ var existsSync = fs.existsSync || path.existsSync;
  * token & serial functions
  */
 
-function credentials(opts) {
+function Credentials(opts, app) {
+
+  this.opts = opts;
+  this.app = app;
+  this.log = app.log.extend('Credentials');
 
   this.token = null;
   this.serial = null;
@@ -28,16 +32,13 @@ function credentials(opts) {
       fs.writeFileSync(opts.serialFile, generatedSerial);
     } catch (e) {
 
-      if (e.code == "EACCES") {
+      if (e.code == 'EACCES') {
         this.log.error(
-          "Filesystem permissions error (%s)"
-          , opts.serialFile
+          'Filesystem permissions error (%s)', opts.serialFile
         );
       } else {
         this.log.error(
-          "Cannot create serial file (%s): %s"
-          , opts.serialFile
-          , e
+          'Cannot create serial file (%s): %s', opts.serialFile, e
         );
       }
       return process.exit(1);
@@ -56,7 +57,7 @@ function credentials(opts) {
     }
     this.log.debug('Attempting to save %s to file...', cred);
 
-    fs.writeFile(cFile, this[cred], function (err) {
+    fs.writeFile(cFile, this[cred], function(err) {
       if (err) {
         self.log.error('Unable to save %s file (%s)', cred, err);
         cb(err);
@@ -90,8 +91,7 @@ function credentials(opts) {
     try {
 
       fs.writeFileSync(cFile, this[cred]);
-    }
-    catch (e) {
+    } catch (e) {
       this.log.error('Unable to save %s file (%s)', cred, e);
       return false;
     }
@@ -123,13 +123,12 @@ function credentials(opts) {
 
         contents = fs.readFileSync(cFile, 'utf8');
       }
-    }
-    catch (e) {
+    } catch (e) {
       this.log.error('Unable to load %s from file (%s)', cred, e);
       return false;
     }
     this[cred] = contents.replace(/\n/g, '');
-    this.log.info('Successfully loaded %s from file', cred);
+    this.log.info('Successfully loaded %s from file - %s', cred, this[cred]);
     return true;
   };
 
@@ -138,9 +137,9 @@ function credentials(opts) {
    * Respond to revokeCredential requests from dojo
    * and other calls for token removal
    */
-  this.app.on('client::invalidToken', function () {
+  this.app.on('client::invalidToken', function() {
 
-    this.log.debug("Attempting to invalidate token...");
+    this.log.debug('Attempting to invalidate token...');
     this.mqttId = undefined;
     this.token = undefined;
     this.saveToken(console.err);
@@ -150,8 +149,8 @@ function credentials(opts) {
   this.loadToken();
   this.loadSerial();
 
-  this.log.info("This Ninja's Serial: %s", this.serial);
+  this.log.info('This Ninja\'s Serial: %s', this.serial);
   return this;
 }
 
-module.exports = credentials;
+module.exports = Credentials;

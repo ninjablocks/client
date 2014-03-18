@@ -1,8 +1,6 @@
 'use strict';
 
-var fs = require('fs');
 var path = require('path');
-var util = require('util');
 var events = require('events');
 var argv = require(path.resolve(__dirname, 'app', 'argv'));
 var Client = require(path.resolve(__dirname, 'app', 'client'));
@@ -21,7 +19,7 @@ app.setMaxListeners(99);
 
 var d = domain.create();
 
-d.on('error', function (err) {
+d.on('error', function(err) {
 
   log.error(err);
 
@@ -38,7 +36,7 @@ d.add(app);
 // Prevents errors when we have a lot of drivers running
 app.setMaxListeners(99);
 
-app.on('error', function (err) {
+app.on('error', function(err) {
 
   log.error(err);
 
@@ -55,8 +53,7 @@ var ninja = new Client(argv, app);
 d.add(ninja);
 
 if (!ninja) {
-
-  log.error("Unable to create ninja client.");
+  log.error('Unable to create ninja client.');
   process.exit(1);
 }
 
@@ -71,6 +68,6 @@ config(ninja, app);
  * isolation without any additional infrastructure
  */
 
-process.on('uncaughtException', function (err) {
+process.on('uncaughtException', function(err) {
   log.error(err);
 });
