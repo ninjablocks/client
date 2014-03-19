@@ -17,10 +17,13 @@ app.log = Log.getLogger('NB');
 var banner = fs.readFileSync('./lib/banner', 'utf-8');
 app.log.debug(banner);
 
-
 // 1. Load our options
 var opts = accio('./lib/Options');
 app.opts = opts;
+
+Log.addFileAppender(opts.logFile);
+
+app.log.info('------ Starting Client ------');
 
 // 2. Send any uncaught exceptions to our log... 
 // XXX: Nothing should be uncaught. Handle it with domains for the drivers.
