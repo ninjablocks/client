@@ -58,6 +58,32 @@ else if (process.env.NODE_ENV === "hacking") {
     client: process.env.NINJA_CLIENT_NAME
   }
 }
+else if (process.env.NODE_ENV === "desktop-beta") {
+
+  var home = process.env.HOME + '/.ninjablocks/';
+
+  console.log('Starting in desktop mode. Home directory : ' + home);
+
+  defaults = {
+    cloudHost: "wakai.ninja.is",
+    apiHost: "wakai.ninja.is",
+    streamHost: "stream.ninja.is",
+    logFile: home + 'ninjablock.log',
+    updateLock: home + '.has_updated',
+    serialFile: home + 'serial.conf',
+    tokenFile: home + 'token.conf',
+    versionsFile: home + 'versions.json',
+    moduleDir: home + 'drivers',
+    configDir: home + 'config',
+    env: 'beta',
+    streamPort: 443,
+    cloudPort: 8883,
+    apiPort: 443,
+    secure: true,
+    debug: true,
+    client: process.env.NINJA_CLIENT_NAME
+  }
+}
 else if (process.env.NODE_ENV === "desktop") {
 
   var home = process.env.HOME + '/.ninjablocks/';
