@@ -4,3 +4,6 @@
 [submodule "drivers/ninja-arduino"]
 	path = drivers/ninja-arduino
 	url = https://github.com/ninjablocks/ninja-arduino.git
+[submodule "drivers/ninja-hue2"]
+	path = drivers/ninja-hue2
+	url = https://github.com/elliots/ninja-hue2.git
