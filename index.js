@@ -4,6 +4,7 @@ var accio = require;
 var events = accio('events');
 var fs = accio('fs');
 var path = accio('path');
+var util = accio('util');
 
 var CloudConnection = accio('./lib/CloudConnection');
 var Log = accio('./lib/Log');
@@ -15,11 +16,28 @@ var app = new events.EventEmitter();
 app.log = Log.getLogger('NB');
 
 var banner = fs.readFileSync('./lib/banner', 'utf-8');
-app.log.debug(banner);
+app.log.debug(banner.bold);
 
 // 1. Load our options
 var opts = accio('./lib/Options');
 app.opts = opts;
+
+if (opts.debug) {
+  var memwatch = require('memwatch');
+  var debugLog = app.log.extend('[Debug Monitoring]');
+
+  memwatch.on('leak', function(info) {
+    debugLog.warn('Memory Leak', info);
+  });
+
+  var nurse = require('nurse');
+  var printStats = function() {
+    debugLog.debug('Stats', util.inspect(nurse(), {colors:true}));
+  };
+
+  setInterval(printStats, 120000);
+  printStats();
+}
 
 Log.addFileAppender(opts.logFile);
 
