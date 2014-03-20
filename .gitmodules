@@ -7,3 +7,6 @@
 [submodule "drivers/ninja-hue2"]
 	path = drivers/ninja-hue2
 	url = https://github.com/elliots/ninja-hue2.git
+[submodule "drivers/ninja-lifx"]
+	path = drivers/ninja-lifx
+	url = https://github.com/elliots/ninja-lifx.git
