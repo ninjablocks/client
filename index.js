@@ -35,6 +35,10 @@ process.on('uncaughtException', function(err) {
 var creds = new Credentials(opts, app);
 var cloud = new CloudConnection(opts, creds, app);
 
+app.__defineGetter__('token', function(){
+  return creds.token;
+});
+
 // 4. Fire up the device manager
 var deviceManager = new DeviceManager(app, cloud);
 
