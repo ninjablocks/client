@@ -10,3 +10,6 @@
 [submodule "drivers/ninja-lifx"]
 	path = drivers/ninja-lifx
 	url = https://github.com/elliots/ninja-lifx.git
+[submodule "drivers/ninja-xbmc"]
+	path = drivers/ninja-xbmc
+	url = https://github.com/elliots/ninja-xbmc.git
