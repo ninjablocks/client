@@ -17,7 +17,9 @@ echo "Installing NPM dependencies for drivers"
 
 for f in `ls -1 drivers`;
 do
-  $(cd drivers/$f && npm install --force);
+  pushd drivers/$f
+  npm install --force
+  popd
 done
 
 echo "All done!"
