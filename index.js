@@ -1,6 +1,8 @@
 'use strict';
 var accio = require;
 
+process.chdir(__dirname); // avoid relative hacks
+
 var events = accio('events');
 var fs = accio('fs');
 var path = accio('path');
