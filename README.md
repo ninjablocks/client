@@ -20,5 +20,3 @@ cd client
 ## License
 
 Copyright (C) 2012 Ninja Blocks Inc under the MIT license.
-
-
