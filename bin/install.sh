@@ -10,9 +10,9 @@ npm install
 echo "Installing NPM dependencies for drivers"
 for f in `ls -1 drivers`;
 do
-  pushd drivers/$f
+  cd drivers/$f
   npm install --force
-  popd
+  cd ../..
 done
 
 echo "All done!"
