@@ -24,6 +24,8 @@ app.log.debug(banner.bold);
 var opts = accio('./lib/Options');
 app.opts = opts;
 
+Log.addFileAppender(opts.logFile);
+
 if (opts.debug) {
   var memwatch = require('memwatch');
   var debugLog = app.log.extend('[Debug Monitoring]');
@@ -41,7 +43,8 @@ if (opts.debug) {
   printStats();
 }
 
-Log.addFileAppender(opts.logFile);
+app.log.info('Environment', process.env.NODE_ENV);
+app.log.debug('Configuration', util.inspect(opts, {colors:true}));
 
 app.log.info('------ Starting Client ------');
 
