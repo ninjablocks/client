@@ -13,6 +13,7 @@ var Log = accio('./lib/Log');
 var Credentials = accio('./lib/Credentials');
 var DriverLoader = accio('./lib/DriverLoader');
 var DeviceManager = accio('./lib/DeviceManager');
+var Metrics = accio('./lib/Metrics');
 
 var app = new events.EventEmitter();
 app.log = Log.getLogger('NB');
@@ -26,31 +27,37 @@ app.opts = opts;
 
 Log.addFileAppender(opts.logFile);
 
-if (opts.debug) {
-  var memwatch = require('memwatch');
-  var debugLog = app.log.extend('[Debug Monitoring]');
+if (opts.memwatch) {
 
-  memwatch.on('leak', function(info) {
+  var debugLog = app.log.extend('[Debug Monitoring]');
+  debugLog.info('enabling memwatch');
+  var memwatch = require('memwatch');
+
+  memwatch.on('leak', function (info) {
     debugLog.warn('Memory Leak', info);
   });
 
   var nurse = require('nurse');
-  var printStats = function() {
-    debugLog.debug('Stats', util.inspect(nurse(), {colors:true}));
+  var printStats = function () {
+    debugLog.debug('Stats', util.inspect(nurse(), {colors: true}));
   };
 
   setInterval(printStats, 120000);
   printStats();
+
 }
 
+var metrics = new Metrics(app);
+metrics.registerMetricsTask();
+
 app.log.info('Environment', process.env.NODE_ENV);
-app.log.debug('Configuration', util.inspect(opts, {colors:true}));
+app.log.debug('Configuration', util.inspect(opts, {colors: true}));
 
 app.log.info('------ Starting Client ------');
 
 // 2. Send any uncaught exceptions to our log... 
 // XXX: Nothing should be uncaught. Handle it with domains for the drivers.
-process.on('uncaughtException', function(err) {
+process.on('uncaughtException', function (err) {
   app.log.error('UNCAUGHT EXCEPTION', err);
 });
 
@@ -58,7 +65,7 @@ process.on('uncaughtException', function(err) {
 var creds = new Credentials(opts, app);
 var cloud = new CloudConnection(opts, creds, app);
 
-app.__defineGetter__('token', function(){
+app.__defineGetter__('token', function () {
   return creds.token;
 });
 
@@ -69,7 +76,7 @@ var deviceManager = new DeviceManager(app, cloud);
 var drivers = new DriverLoader(app, path.resolve(__dirname, 'config'), path.resolve(__dirname, 'drivers'));
 
 // XXX: Move me.
-app.getGuid = function(device) {
+app.getGuid = function (device) {
   return [
     creds.serial, device.G, device.V, device.D
   ].join('_');
