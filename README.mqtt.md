@@ -4,7 +4,7 @@ Ninja blocks has been working on a version of client which replaces dnode with M
 
 # Known Issues
 
-* Revoking tokens doesn't work yet.
+* Revoking tokens doesn't work (yet).
 * Needs to be tested with a range of devices.
 * Need to clear out all some of the dead handler and authentication related code.
 * No way of recognising authentication failures.
