@@ -11,9 +11,9 @@ var util = require('util');
 var helpers = require('./lib/helpers');
 var devices = {};
 
-util.inherits(rest,stream);
+util.inherits(Rest,stream);
 
-function rest(config, ninja) {
+function Rest(config, ninja) {
   var app = express();
   var self = this;
 
@@ -43,7 +43,7 @@ function rest(config, ninja) {
 
   ninja.on('device::up',function(guid) {
     setTimeout(function() {
-      helpers.fetchDeviceData(ninja,guid,function(err,data) {
+      helpers.fetchDeviceData(ninja, guid, function(err,data) {
 
         if (err) {
           self.log.error('REST: %s (%s)', err, guid);
@@ -60,4 +60,4 @@ function rest(config, ninja) {
   });
 }
 
-module.exports = rest;
+module.exports = Rest;
