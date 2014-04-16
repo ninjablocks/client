@@ -1,6 +1,6 @@
 {
   "name": "ninja-client",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "Ninja blocks client which manages connection to cloud and drivers.",
   "repository": {
     "type": "git",
