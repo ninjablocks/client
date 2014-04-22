@@ -47,6 +47,12 @@ if (opts.memwatch) {
 
 }
 
+if (opts.bugsnagKey) {
+  app.log.info('enabling bugsnag');
+  var bugsnag = require("bugsnag");
+  bugsnag.register(opts.bugsnagKey);
+}
+
 var metrics = new Metrics(app);
 metrics.registerMetricsTask();
 
