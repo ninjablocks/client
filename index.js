@@ -15,7 +15,10 @@ var DriverLoader = accio('./lib/DriverLoader');
 var DeviceManager = accio('./lib/DeviceManager');
 var Metrics = accio('./lib/Metrics');
 
-var app = new events.EventEmitter();
+
+var AsyncEventEmitter = require('async-cancelable-events');
+var app = new AsyncEventEmitter();
+
 app.log = Log.getLogger('NB');
 
 var banner = fs.readFileSync('./lib/banner', 'utf-8');

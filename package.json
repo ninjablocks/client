@@ -22,7 +22,8 @@
     "log4js": "^0.6.12",
     "memwatch": "^0.2.2",
     "nurse": "^0.1.0",
-    "when": "~3.0.1"
+    "when": "~3.0.1",
+    "async-cancelable-events": "0.0.6"
   },
   "scripts": {
     "test": "make test"
