@@ -61,6 +61,11 @@ metrics.registerMetricsTask();
 
 app.log.info('Environment', process.env.NODE_ENV);
 app.log.debug('Configuration', util.inspect(opts, {colors: true}));
+fs.writeFile('config-snapshot.json', JSON.stringify(opts), function(err) {
+  if (err) {
+    app.log.debug('Failed to write configuration snapshot');
+  }
+});
 
 app.log.info('------ Starting Client ------');
 
