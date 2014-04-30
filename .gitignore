@@ -21,3 +21,4 @@ config
 drivers/dev-*
 versions.json
 versions*.json
+config-snapshot.json
