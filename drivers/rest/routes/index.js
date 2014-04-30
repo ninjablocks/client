@@ -1,36 +1,42 @@
+'use strict';
+
 var helpers = require('../lib/helpers');
 
 exports.showDevices = function(req, res){
-  res.json({result:1,error:null,id:0,data:req.devices});
+  res.json({
+    result: 1,
+    error: null,
+    id: 0,
+    data: req.devices
+  });
 };
 
 exports.actuate = function(req,res) {
 
-  if (!req.body.hasOwnProperty('DA') || typeof req.body.DA !== "string") {
-    res.json({error:'Invalid parameter, DA must be a string'},400);
+  if (!req.body.hasOwnProperty('DA')) {
+    res.json({error:'Invalid parameter, you must provide a DA value'}, 400);
     return;
   }
 
-  if (!req.devices.hasOwnProperty(req.params.deviceGuid)) {
-    res.json({error:'Unkown Device'},404);
+  if (!req.ninja.devices.hasOwnProperty(req.params.deviceGuid)) {
+    res.json({error:'Unknown Device'},404);
     return;
   }
 
   var guid = req.params.deviceGuid;
   var device = req.ninja.devices[guid];
+
   try {
-    device.write(req.body.DA);
     res.json({
-      result:1,
-      error:null,
-      id:0
+      result: 1,
+      error: null,
+      id: 0
     });
-  }
-  catch (err) {
+  } catch (err) {
     res.json({
-      result:0,
-      error:"Unknown Error",
-      id:500
+      result: 0,
+      error: err,
+      id: 500
     });
   }
 };

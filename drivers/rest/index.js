@@ -1,26 +1,28 @@
+'use strict';
 /**
  * Module dependencies.
  */
-var express = require('express')
-  , routes = require('./routes')
-  , http = require('http')
-  , path = require('path')
-  , stream = require('stream')
-  , util = require('util')
-  , helpers = require('./lib/helpers')
-  , devices = {};
+var express = require('express');
+var routes = require('./routes');
+var http = require('http');
+var path = require('path');
+var stream = require('stream');
+var util = require('util');
+var helpers = require('./lib/helpers');
+var devices = {};
 
-util.inherits(rest,stream);
+util.inherits(Rest,stream);
 
-function rest(ninja) {
+function Rest(config, ninja) {
   var app = express();
+  var self = this;
 
   app.configure(function(){
     app.set('port', process.env.PORT || 8000);
     app.use(function(req, res, next){
 
       // Custom logger
-      ninja.log.info('REST %s %s', req.method, req.url);
+      self.log.info('REST %s %s', req.method, req.url);
 
       // Give all requests the client (for now).
       req.ninja = ninja;
@@ -30,7 +32,7 @@ function rest(ninja) {
     });
 
     app.use(express.bodyParser());
-    app.use(helpers.allowCORS)
+    app.use(helpers.allowCORS);
     app.use(app.router);
   });
 
@@ -39,12 +41,12 @@ function rest(ninja) {
   app.put('/rest/v0/device/:deviceGuid',routes.actuate);
   app.post('/rest/v0/device/:deviceGuid',routes.actuate);
 
-  ninja.app.on('device::up',function(guid) {
+  ninja.on('device::up',function(guid) {
     setTimeout(function() {
-      helpers.fetchDeviceData(ninja,guid,function(err,data) {
+      helpers.fetchDeviceData(ninja, guid, function(err,data) {
 
         if (err) {
-          ninja.log.error("REST: %s (%s)", err, guid);
+          self.log.error('REST: %s (%s)', err, guid);
           // TODO decide what to do here
         }
 
@@ -54,9 +56,8 @@ function rest(ninja) {
   });
 
   http.createServer(app).listen(app.get('port'), function(){
-
-    ninja.log.info("Express server listening on port " + app.get('port'));
+    self.log.info('Express server listening on port ' + app.get('port'));
   });
-};
+}
 
-module.exports = rest;
+module.exports = Rest;
