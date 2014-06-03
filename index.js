@@ -69,7 +69,7 @@ fs.writeFile('config-snapshot.json', JSON.stringify(opts), function(err) {
 
 app.log.info('------ Starting Client ------');
 
-// 2. Send any uncaught exceptions to our log... 
+// 2. Send any uncaught exceptions to our log...
 // XXX: Nothing should be uncaught. Handle it with domains for the drivers.
 process.on('uncaughtException', function(err) {
   app.log.error('UNCAUGHT EXCEPTION', err);
@@ -78,6 +78,10 @@ process.on('uncaughtException', function(err) {
 // 3. Set up our cloud connection
 var creds = new Credentials(opts, app);
 var cloud = new CloudConnection(opts, creds, app);
+
+app.__defineGetter__('serial', function() {
+  return creds.serial;
+});
 
 app.__defineGetter__('token', function() {
   return creds.token;
