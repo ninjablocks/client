@@ -25,6 +25,8 @@ exports.actuate = function(req,res) {
 
   var guid = req.params.deviceGuid;
   var device = req.ninja.devices[guid];
+  
+  device.write(req.body.DA);
 
   try {
     res.json({
